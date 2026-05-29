@@ -1,0 +1,25 @@
+# FIX_Aggregator_SOR_Complete APP — Python dependencies
+# Install: pip install -r requirements.txt
+
+# Web framework and ASGI server
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+websockets>=12.0
+
+# Data validation
+pydantic>=2.7.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# YAML config parsing
+pyyaml>=6.0.1
+
+# FIX protocol (optional — app uses built-in encoder if not installed)
+# simplefix>=1.0.13
+
+# Kafka client (optional — only needed when use_kafka=true in sor_config.yaml)
+# kafka-python>=2.0.2
+
+# Prometheus metrics export (optional — built-in registry works without this)
+# prometheus-client>=0.20.0

@@ -1,0 +1,56 @@
+venues:
+  GSE:
+    name: Ghana Stock Exchange
+    host: fix.gse.com.gh
+    port: 9876
+    sender_comp_id: BROKER_GH
+    target_comp_id: GSE_TRADING
+    currency: GHS
+    taker_fee: 0.0015
+    latency_ms: 8.0
+    enabled: true
+    settlement: T+3
+    trading_hours_utc: "09:30-15:00"
+    symbols: [GCB, MTNGH, GOIL, UNIL, SIC, EGL]
+
+  JSE:
+    name: Johannesburg Stock Exchange
+    host: fix.jse.co.za
+    port: 9877
+    sender_comp_id: BROKER_ZA
+    target_comp_id: JSE_TRADING
+    currency: ZAR
+    taker_fee: 0.002
+    latency_ms: 2.0
+    enabled: true
+    settlement: T+3
+    trading_hours_utc: "07:00-15:00"
+    symbols: [MTN, NPN, SOL, BHP, AGL]
+
+  NGX:
+    name: Nigerian Exchange Group
+    host: fix.ngxgroup.com
+    port: 9878
+    sender_comp_id: BROKER_NG
+    target_comp_id: NGX_TRADING
+    currency: NGN
+    taker_fee: 0.003
+    latency_ms: 12.0
+    enabled: true
+    settlement: T+3
+    trading_hours_utc: "10:00-14:30"
+    symbols: [DANGCEM, GTCO, AIRTELAFRI, ZENITHBANK, MTNN]
+
+  NSE:
+    name: Nairobi Securities Exchange
+    host: fix.nse.co.ke
+    port: 9879
+    sender_comp_id: BROKER_KE
+    target_comp_id: NSE_TRADING
+    currency: KES
+    taker_fee: 0.0021
+    latency_ms: 15.0
+    enabled: true
+    settlement: T+3
+    trading_hours_utc: "09:00-15:00"
+    symbols: [SAFCOM, EABL, KCB, EQUITY, BAMBURI]

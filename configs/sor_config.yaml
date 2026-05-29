@@ -1,0 +1,56 @@
+routing:
+  liquidity_weight: 0.30
+  spread_weight: 0.20
+  fee_weight: 0.20
+  fx_weight: 0.20
+  latency_weight: 0.10
+  max_order_splits: 5
+  min_split_quantity: 100.0
+
+circuit_breaker:
+  failure_threshold: 5
+  success_threshold: 3
+  timeout_seconds: 30
+
+cache:
+  shard_count: 256
+
+execution:
+  max_retries: 3
+  retry_delay_ms: 100
+  order_timeout_seconds: 30
+  simulate: true
+
+fx_rates:
+  base_currency: USD
+  GHS: 15.2
+  ZAR: 18.8
+  NGN: 1580.0
+  KES: 133.5
+
+api:
+  host: 0.0.0.0
+  port: 9090
+  workers: 1
+
+market_data:
+  update_interval_seconds: 0.1
+  kafka_brokers: "kafka:9092"
+  use_kafka: false
+
+risk:
+  enabled: true
+  max_order_qty: 1000000.0
+  max_order_notional: 10000000.0
+  price_band_pct: 0.05
+  max_daily_notional: 50000000.0
+  max_position_qty: 5000000.0
+
+auth:
+  enabled: false
+  api_keys:
+    - "dev-key-change-in-production"
+
+rate_limit:
+  enabled: true
+  requests_per_minute: 300

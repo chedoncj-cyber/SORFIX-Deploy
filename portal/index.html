@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIX SOR Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg:       #07080f;
+      --surface:  #0d0f1d;
+      --card:     #111422;
+      --card2:    #161929;
+      --border:   #1c2035;
+      --accent:   #3b82f6;
+      --accent-g: rgba(59,130,246,0.10);
+      --green:    #22c55e;
+      --red:      #ef4444;
+      --yellow:   #f59e0b;
+      --purple:   #a78bfa;
+      --text:     #e1e7ef;
+      --muted:    #5a6580;
+      --sw:       216px;
+      --hh:       54px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; font-size: 13px; line-height: 1.5; }
+    .mono { font-family: 'Courier New', Courier, monospace !important; }
+    .hidden { display: none !important; }
+
+    /* ── Header ── */
+    #hdr {
+      position: fixed; top: 0; left: 0; right: 0; height: var(--hh);
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 20px; gap: 14px; z-index: 50;
+    }
+    .logo {
+      font-weight: 900; font-size: 17px; letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      flex-shrink: 0; white-space: nowrap;
+    }
+    .logo-sub { font-size: 11px; font-weight: 500; color: var(--muted); border-left: 1px solid var(--border); padding-left: 14px; flex-shrink: 0; white-space: nowrap; }
+    .hdr-spacer { flex: 1; }
+    .hdr-chip { display: flex; align-items: center; gap: 7px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 12px; white-space: nowrap; }
+    .hdr-lbl { color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      position: fixed; top: var(--hh); left: 0; bottom: 0; width: var(--sw);
+      background: var(--surface); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; z-index: 40; overflow-y: auto; padding: 10px 0;
+    }
+    .sb-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.10em; color: var(--muted); padding: 10px 16px 4px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 14px; margin: 1px 8px; border-radius: 8px;
+      cursor: pointer; color: var(--muted); font-size: 13px; font-weight: 500;
+      transition: all 0.14s; border: 1px solid transparent;
+      background: transparent; width: calc(100% - 16px); text-align: left; font-family: inherit;
+    }
+    .nav-item:hover { background: var(--card); color: var(--text); border-color: var(--border); }
+    .nav-item.active { background: var(--accent-g); color: var(--accent); border-color: rgba(59,130,246,0.22); }
+    .nav-item.active .nsvg { stroke: var(--accent); }
+    .nsvg { width: 15px; height: 15px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+    .nav-badge { margin-left: auto; background: var(--accent); color: #fff; border-radius: 10px; font-size: 10px; font-weight: 700; padding: 1px 6px; line-height: 1.6; }
+    .nav-halt  { margin-left: auto; background: rgba(239,68,68,0.2); color: #f87171; border-radius: 5px; font-size: 9px; font-weight: 900; padding: 2px 6px; letter-spacing: 0.05em; }
+    .sb-footer { margin-top: auto; padding: 12px 16px; border-top: 1px solid var(--border); }
+
+    /* ── Main ── */
+    #main { margin-left: var(--sw); margin-top: var(--hh); min-height: calc(100vh - var(--hh)); }
+    .tab-pane { padding: 24px; }
+
+    /* ── Cards ── */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; }
+
+    /* ── Metric cards ── */
+    .metric { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; position: relative; overflow: hidden; transition: border-color 0.2s; }
+    .metric:hover { border-color: rgba(59,130,246,0.3); }
+    .metric-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+    .metric-val { font-size: 30px; font-weight: 900; line-height: 1; }
+    .metric-sub { font-size: 11px; margin-top: 6px; color: var(--muted); }
+
+    /* ── Venue cards ── */
+    .venue-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; transition: border-color 0.15s; }
+    .venue-card:hover { border-color: rgba(59,130,246,0.3); }
+
+    /* ── Sec header ── */
+    .sec-hdr { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 12px 16px; border-bottom: 1px solid var(--border); }
+
+    /* ── Dots ── */
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .dot-up   { background: #4ade80; box-shadow: 0 0 6px #4ade8088; }
+    .dot-down { background: #f87171; box-shadow: 0 0 6px #f8717188; }
+    .dot-warn { background: #facc15; box-shadow: 0 0 6px #facc1588; }
+    @keyframes live-pulse { 0%,100% { box-shadow: 0 0 4px #4ade80; } 50% { box-shadow: 0 0 14px #4ade80, 0 0 24px #4ade8044; } }
+    .dot-live { background: #4ade80; animation: live-pulse 1.6s ease-in-out infinite; }
+
+    /* ── Badges ── */
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 700; }
+    .badge-green  { background: rgba(34,197,94,0.15);   color: #4ade80; }
+    .badge-red    { background: rgba(239,68,68,0.15);   color: #f87171; }
+    .badge-yellow { background: rgba(245,158,11,0.15);  color: #fde047; }
+    .badge-blue   { background: rgba(59,130,246,0.15);  color: #93c5fd; }
+    .badge-buy    { background: rgba(34,197,94,0.12);   color: #4ade80; }
+    .badge-sell   { background: rgba(239,68,68,0.12);   color: #f87171; }
+    .badge-purple { background: rgba(167,139,250,0.15); color: #c4b5fd; }
+
+    /* ── Buttons ── */
+    .btn { padding: 8px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: inherit; font-size: 13px; border: 1px solid transparent; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn:hover:not(:disabled) { opacity: 0.84; transform: translateY(-1px); }
+    .btn:active:not(:disabled) { transform: translateY(0); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-buy     { background: #16a34a; color: #fff; }
+    .btn-sell    { background: #dc2626; color: #fff; }
+    .btn-ghost   { background: var(--card); border-color: var(--border); color: var(--text); }
+
+    /* ── Kill switch ── */
+    .kill-btn { width: 100%; padding: 22px; border-radius: 10px; font-weight: 900; font-size: 18px; letter-spacing: 0.12em; cursor: pointer; font-family: inherit; transition: all 0.2s; border: 2px solid; }
+    .kill-halt   { background: rgba(239,68,68,0.10); border-color: rgba(239,68,68,0.30); color: #f87171; }
+    .kill-halt:hover { background: rgba(239,68,68,0.18); border-color: #ef4444; box-shadow: 0 0 32px rgba(239,68,68,0.18); }
+    .kill-resume { background: rgba(34,197,94,0.10);  border-color: rgba(34,197,94,0.30);  color: #4ade80; }
+    .kill-resume:hover { background: rgba(34,197,94,0.18); border-color: #22c55e; box-shadow: 0 0 32px rgba(34,197,94,0.18); }
+
+    /* ── Inputs ── */
+    input, select { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 9px 12px; width: 100%; outline: none; font-family: inherit; font-size: 13px; transition: border-color 0.14s, box-shadow 0.14s; }
+    input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.10); }
+    label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 6px; }
+
+    /* ── Tables ── */
+    table { border-collapse: collapse; width: 100%; }
+    th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 10px 12px; }
+    td { padding: 9px 12px; font-size: 12px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tbody tr { transition: background 0.1s; }
+    tbody tr:hover td { background: rgba(59,130,246,0.04); }
+
+    /* ── Progress bar ── */
+    .progress-track { background: var(--border); border-radius: 4px; height: 5px; overflow: hidden; }
+    .progress-fill  { height: 5px; border-radius: 4px; transition: width 0.5s ease; }
+
+    /* ── Score bars ── */
+    .bar-bg  { background: var(--border); border-radius: 3px; height: 5px; }
+    .bar-fill { border-radius: 3px; height: 5px; transition: width 0.4s ease; }
+
+    /* ── Chips ── */
+    .chip { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 11px; font-weight: 700; padding: 3px 9px; color: var(--muted); transition: all 0.12s; }
+    .chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-g); }
+    .chip.active { border-color: var(--accent); background: var(--accent-g); color: var(--accent); }
+
+    /* ── Toasts ── */
+    #toast-root { position: fixed; bottom: 22px; right: 22px; z-index: 9999; display: flex; flex-direction: column-reverse; gap: 8px; pointer-events: none; }
+    .toast { padding: 12px 18px; border-radius: 9px; font-size: 12px; font-weight: 600; pointer-events: all; min-width: 240px; max-width: 340px; opacity: 0; transform: translateX(24px); transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
+    .toast.show { opacity: 1; transform: none; }
+    .toast-ok  { background: rgba(22,163,74,0.95);  color: #fff; border: 1px solid rgba(74,222,128,0.3); }
+    .toast-err { background: rgba(185,28,28,0.95);  color: #fff; border: 1px solid rgba(248,113,113,0.3); }
+    .toast-inf { background: rgba(59,130,246,0.95); color: #fff; border: 1px solid rgba(147,197,253,0.3); }
+
+    /* ── Animations ── */
+    .fade-in { animation: fadeIn 0.22s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+  </style>
+</head>
+<body>
+<div id="toast-root"></div>
+
+<!-- ═══ HEADER ════════════════════════════════════════════════════════════════ -->
+<header id="hdr">
+  <div class="logo">FIX SOR</div>
+  <div class="logo-sub">Pan-African Smart Order Router</div>
+  <div class="hdr-spacer"></div>
+  <div class="hdr-chip">
+    <span class="hdr-lbl">Rate</span>
+    <span id="hdr-rate" class="mono font-bold" style="color:#4ade80">—</span>
+  </div>
+  <div class="hdr-chip">
+    <span class="hdr-lbl">Uptime</span>
+    <span id="hdr-uptime" class="mono font-bold" style="color:#60a5fa">—</span>
+  </div>
+  <div class="hdr-chip">
+    <span class="dot" id="hdr-dot"></span>
+    <span id="hdr-status" style="font-weight:600">connecting…</span>
+  </div>
+</header>
+
+<!-- ═══ SIDEBAR ═══════════════════════════════════════════════════════════════ -->
+<nav id="sidebar">
+  <div class="sb-label">Trading</div>
+
+  <button class="nav-item tab-btn active" onclick="showTab('dashboard',this)">
+    <svg class="nsvg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+    Dashboard
+  </button>
+
+  <button class="nav-item tab-btn" onclick="showTab('book',this)">
+    <svg class="nsvg" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Live Book
+  </button>
+
+  <button class="nav-item tab-btn" onclick="showTab('submit',this)">
+    <svg class="nsvg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Submit Order
+  </button>
+
+  <button class="nav-item tab-btn" onclick="showTab('history',this)">
+    <svg class="nsvg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    Order History
+    <span id="history-badge" class="nav-badge hidden">0</span>
+  </button>
+
+  <button class="nav-item tab-btn" onclick="showTab('positions',this)">
+    <svg class="nsvg" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+    Positions
+  </button>
+
+  <button class="nav-item tab-btn" onclick="showTab('algo',this)">
+    <svg class="nsvg" viewBox="0 0 24 24"><rect x="9" y="9" width="6" height="6"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v2M15 3v2M9 19v2M15 19v2M3 9h2M3 15h2M19 9h2M19 15h2"/></svg>
+    Algo Orders
+  </button>
+
+  <button class="nav-item tab-btn" onclick="showTab('tca',this)">
+    <svg class="nsvg" viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+    TCA
+  </button>
+
+  <div class="sb-label" style="margin-top:16px">System</div>
+
+  <button class="nav-item tab-btn" onclick="showTab('admin',this)">
+    <svg class="nsvg" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    Admin
+    <span id="halt-badge" class="nav-halt hidden">HALT</span>
+  </button>
+
+  <div class="sb-footer">
+    <div style="font-size:11px;font-weight:600;color:var(--muted)">v2.0.0 · FIX 4.2</div>
+    <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+      <span class="dot dot-up" style="width:6px;height:6px"></span>
+      <span style="font-size:11px;color:var(--muted)">GSE · JSE · NGX · NSE</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ MAIN CONTENT ══════════════════════════════════════════════════════════ -->
+<main id="main">
+
+<!-- ── DASHBOARD ─────────────────────────────────────────────────────────── -->
+<div id="tab-dashboard" class="tab-pane">
+  <div class="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+    <div class="metric">
+      <div class="metric-lbl">Uptime
+        <svg style="width:14px;height:14px;fill:none;stroke:#3b82f6;stroke-width:2;stroke-linecap:round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="metric-val mono" style="color:#60a5fa" id="d-uptime">—</div>
+    </div>
+    <div class="metric">
+      <div class="metric-lbl">MD Updates/s
+        <svg style="width:14px;height:14px;fill:none;stroke:#22c55e;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <div class="metric-val mono" style="color:#4ade80" id="d-rate">—</div>
+      <div class="metric-sub mono" id="d-total">total: —</div>
+    </div>
+    <div class="metric">
+      <div class="metric-lbl">Cached Books
+        <svg style="width:14px;height:14px;fill:none;stroke:#a78bfa;stroke-width:2;stroke-linecap:round" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      </div>
+      <div class="metric-val mono" style="color:#a78bfa" id="d-books">—</div>
+    </div>
+    <div class="metric">
+      <div class="metric-lbl">Executions
+        <svg style="width:14px;height:14px;fill:none;stroke:#f59e0b;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      </div>
+      <div class="metric-val mono" style="color:#fbbf24" id="d-execs">—</div>
+    </div>
+  </div>
+
+  <h3 style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.10em;color:var(--muted);margin-bottom:12px">Venue Status</h3>
+  <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-6" id="d-venues"></div>
+
+  <div class="card overflow-hidden">
+    <div class="sec-hdr">Symbol Catalog</div>
+    <div id="d-symbols" class="p-5 grid grid-cols-2 md:grid-cols-4 gap-5"></div>
+  </div>
+</div>
+
+<!-- ── LIVE BOOK ──────────────────────────────────────────────────────────── -->
+<div id="tab-book" class="tab-pane hidden">
+  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;align-items:flex-end">
+    <div>
+      <label>Venue</label>
+      <select id="b-venue" onchange="onVenueChange()" style="width:120px">
+        <option value="">Select…</option>
+        <option>GSE</option><option>JSE</option><option>NGX</option><option>NSE</option>
+      </select>
+    </div>
+    <div>
+      <label>Symbol</label>
+      <select id="b-symbol" style="width:150px" disabled></select>
+    </div>
+    <button class="btn btn-primary" onclick="connectBook()">Connect</button>
+    <button class="btn btn-ghost"   onclick="disconnectBook(true)">Disconnect</button>
+    <span style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--muted)">
+      <span class="dot" id="ws-dot"></span>
+      <span id="ws-status">disconnected</span>
+    </span>
+  </div>
+
+  <div class="card p-5 mb-5">
+    <div style="display:flex;align-items:center;gap:32px">
+      <div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:8px">Mid Price</div>
+        <div class="mono" style="font-size:36px;font-weight:900;line-height:1" id="b-mid">—</div>
+      </div>
+      <div style="flex:1;height:60px">
+        <div id="b-sparkline" style="width:100%;height:60px"></div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:8px">Spread</div>
+        <div class="mono" style="font-size:28px;font-weight:900;line-height:1;color:#fbbf24" id="b-spread">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div class="card overflow-hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border)">
+        <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#4ade80">Bids</span>
+        <span style="font-size:11px;color:var(--muted)">Best: <span class="mono font-bold" style="color:#4ade80" id="b-best-bid">—</span></span>
+      </div>
+      <table>
+        <thead><tr style="border-bottom:1px solid var(--border)">
+          <th style="text-align:right">Price</th><th style="text-align:right">Qty</th><th style="text-align:right">Value</th>
+        </tr></thead>
+        <tbody id="b-bids"></tbody>
+      </table>
+    </div>
+    <div class="card overflow-hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border)">
+        <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#f87171">Asks</span>
+        <span style="font-size:11px;color:var(--muted)">Best: <span class="mono font-bold" style="color:#f87171" id="b-best-ask">—</span></span>
+      </div>
+      <table>
+        <thead><tr style="border-bottom:1px solid var(--border)">
+          <th style="text-align:right">Price</th><th style="text-align:right">Qty</th><th style="text-align:right">Value</th>
+        </tr></thead>
+        <tbody id="b-asks"></tbody>
+      </table>
+    </div>
+  </div>
+  <p style="text-align:center;font-size:11px;color:var(--muted);margin-top:12px">Depth bars show relative liquidity · WebSocket pushes every 500ms · Auto-reconnects on drop</p>
+</div>
+
+<!-- ── SUBMIT ORDER ────────────────────────────────────────────────────────── -->
+<div id="tab-submit" class="tab-pane hidden">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card p-6">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:20px">Order Parameters</div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div>
+          <label>Symbol</label>
+          <input id="o-symbol" list="symbol-list" placeholder="e.g. GCB, MTN, DANGCEM…"
+                 oninput="this.value=this.value.toUpperCase(); highlightChip(this.value)">
+          <datalist id="symbol-list"></datalist>
+          <div id="o-chips" style="margin-top:12px;display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+        <div>
+          <label>Side</label>
+          <div style="display:flex;gap:8px">
+            <button id="side-buy"  class="btn btn-buy"  style="flex:1" onclick="setSide('buy')">BUY</button>
+            <button id="side-sell" class="btn btn-ghost" style="flex:1" onclick="setSide('sell')">SELL</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label>Quantity</label>
+            <input id="o-qty" type="number" placeholder="e.g. 1000" min="1" step="1">
+          </div>
+          <div>
+            <label>Limit Price <span style="font-weight:400;opacity:0.55">(blank=market)</span></label>
+            <input id="o-price" type="number" placeholder="Market order" min="0.0001" step="any">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;padding-top:4px">
+          <button class="btn btn-ghost" style="flex:1" onclick="previewOrder()" id="btn-preview">Preview Route</button>
+          <button class="btn btn-primary" style="flex:1" onclick="submitOrder()" id="btn-submit">
+            Submit <span style="opacity:0.5;font-size:11px">Ctrl+↵</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="o-result">
+      <div class="card p-6" style="color:var(--muted);text-align:center">
+        Submit an order to see routing decision and execution result.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ORDER HISTORY ──────────────────────────────────────────────────────── -->
+<div id="tab-history" class="tab-pane hidden">
+  <div id="h-stats" class="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div style="font-size:11px;color:var(--muted)">
+      <span id="h-count">0</span> orders · auto-refresh every 5s · click row to expand
+    </div>
+    <button class="btn btn-ghost" style="padding:6px 14px;font-size:12px" onclick="loadHistory()">Refresh</button>
+  </div>
+  <div class="card overflow-x-auto mb-4">
+    <table>
+      <thead><tr style="border-bottom:1px solid var(--border)">
+        <th style="text-align:left">Time</th>
+        <th style="text-align:left">Order ID</th>
+        <th style="text-align:left">Venue</th>
+        <th style="text-align:left">Symbol</th>
+        <th style="text-align:left">Side</th>
+        <th style="text-align:right">Qty</th>
+        <th style="text-align:right">Filled</th>
+        <th style="text-align:right">Fill%</th>
+        <th style="text-align:right">VWAP</th>
+        <th style="text-align:right">Latency</th>
+        <th style="text-align:center">Status</th>
+      </tr></thead>
+      <tbody id="h-rows"></tbody>
+    </table>
+  </div>
+  <div id="h-detail" class="hidden card p-4 text-xs overflow-auto fade-in"
+       style="max-height:300px;white-space:pre;font-family:monospace;color:#94a3b8"></div>
+</div>
+
+<!-- ── POSITIONS ──────────────────────────────────────────────────────────── -->
+<div id="tab-positions" class="tab-pane hidden">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <div style="font-size:11px;color:var(--muted)">Net positions · avg cost · realized P&amp;L · auto-refresh every 5s</div>
+    <button class="btn btn-ghost" style="padding:6px 14px;font-size:12px" onclick="loadPositions()">Refresh</button>
+  </div>
+  <div id="pos-stats" class="grid grid-cols-3 gap-3 mb-5"></div>
+  <div class="card overflow-x-auto">
+    <table>
+      <thead><tr style="border-bottom:1px solid var(--border)">
+        <th style="text-align:left">Symbol</th>
+        <th style="text-align:left">Direction</th>
+        <th style="text-align:right">Net Qty</th>
+        <th style="text-align:right">Avg Cost</th>
+        <th style="text-align:right">Realized P&amp;L</th>
+        <th style="text-align:right">Total Vol</th>
+        <th style="text-align:right">Buys</th>
+        <th style="text-align:right">Sells</th>
+      </tr></thead>
+      <tbody id="pos-rows">
+        <tr><td colspan="8" style="text-align:center;padding:28px;color:var(--muted)">No positions yet. Submit orders first.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── ALGO ORDERS ────────────────────────────────────────────────────────── -->
+<div id="tab-algo" class="tab-pane hidden">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card p-6">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:20px">Submit Algo Order</div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <label>Algo Type</label>
+          <div style="display:flex;gap:8px">
+            <button id="algo-twap-btn" class="btn btn-primary" style="flex:1" onclick="setAlgoType('twap')">TWAP</button>
+            <button id="algo-vwap-btn" class="btn btn-ghost"   style="flex:1" onclick="setAlgoType('vwap')">VWAP</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label>Symbol</label>
+            <input id="algo-symbol" list="symbol-list" placeholder="e.g. GCB" oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <div>
+            <label>Side</label>
+            <div style="display:flex;gap:8px">
+              <button id="algo-buy-btn"  class="btn btn-buy"   style="flex:1" onclick="setAlgoSide('buy')">BUY</button>
+              <button id="algo-sell-btn" class="btn btn-ghost"  style="flex:1" onclick="setAlgoSide('sell')">SELL</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label>Total Qty</label>
+            <input id="algo-qty" type="number" placeholder="5000" min="1" step="1">
+          </div>
+          <div>
+            <label>Limit Price</label>
+            <input id="algo-price" type="number" placeholder="Market" min="0.0001" step="any">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label>Duration (seconds)</label>
+            <input id="algo-duration" type="number" placeholder="300" min="10" step="10">
+          </div>
+          <div>
+            <label>Slices</label>
+            <input id="algo-slices" type="number" placeholder="10" min="2" max="100" step="1">
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="submitAlgo()" id="btn-algo-submit">Submit Algo Order</button>
+      </div>
+    </div>
+
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">Active &amp; Recent</div>
+        <button class="btn btn-ghost" style="padding:6px 14px;font-size:12px" onclick="loadAlgoOrders()">Refresh</button>
+      </div>
+      <div id="algo-orders" style="display:flex;flex-direction:column;gap:12px">
+        <div class="card p-5" style="color:var(--muted);text-align:center">No algo orders yet.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TCA ────────────────────────────────────────────────────────────────── -->
+<div id="tab-tca" class="tab-pane hidden">
+  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;align-items:flex-end">
+    <div>
+      <label>Filter Symbol</label>
+      <input id="tca-symbol" list="symbol-list" placeholder="All symbols" style="width:170px"
+             oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <button class="btn btn-primary" onclick="loadTCA()">Load TCA</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('tca-symbol').value=''; loadTCA()">Clear Filter</button>
+  </div>
+
+  <div id="tca-stats" class="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5"></div>
+
+  <div id="tca-chart" class="card p-5 mb-5 hidden">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:16px">Fill Ratio Distribution</div>
+    <div id="tca-chart-bars" style="display:flex;gap:4px;align-items:flex-end;height:80px"></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:8px;color:var(--muted)"><span>0%</span><span>50%</span><span>100%</span></div>
+  </div>
+
+  <div class="card overflow-x-auto">
+    <table>
+      <thead><tr style="border-bottom:1px solid var(--border)">
+        <th style="text-align:left">Time</th>
+        <th style="text-align:left">Order ID</th>
+        <th style="text-align:left">Symbol</th>
+        <th style="text-align:left">Side</th>
+        <th style="text-align:left">Venue</th>
+        <th style="text-align:right">Filled</th>
+        <th style="text-align:right">Fill%</th>
+        <th style="text-align:right">VWAP</th>
+        <th style="text-align:right">Latency</th>
+        <th style="text-align:right">Split</th>
+        <th style="text-align:center">Status</th>
+      </tr></thead>
+      <tbody id="tca-rows">
+        <tr><td colspan="11" style="text-align:center;padding:28px;color:var(--muted)">Click "Load TCA" to fetch data.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── ADMIN ──────────────────────────────────────────────────────────────── -->
+<div id="tab-admin" class="tab-pane hidden">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <div>
+      <h3 style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.10em;color:var(--muted);margin-bottom:16px">System Control</h3>
+      <div class="card p-6 mb-4" style="text-align:center">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:10px">Current Status</div>
+        <div id="admin-status-text" style="font-size:48px;font-weight:900;letter-spacing:0.05em;color:#4ade80">RUNNING</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <button class="kill-btn kill-halt"   onclick="adminHalt()">HALT</button>
+        <button class="kill-btn kill-resume" onclick="adminResume()">RESUME</button>
+      </div>
+      <p style="font-size:11px;text-align:center;color:var(--muted)">HALT suspends all new order routing. In-flight executions complete normally.</p>
+    </div>
+
+    <div>
+      <h3 style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.10em;color:var(--muted);margin-bottom:16px">Risk Parameters</h3>
+      <div class="card p-5">
+        <div id="risk-cfg-display" style="margin-bottom:16px;color:var(--text)">Loading…</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div>
+            <label>Max Order Notional (USD)</label>
+            <input id="risk-notional" type="number" placeholder="10000000" min="1" step="1000">
+          </div>
+          <div>
+            <label>Max Daily Notional (USD)</label>
+            <input id="risk-daily" type="number" placeholder="50000000" min="1" step="10000">
+          </div>
+          <div>
+            <label>Price Band % (e.g. 0.05 = 5%)</label>
+            <input id="risk-band" type="number" placeholder="0.05" min="0.001" max="1" step="0.01">
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" style="flex:1" onclick="updateRisk()">Update Risk</button>
+            <button class="btn btn-ghost"   style="flex:1" onclick="loadRiskConfig()">Refresh</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lg:col-span-2">
+      <h3 style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.10em;color:var(--muted);margin-bottom:16px">Risk Engine Stats</h3>
+      <div class="grid grid-cols-2 xl:grid-cols-4 gap-3" id="risk-stats"></div>
+      <button class="btn btn-ghost" style="margin-top:12px;padding:6px 14px;font-size:12px" onclick="adminResetDaily()">Reset Daily Notional</button>
+    </div>
+
+  </div>
+</div>
+
+</main>
+
+<!-- ═══ SCRIPTS ═══════════════════════════════════════════════════════════════ -->
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let currentSide   = 'buy';
+let wsConn        = null;
+let wsVenue       = '', wsSymbol = '', wsIntentional = false;
+let wsRetryDelay  = 3000, wsRetryTimer = null;
+let allSymbols    = {};
+let historyCache  = [];
+let priceHistory  = [];
+let prevMdCount   = 0, prevMdTime = Date.now();
+let prevBid = null, prevAsk = null;
+const MAX_SPARK = 80;
+const VENUE_LABELS = {
+  GSE: 'Ghana Stock Exchange',
+  JSE: 'Johannesburg Stock Exchange',
+  NGX: 'Nigerian Exchange Group',
+  NSE: 'Nairobi Securities Exchange',
+};
+
+// Top listed companies per exchange — used for the "Find other" catalog dropdown
+const TOP_COMPANIES = {
+  GSE: [
+    {t:'ABL',     n:'Aluworks Limited'},
+    {t:'ACCESS',  n:'Access Bank Ghana'},
+    {t:'ACI',     n:'African Champion Industries'},
+    {t:'AYRTN',   n:'Ayrton Drugs Manufacturing'},
+    {t:'BOPP',    n:'Benso Oil Palm Plantation'},
+    {t:'CAL',     n:'CAL Bank'},
+    {t:'CLYD',    n:'Clydestone Ghana'},
+    {t:'CMLT',    n:'Camelot Ghana'},
+    {t:'CPC',     n:'Cocoa Processing Company'},
+    {t:'EGL',     n:'Enterprise Group Limited'},
+    {t:'FML',     n:'Fan Milk Limited'},
+    {t:'GCB',     n:'GCB Bank'},
+    {t:'GGBL',    n:'Guinness Ghana Breweries'},
+    {t:'GOIL',    n:'GOIL Company'},
+    {t:'GWEB',    n:'GW-Afr Properties'},
+    {t:'HFCB',    n:'Republic Bank Ghana'},
+    {t:'MTNGH',   n:'MTN Ghana'},
+    {t:'NIB',     n:'National Investment Bank'},
+    {t:'PBC',     n:'Produce Buying Company'},
+    {t:'PRIMUS',  n:'Primus One'},
+    {t:'RBGH',    n:'Royal Bank Ghana'},
+    {t:'SCB',     n:'Standard Chartered Bank Ghana'},
+    {t:'SIC',     n:'SIC Insurance'},
+    {t:'SOGEGH',  n:'Societe Generale Ghana'},
+    {t:'TBL',     n:'Trust Bancorp'},
+    {t:'TOTAL',   n:'TotalEnergies Marketing Ghana'},
+    {t:'TRANSOL', n:'Transol Solutions'},
+    {t:'UNIL',    n:'Unilever Ghana'},
+  ],
+  JSE: [
+    {t:'ABG',  n:'Absa Group'},
+    {t:'ADH',  n:'ADvTECH'},
+    {t:'AFR',  n:'Afrocentric Investment'},
+    {t:'AGL',  n:'Anglo American'},
+    {t:'AIA',  n:'Alexander Forbes Group'},
+    {t:'AMS',  n:'Anglo American Platinum'},
+    {t:'ARA',  n:'Argent Industrial'},
+    {t:'AVI',  n:'AVI Limited'},
+    {t:'BAW',  n:'Barloworld'},
+    {t:'BHP',  n:'BHP Group'},
+    {t:'BID',  n:'Bid Corporation'},
+    {t:'BTI',  n:'British American Tobacco'},
+    {t:'BVT',  n:'Bidvest Group'},
+    {t:'CFR',  n:'Compagnie Financière Richemont'},
+    {t:'CLH',  n:'City Lodge Hotels'},
+    {t:'CML',  n:'Coronation Fund Managers'},
+    {t:'CPI',  n:'Capitec Bank Holdings'},
+    {t:'CRG',  n:'Curro Holdings'},
+    {t:'DCP',  n:'Dis-Chem Pharmacies'},
+    {t:'DRD',  n:'DRDGold'},
+    {t:'DSY',  n:'Discovery'},
+    {t:'EMI',  n:'enX Group'},
+    {t:'EXX',  n:'Exxaro Resources'},
+    {t:'FBR',  n:'Famous Brands'},
+    {t:'FFB',  n:'Fortress Real Estate Investments'},
+    {t:'FSR',  n:'FirstRand'},
+    {t:'GFI',  n:'Gold Fields'},
+    {t:'GLN',  n:'Glencore'},
+    {t:'GND',  n:'Grindrod'},
+    {t:'GRT',  n:'Growthpoint Properties'},
+    {t:'HAR',  n:'Harmony Gold Mining'},
+    {t:'HCI',  n:'Hosken Consolidated Investments'},
+    {t:'IMP',  n:'Impala Platinum Holdings'},
+    {t:'INL',  n:'Investec'},
+    {t:'JSE',  n:'JSE Limited'},
+    {t:'KAP',  n:'KAP Industrial Holdings'},
+    {t:'LHC',  n:'Life Healthcare Group'},
+    {t:'MCG',  n:'MultiChoice Group'},
+    {t:'MEI',  n:'Metair Investments'},
+    {t:'MMI',  n:'Momentum Metropolitan Holdings'},
+    {t:'MNP',  n:'Mondi'},
+    {t:'MSM',  n:'Massmart Holdings'},
+    {t:'MTN',  n:'MTN Group'},
+    {t:'MUR',  n:'Murray & Roberts'},
+    {t:'NED',  n:'Nedbank Group'},
+    {t:'NHM',  n:'Northam Platinum'},
+    {t:'NPN',  n:'Naspers'},
+    {t:'NRP',  n:'Nampak'},
+    {t:'OCE',  n:'Oceana Group'},
+    {t:'OMU',  n:'Old Mutual'},
+    {t:'PAN',  n:'Pan African Resources'},
+    {t:'PIK',  n:'Pick n Pay Stores'},
+    {t:'PPH',  n:'Pepkor Holdings'},
+    {t:'PPC',  n:'PPC Limited'},
+    {t:'PRX',  n:'Prosus'},
+    {t:'PSG',  n:'PSG Group'},
+    {t:'RCL',  n:'RCL Foods'},
+    {t:'REM',  n:'Remgro'},
+    {t:'RNI',  n:'Redefine Properties'},
+    {t:'SAP',  n:'Sappi'},
+    {t:'SBK',  n:'Standard Bank Group'},
+    {t:'SHP',  n:'Shoprite Holdings'},
+    {t:'SLM',  n:'Sanlam'},
+    {t:'SNT',  n:'Santam'},
+    {t:'SOL',  n:'Sasol'},
+    {t:'SPP',  n:'The Spar Group'},
+    {t:'SSW',  n:'Sibanye-Stillwater'},
+    {t:'SUI',  n:'Sun International'},
+    {t:'TBS',  n:'Tiger Brands'},
+    {t:'TFG',  n:'The Foschini Group'},
+    {t:'TKG',  n:'Telkom SA SOC'},
+    {t:'TRU',  n:'Truworths International'},
+    {t:'TSH',  n:'Tharisa'},
+    {t:'VKE',  n:'Vukile Property Fund'},
+    {t:'VOD',  n:'Vodacom Group'},
+    {t:'WHL',  n:'Woolworths Holdings'},
+    {t:'RBP',  n:'Royal Bafokeng Platinum'},
+    {t:'RMH',  n:'RMB Holdings'},
+    {t:'SER',  n:'Seriti Resources'},
+    {t:'TON',  n:'Tongaat Hulett'},
+    {t:'SNH',  n:'Steinhoff International'},
+    {t:'COH',  n:'Comair Holdings'},
+    {t:'GRF',  n:'Griffin Mining'},
+    {t:'MRF',  n:'Merafe Resources'},
+    {t:'PGR',  n:'Pan African Gold Resources'},
+    {t:'SGL',  n:'Sibanye Gold'},
+    {t:'ADI',  n:'Astral Foods'},
+    {t:'RDF',  n:'Resilient REIT'},
+    {t:'EPP',  n:'EPP N.V.'},
+    {t:'HYP',  n:'Hyprop Investments'},
+    {t:'ACL',  n:'ArcelorMittal South Africa'},
+    {t:'ATT',  n:'Attacq'},
+    {t:'CCO',  n:'Capital & Counties'},
+    {t:'OML',  n:'Old Mutual Limited'},
+    {t:'NPK',  n:'Nampak'},
+    {t:'RLO',  n:'Reunert'},
+    {t:'SRG',  n:'Sasfin Holdings'},
+    {t:'TGA',  n:'Thungela Resources'},
+    {t:'GPT',  n:'Grindrod Shipping'},
+    {t:'MEP',  n:'Merafe Resources'},
+    {t:'NRI',  n:'Nutritional Holdings'},
+    {t:'SEA',  n:'Seardel Investment'},
+  ],
+  NGX: [
+    {t:'ACCESS',      n:'Access Holdings'},
+    {t:'AFRIPRUD',    n:'Africa Prudential'},
+    {t:'AIICO',       n:'AIICO Insurance'},
+    {t:'AIRTELAFRI',  n:'Airtel Africa'},
+    {t:'ARDOVA',      n:'Ardova Plc'},
+    {t:'BETAGLASS',   n:'Beta Glass'},
+    {t:'BUACEMENT',   n:'BUA Cement'},
+    {t:'BUAFOODS',    n:'BUA Foods'},
+    {t:'CADBURY',     n:'Cadbury Nigeria'},
+    {t:'CAP',         n:'CAP Plc'},
+    {t:'CAVERTON',    n:'Caverton Offshore Support Group'},
+    {t:'CHAMPION',    n:'Champion Breweries'},
+    {t:'CHAMS',       n:'Chams Holding Company'},
+    {t:'CONOIL',      n:'Conoil Plc'},
+    {t:'CORNERST',    n:'Cornerstone Insurance'},
+    {t:'COURTVILLE',  n:'Courtville Business Solutions'},
+    {t:'CUTIX',       n:'Cutix Plc'},
+    {t:'DANGCEM',     n:'Dangote Cement'},
+    {t:'DANGSUGAR',   n:'Dangote Sugar Refinery'},
+    {t:'ETERNA',      n:'Eterna Plc'},
+    {t:'ETI',         n:'Ecobank Transnational'},
+    {t:'FBNH',        n:'FBN Holdings'},
+    {t:'FCMB',        n:'FCMB Group'},
+    {t:'FIDSON',      n:'Fidson Healthcare'},
+    {t:'FIDELITYBK',  n:'Fidelity Bank'},
+    {t:'FLOURMILL',   n:'Flour Mills of Nigeria'},
+    {t:'GEREGU',      n:'Geregu Power'},
+    {t:'GTCO',        n:'Guaranty Trust Holding Company'},
+    {t:'GUINNESS',    n:'Guinness Nigeria'},
+    {t:'HONYFLOUR',   n:'Honeywell Flour Mills'},
+    {t:'INTBREW',     n:'International Breweries'},
+    {t:'JAIZ',        n:'Jaiz Bank'},
+    {t:'JAPAUL',      n:'Japaul Gold & Ventures'},
+    {t:'JOHN-HOLT',   n:'John Holt'},
+    {t:'LEARNAFRICA', n:'Learn Africa'},
+    {t:'LIVESTOCK',   n:'Livestock Feeds'},
+    {t:'MANSARD',     n:'AXA Mansard Insurance'},
+    {t:'MAYBAKER',    n:'May & Baker Nigeria'},
+    {t:'MCNICHOLS',   n:'McNichols Consolidated'},
+    {t:'MEYER',       n:'Meyer Plc'},
+    {t:'MIXEDRT',     n:'Mixta Real Estate'},
+    {t:'MRS',         n:'MRS Oil Nigeria'},
+    {t:'MTNN',        n:'MTN Nigeria Communications'},
+    {t:'MULTIVERSE',  n:'Multiverse Mining & Exploration'},
+    {t:'NASCON',      n:'NASCON Allied Industries'},
+    {t:'NB',          n:'Nigerian Breweries'},
+    {t:'NCAM',        n:'NC Alliance'},
+    {t:'NEM',         n:'NEM Insurance'},
+    {t:'NESTLE',      n:'Nestle Nigeria'},
+    {t:'NNFM',        n:'Northern Nigeria Flour Mills'},
+    {t:'NOTORE',      n:'Notore Chemical Industries'},
+    {t:'OANDO',       n:'Oando Plc'},
+    {t:'OKOMUOIL',    n:'Okomu Oil Palm'},
+    {t:'PHARMDEKO',   n:'Pharmdeko Plc'},
+    {t:'PRESCO',      n:'Presco Plc'},
+    {t:'PZ',          n:'PZ Cussons Nigeria'},
+    {t:'REGALINS',    n:'Regal Insurance'},
+    {t:'ROYALEX',     n:'Royalex Plc'},
+    {t:'SEPLAT',      n:'Seplat Energy'},
+    {t:'STANBIC',     n:'Stanbic IBTC Holdings'},
+    {t:'STERLINBANK', n:'Sterling Financial Holdings'},
+    {t:'TANTALIZERS', n:'Tantalizers Plc'},
+    {t:'THOMAS',      n:'Thomas Wyatt Nigeria'},
+    {t:'TOTAL',       n:'TotalEnergies Marketing Nigeria'},
+    {t:'TRANSCORP',   n:'Transnational Corporation'},
+    {t:'TRIPLEG',     n:'Triple Gee & Company'},
+    {t:'UBA',         n:'United Bank for Africa'},
+    {t:'UACN',        n:'UAC of Nigeria'},
+    {t:'UNILEVER',    n:'Unilever Nigeria'},
+    {t:'VITAFOAM',    n:'Vitafoam Nigeria'},
+    {t:'WEMA',        n:'Wema Bank'},
+    {t:'ZENITHBANK',  n:'Zenith Bank'},
+    {t:'AFRIPRUD',    n:'Africa Prudential Registrars'},
+    {t:'BERGER',      n:'Berger Paints Nigeria'},
+    {t:'CWG',         n:'CWG Plc'},
+    {t:'DNMAYER',     n:'DN Meyer'},
+    {t:'GOLDBREW',    n:'Golden Guinea Breweries'},
+    {t:'MBENEFIT',    n:'Mutual Benefits Assurance'},
+    {t:'REGENCY',     n:'Regency Alliance Insurance'},
+    {t:'UACPROP',     n:'UAC Property Development'},
+    {t:'VERITASKAP',  n:'Veritas Kapital Assurance'},
+    {t:'DAAR',        n:'DAAR Communications'},
+    {t:'ACADEMY',     n:'Academy Press'},
+    {t:'AFMIP',       n:'African Minerals & Mining'},
+    {t:'LINKASSURE',  n:'Linkage Assurance'},
+    {t:'FIDSON',      n:'Fidson Healthcare'},
+    {t:'LASACO',      n:'Lasaco Assurance'},
+    {t:'MORISON',     n:'Morison Industries'},
+    {t:'NCR',         n:'NCR (Nigeria)'},
+    {t:'REDSTAREX',   n:'Red Star Express'},
+    {t:'RTBRISCOE',   n:'R.T. Briscoe (Nigeria)'},
+    {t:'SOVEREIGN',   n:'Sovereign Trust Insurance'},
+    {t:'UNIONDICON',  n:'Union Dicon Salt'},
+  ],
+  NSE: [
+    {t:'ABSA',       n:'Absa Bank Kenya'},
+    {t:'ARM',        n:'ARM Cement'},
+    {t:'BAT',        n:'British American Tobacco Kenya'},
+    {t:'BAMBURI',    n:'Bamburi Cement'},
+    {t:'BOC',        n:'BOC Kenya'},
+    {t:'BRITAM',     n:'Britam Holdings'},
+    {t:'CARBACID',   n:'Carbacid Investments'},
+    {t:'CENTUM',     n:'Centum Investment'},
+    {t:'CHL',        n:'Crown Paints Kenya'},
+    {t:'CIC',        n:'CIC Insurance Group'},
+    {t:'COOP',       n:'Co-operative Bank of Kenya'},
+    {t:'DTB',        n:'Diamond Trust Bank Kenya'},
+    {t:'EABL',       n:'East African Breweries'},
+    {t:'EQUITY',     n:'Equity Group Holdings'},
+    {t:'EXPRESS',    n:'Express Kenya'},
+    {t:'FAHARI',     n:'ILAM Fahari I-REIT'},
+    {t:'HFCK',       n:'HF Group'},
+    {t:'IMH',        n:'I&M Holdings'},
+    {t:'JUBILEE',    n:'Jubilee Holdings'},
+    {t:'KAKUZI',     n:'Kakuzi'},
+    {t:'KAPCHORUA',  n:'Kapchorua Tea Kenya'},
+    {t:'KCB',        n:'KCB Group'},
+    {t:'KENGEN',     n:'Kenya Electricity Generating Company'},
+    {t:'KPLC',       n:'Kenya Power & Lighting'},
+    {t:'LIBERTY',    n:'Liberty Holdings Kenya'},
+    {t:'LIMURU',     n:'Limuru Tea'},
+    {t:'LONGHORN',   n:'Longhorn Publishers'},
+    {t:'MSC',        n:'Marshalls East Africa'},
+    {t:'MUMIAS',     n:'Mumias Sugar'},
+    {t:'NCBA',       n:'NCBA Group'},
+    {t:'NMG',        n:'Nation Media Group'},
+    {t:'OLYMPIA',    n:'Olympia Capital Holdings'},
+    {t:'SAFCOM',     n:'Safaricom'},
+    {t:'SANLAM',     n:'Sanlam Kenya'},
+    {t:'SCBL',       n:'Standard Chartered Bank Kenya'},
+    {t:'SGL',        n:'Standard Group'},
+    {t:'STANCHART',  n:'Standard Chartered Bank Kenya'},
+    {t:'TCL',        n:'TransCentury'},
+    {t:'TPS',        n:'TPS Eastern Africa (Serena Hotels)'},
+    {t:'UNGA',       n:'Unga Group'},
+    {t:'WILLIAMSTEA',n:'Williamson Tea Kenya'},
+    {t:'KENOLKOBIL', n:'KenolKobil (Rubis Energy)'},
+    {t:'ATHI',       n:'Athi River Mining'},
+    {t:'SCAN',       n:'Scangroup'},
+    {t:'NATION',     n:'Nation Media Group'},
+    {t:'HERITAGE',   n:'Heritage Insurance Kenya'},
+    {t:'ICDC',       n:'ICDC Investment Company'},
+    {t:'EVEREADY',   n:'Eveready East Africa'},
+    {t:'KENYA RE',   n:'Kenya Reinsurance Corporation'},
+    {t:'TOTAL',      n:'TotalEnergies Kenya'},
+    {t:'NAIROBI',    n:'Nairobi Business Ventures'},
+    {t:'MARSABIT',   n:'Marsabit Farm'},
+    {t:'KAPCHORUA',  n:'Kapchorua Tea Kenya'},
+    {t:'UNGA',       n:'Unga Group'},
+    {t:'LONGHORN',   n:'Longhorn Publishers'},
+    {t:'EVEREADY',   n:'Eveready East Africa'},
+    {t:'SPORT',      n:'SportPesa Racing Point'},
+  ],
+};
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+const fmt    = (n, d=2) => n == null ? '—' : Number(n).toFixed(d);
+const fmtQty = n => n == null ? '—' : Number(n).toLocaleString(undefined, {maximumFractionDigits: 0});
+const fmtTs  = ts => new Date(ts * 1000).toLocaleTimeString('en-GB', {hour12: false});
+const setEl  = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+
+// ── Toasts ────────────────────────────────────────────────────────────────────
+function toast(msg, type='ok', dur=3500) {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  document.getElementById('toast-root').appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 320); }, dur);
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function showTab(name, btn) {
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.remove('hidden');
+  btn.classList.add('active');
+  if (name === 'history')   loadHistory();
+  if (name === 'positions') loadPositions();
+  if (name === 'algo')      loadAlgoOrders();
+  if (name === 'tca')       loadTCA();
+  if (name === 'admin')     { loadRiskConfig(); loadRiskStats(); loadHaltStatus(); }
+}
+
+// ── Health polling ────────────────────────────────────────────────────────────
+async function pollHealth() {
+  try {
+    const r = await fetch('/health');
+    if (!r.ok) throw new Error();
+    const h = await r.json();
+
+    const now     = Date.now();
+    const elapsed = (now - prevMdTime) / 1000;
+    const rate    = elapsed > 0.5 ? Math.round((h.market_data_updates - prevMdCount) / elapsed) : null;
+    prevMdCount = h.market_data_updates;
+    prevMdTime  = now;
+
+    document.getElementById('hdr-dot').className = 'dot dot-up';
+    setEl('hdr-status', 'healthy');
+    setEl('hdr-uptime', fmt(h.uptime_seconds, 0) + 's');
+    if (rate != null) setEl('hdr-rate', rate.toLocaleString() + '/s');
+
+    setEl('d-uptime', fmt(h.uptime_seconds, 0) + 's');
+    setEl('d-books',  h.cache_books);
+    setEl('d-execs',  h.executions);
+    if (rate != null) setEl('d-rate', rate.toLocaleString());
+    setEl('d-total', 'total: ' + h.market_data_updates.toLocaleString());
+
+    // Venue cards
+    document.getElementById('d-venues').innerHTML = h.venues.map(v => `
+      <div class="venue-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div style="font-size:22px;font-weight:900;color:#60a5fa">${v.venue}</div>
+          <span class="badge ${v.circuit_breaker_state === 'closed' ? 'badge-green' : 'badge-red'}">
+            ${v.circuit_breaker_state.toUpperCase()}
+          </span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px">${VENUE_LABELS[v.venue] || ''}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px">
+          <div><div style="color:var(--muted)">Currency</div><div style="font-weight:700;margin-top:2px">${v.currency}</div></div>
+          <div><div style="color:var(--muted)">Fee</div><div style="font-weight:700;margin-top:2px;color:#fde047">${v.taker_fee_bps} bps</div></div>
+          <div><div style="color:var(--muted)">Latency</div><div style="font-weight:700;margin-top:2px">${v.latency_ms} ms</div></div>
+          <div><div style="color:var(--muted)">Status</div><div style="font-weight:700;margin-top:2px;color:${v.enabled ? '#4ade80' : '#f87171'}">${v.enabled ? 'Active' : 'Disabled'}</div></div>
+        </div>
+      </div>`).join('');
+  } catch {
+    document.getElementById('hdr-dot').className = 'dot dot-down';
+    setEl('hdr-status', 'unreachable');
+  }
+}
+
+// ── Symbol catalog ────────────────────────────────────────────────────────────
+async function loadSymbols() {
+  try {
+    const r = await fetch('/market-data/symbols');
+    allSymbols = await r.json();
+    const allKnown = new Set(Object.values(allSymbols).flat());
+    Object.values(TOP_COMPANIES).flat().forEach(c => allKnown.add(c.t));
+    document.getElementById('symbol-list').innerHTML =
+      [...allKnown].map(s => `<option value="${s}">`).join('');
+    document.getElementById('d-symbols').innerHTML =
+      Object.entries(allSymbols).map(([venue, syms]) => {
+        const active = new Set(syms);
+        const others = (TOP_COMPANIES[venue] || []).filter(c => !active.has(c.t));
+        const selectHtml = others.length ? `
+          <div style="margin-top:10px">
+            <select style="font-size:11px;padding:5px 8px;border-radius:6px;background:var(--surface);border:1px solid var(--border);color:var(--muted);width:100%;cursor:pointer;outline:none"
+                    onchange="selectOtherSymbol('${venue}', this.value); this.selectedIndex=0">
+              <option value="">Find other ${venue} stock…</option>
+              ${others.map(c => `<option value="${c.t}">${c.t} — ${c.n}</option>`).join('')}
+            </select>
+          </div>` : '';
+        return `
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#60a5fa;margin-bottom:8px">${venue}</div>
+            ${syms.map(s => `<div style="font-size:12px;padding:2px 0;color:var(--muted)">${s}</div>`).join('')}
+            ${selectHtml}
+          </div>`;
+      }).join('');
+    renderChips();
+  } catch {}
+}
+
+// ── Symbol chips ──────────────────────────────────────────────────────────────
+function renderChips() {
+  document.getElementById('o-chips').innerHTML =
+    Object.entries(allSymbols).map(([venue, syms]) => `
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+        <span style="font-size:11px;font-weight:700;color:#60a5fa;min-width:34px">${venue}</span>
+        ${syms.map(s => `<button class="chip" id="chip-${s}" onclick="selectSymbol('${s}')">${s}</button>`).join('')}
+      </div>`).join('');
+}
+function selectSymbol(s) {
+  document.getElementById('o-symbol').value = s;
+  highlightChip(s);
+}
+function highlightChip(val) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.id === `chip-${val}`));
+}
+function selectOtherSymbol(venue, ticker) {
+  if (!ticker) return;
+  const submitBtn = Array.from(document.querySelectorAll('.tab-btn'))
+    .find(btn => (btn.getAttribute('onclick') || '').includes("'submit'"));
+  if (submitBtn) showTab('submit', submitBtn);
+  document.getElementById('o-symbol').value = ticker;
+  highlightChip(ticker);
+  toast(`${ticker} selected — set quantity and submit`, 'inf', 3000);
+}
+
+// ── Live order book ───────────────────────────────────────────────────────────
+function onVenueChange() {
+  const venue = document.getElementById('b-venue').value;
+  const sel   = document.getElementById('b-symbol');
+  sel.innerHTML = '<option value="">Select…</option>';
+  if (venue && allSymbols[venue]) {
+    allSymbols[venue].forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
+    sel.disabled = false;
+  } else { sel.disabled = true; }
+  disconnectBook(true);
+}
+
+function disconnectBook(intentional=true) {
+  wsIntentional = intentional;
+  if (wsRetryTimer) { clearTimeout(wsRetryTimer); wsRetryTimer = null; }
+  if (wsConn) { try { wsConn.close(); } catch {} wsConn = null; }
+  setWsDot('down'); setEl('ws-status', 'disconnected');
+  ['b-bids','b-asks'].forEach(id => document.getElementById(id).innerHTML = '');
+  setEl('b-spread', '—'); setEl('b-mid', '—');
+  setEl('b-best-bid', '—'); setEl('b-best-ask', '—');
+  document.getElementById('b-sparkline').innerHTML = '';
+  priceHistory = []; prevBid = null; prevAsk = null;
+  wsRetryDelay = 3000;
+}
+
+function connectBook() {
+  const venue = document.getElementById('b-venue').value;
+  const symbol = document.getElementById('b-symbol').value;
+  if (!venue || !symbol) { toast('Select a venue and symbol first.', 'err'); return; }
+  wsVenue = venue; wsSymbol = symbol; wsIntentional = false;
+  _openWs(venue, symbol);
+}
+
+function _openWs(venue, symbol) {
+  if (wsConn) { try { wsConn.close(); } catch {} wsConn = null; }
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  wsConn = new WebSocket(`${proto}//${location.host}/ws/book/${venue}/${symbol}`);
+  setWsDot('warn'); setEl('ws-status', 'connecting…');
+  wsConn.onopen  = () => { wsRetryDelay = 3000; setWsDot('live'); setEl('ws-status', 'LIVE'); };
+  wsConn.onclose = () => {
+    wsConn = null;
+    if (!wsIntentional) {
+      setWsDot('warn');
+      setEl('ws-status', `reconnect in ${wsRetryDelay/1000}s…`);
+      wsRetryTimer = setTimeout(() => { wsRetryDelay = Math.min(wsRetryDelay * 2, 30000); _openWs(wsVenue, wsSymbol); }, wsRetryDelay);
+    } else { setWsDot('down'); setEl('ws-status', 'disconnected'); }
+  };
+  wsConn.onerror  = () => { setWsDot('down'); setEl('ws-status', 'error'); };
+  wsConn.onmessage = e => { const d = JSON.parse(e.data); if (d.status === 'no_data') return; renderBook(d); };
+}
+
+function setWsDot(state) {
+  const map = { up:'dot-up', down:'dot-down', warn:'dot-warn', live:'dot-live' };
+  document.getElementById('ws-dot').className = 'dot ' + (map[state] || 'dot-down');
+}
+
+function renderBook(d) {
+  const bidArrow = prevBid == null ? '' : d.best_bid > prevBid ? ' <span style="color:#4ade80">▲</span>' : d.best_bid < prevBid ? ' <span style="color:#f87171">▼</span>' : '';
+  const askArrow = prevAsk == null ? '' : d.best_ask > prevAsk ? ' <span style="color:#4ade80">▲</span>' : d.best_ask < prevAsk ? ' <span style="color:#f87171">▼</span>' : '';
+  document.getElementById('b-best-bid').innerHTML = d.best_bid != null ? fmt(d.best_bid, 4) + bidArrow : '—';
+  document.getElementById('b-best-ask').innerHTML = d.best_ask != null ? fmt(d.best_ask, 4) + askArrow : '—';
+  prevBid = d.best_bid; prevAsk = d.best_ask;
+  setEl('b-spread', d.spread != null ? fmt(d.spread, 6) : '—');
+
+  if (d.best_bid != null && d.best_ask != null) {
+    const mid = (d.best_bid + d.best_ask) / 2;
+    setEl('b-mid', fmt(mid, 4));
+    priceHistory.push(mid);
+    if (priceHistory.length > MAX_SPARK) priceHistory.shift();
+    drawSparkline();
+  }
+
+  const bids = d.bids || [], asks = d.asks || [];
+  const maxQty = Math.max(1, ...bids.map(l => l.qty), ...asks.map(l => l.qty));
+
+  const bidRow = l => {
+    const pct = (l.qty / maxQty * 100).toFixed(1);
+    return `<tr style="border-bottom:1px solid var(--border);background:linear-gradient(to left,rgba(34,197,94,0.12) ${pct}%,transparent ${pct}%)">
+      <td style="text-align:right;font-weight:700;color:#4ade80;font-family:monospace">${fmt(l.price,4)}</td>
+      <td style="text-align:right;font-family:monospace">${fmtQty(l.qty)}</td>
+      <td style="text-align:right;font-family:monospace;color:var(--muted)">${fmtQty(l.price*l.qty)}</td>
+    </tr>`;
+  };
+  const askRow = l => {
+    const pct = (l.qty / maxQty * 100).toFixed(1);
+    return `<tr style="border-bottom:1px solid var(--border);background:linear-gradient(to right,rgba(239,68,68,0.12) ${pct}%,transparent ${pct}%)">
+      <td style="text-align:right;font-weight:700;color:#f87171;font-family:monospace">${fmt(l.price,4)}</td>
+      <td style="text-align:right;font-family:monospace">${fmtQty(l.qty)}</td>
+      <td style="text-align:right;font-family:monospace;color:var(--muted)">${fmtQty(l.price*l.qty)}</td>
+    </tr>`;
+  };
+  document.getElementById('b-bids').innerHTML = bids.map(bidRow).join('');
+  document.getElementById('b-asks').innerHTML = asks.map(askRow).join('');
+}
+
+// ── Sparkline ─────────────────────────────────────────────────────────────────
+function drawSparkline() {
+  const prices = priceHistory;
+  if (prices.length < 2) return;
+  const container = document.getElementById('b-sparkline');
+  const W = container.clientWidth || 300, H = 60;
+  const min = Math.min(...prices), max = Math.max(...prices);
+  const range = max - min || min * 0.001 || 1;
+  const pad = 4;
+  const pts = prices.map((p, i) => [
+    (i / (prices.length - 1)) * W,
+    H - pad - ((p - min) / range) * (H - pad * 2),
+  ]);
+  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('');
+  const area = `${line} L${W},${H} L0,${H} Z`;
+  const rising = prices[prices.length - 1] >= prices[0];
+  const col = rising ? '#4ade80' : '#f87171';
+  const last = pts[pts.length - 1];
+  container.innerHTML = `
+    <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;overflow:visible">
+      <defs>
+        <linearGradient id="spkg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="${col}" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="${col}" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="${area}" fill="url(#spkg)"/>
+      <path d="${line}" fill="none" stroke="${col}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="3" fill="${col}"/>
+    </svg>`;
+}
+
+// ── Order submission ──────────────────────────────────────────────────────────
+function setSide(s) {
+  currentSide = s;
+  document.getElementById('side-buy').className  = 'btn flex-1 ' + (s === 'buy'  ? 'btn-buy'  : 'btn-ghost');
+  document.getElementById('side-sell').className = 'btn flex-1 ' + (s === 'sell' ? 'btn-sell' : 'btn-ghost');
+}
+
+function buildPayload() {
+  const symbol = document.getElementById('o-symbol').value.trim().toUpperCase();
+  const qty    = parseFloat(document.getElementById('o-qty').value);
+  const price  = document.getElementById('o-price').value.trim();
+  if (!symbol)        { toast('Symbol is required.', 'err'); return null; }
+  if (!qty || qty<=0) { toast('Quantity must be positive.', 'err'); return null; }
+  const p = { symbol, side: currentSide, quantity: qty };
+  if (price) p.price = parseFloat(price);
+  return p;
+}
+
+function setBusy(busy) {
+  document.getElementById('btn-preview').disabled = busy;
+  document.getElementById('btn-submit').disabled  = busy;
+}
+
+async function previewOrder() {
+  const p = buildPayload(); if (!p) return;
+  setBusy(true);
+  showResult('<div class="card p-5" style="color:var(--muted);text-align:center">Computing route…</div>');
+  try {
+    const r = await fetch('/orders/route', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(p)});
+    const d = await r.json();
+    showResult(r.ok ? renderRouting(d, null) : errBox(d.detail || JSON.stringify(d)));
+  } catch(e) { showResult(errBox(e.message)); }
+  finally { setBusy(false); }
+}
+
+async function submitOrder() {
+  const p = buildPayload(); if (!p) return;
+  setBusy(true);
+  showResult('<div class="card p-5" style="color:var(--muted);text-align:center">Submitting…</div>');
+  try {
+    const r = await fetch('/orders/submit', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(p)});
+    const d = await r.json();
+    if (r.ok) {
+      showResult(renderRouting(d.routing, d));
+      toast(`${d.routing.symbol} → ${d.routing.primary_venue} · ${(d.fill_ratio*100).toFixed(1)}% filled · VWAP ${fmt(d.vwap,4)}`, 'ok');
+      loadHistory();
+    } else {
+      showResult(errBox(d.detail || JSON.stringify(d)));
+      toast(d.detail || 'Order failed', 'err');
+    }
+  } catch(e) { showResult(errBox(e.message)); toast(e.message, 'err'); }
+  finally { setBusy(false); }
+}
+
+function showResult(html) { document.getElementById('o-result').innerHTML = `<div class="fade-in">${html}</div>`; }
+function errBox(msg) { return `<div class="card p-4" style="border-color:#7f1d1d"><div style="color:#f87171;font-size:13px">${msg}</div></div>`; }
+
+function renderRouting(routing, result) {
+  const scores  = routing.venue_scores || [];
+  const FLABELS = {liquidity:'Liquidity', spread:'Spread', fee:'Fee', fx_cost:'FX Cost', latency:'Latency'};
+  const FCOLORS = {liquidity:'#3b82f6', spread:'#8b5cf6', fee:'#f59e0b', fx_cost:'#10b981', latency:'#ec4899'};
+
+  const scoresHtml = scores.map(s => `
+    <div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-weight:700;color:#60a5fa">${s.venue}</span>
+        <span style="font-weight:900;font-size:14px">${fmt(s.score,4)} <span style="color:var(--muted);font-size:11px">score</span></span>
+      </div>
+      ${Object.keys(FLABELS).map(k => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div style="width:60px;font-size:11px;color:var(--muted)">${FLABELS[k]}</div>
+          <div class="bar-bg" style="flex:1"><div class="bar-fill" style="width:${(s[k]*100).toFixed(1)}%;background:${FCOLORS[k]}"></div></div>
+          <div style="width:36px;text-align:right;font-size:11px;color:#94a3b8;font-family:monospace">${fmt(s[k],3)}</div>
+        </div>`).join('')}
+    </div>`).join('') || `<div style="font-size:12px;color:var(--muted)">No scores available</div>`;
+
+  const legsHtml = routing.legs.map((leg, i) => `
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <span style="color:var(--muted)">Leg ${i+1} · <span style="color:#60a5fa;font-weight:700">${leg.venue}</span></span>
+      <span style="font-family:monospace">${fmtQty(leg.quantity)} × ${leg.price != null ? fmt(leg.price,4) : '<span style="color:#fbbf24">MKT</span>'} ${leg.currency}</span>
+    </div>`).join('');
+
+  const execHtml = result ? result.executions.map(e => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <span style="color:#60a5fa;font-weight:700">${e.leg_venue}</span>
+      <span class="badge ${e.status==='filled'?'badge-green':e.status==='partial'?'badge-yellow':'badge-red'}">${e.status.toUpperCase()}</span>
+      <span style="font-family:monospace">${fmtQty(e.filled_qty)} @ ${e.avg_price != null ? fmt(e.avg_price,4) : '—'}</span>
+    </div>`).join('') : '';
+
+  return `
+    <div class="card p-4 mb-3">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:10px">
+        Routing · <span style="color:#60a5fa">${routing.primary_venue}</span>
+        · <span style="font-family:monospace">${fmt(routing.routing_latency_us,1)} µs</span>
+        · ${routing.is_split ? '<span class="badge badge-blue">SPLIT</span>' : '<span style="color:var(--muted)">single leg</span>'}
+      </div>
+      ${legsHtml}
+    </div>
+    <div class="card p-4 mb-3">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:12px">Venue Scores</div>
+      ${scoresHtml}
+    </div>
+    ${result ? `
+    <div class="card p-4">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:10px">Execution Result</div>
+      ${execHtml}
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px">
+        <div class="card" style="padding:12px;text-align:center">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">FILLED</div>
+          <div style="font-weight:900;color:#4ade80;font-family:monospace">${fmtQty(result.total_filled)}</div>
+        </div>
+        <div class="card" style="padding:12px;text-align:center">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">FILL RATIO</div>
+          <div style="font-weight:900;font-family:monospace;color:${result.fill_ratio>0.95?'#4ade80':result.fill_ratio>0.5?'#fbbf24':'#f87171'}">
+            ${(result.fill_ratio*100).toFixed(1)}%
+          </div>
+        </div>
+        <div class="card" style="padding:12px;text-align:center">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px">VWAP</div>
+          <div style="font-weight:900;color:#93c5fd;font-family:monospace">${result.vwap != null ? fmt(result.vwap,4) : '—'}</div>
+        </div>
+      </div>
+    </div>` : ''}`;
+}
+
+// ── Order history ─────────────────────────────────────────────────────────────
+async function loadHistory() {
+  try {
+    const r = await fetch('/orders/?limit=100');
+    const d = await r.json();
+    setEl('h-count', d.total_stored);
+    historyCache = [...d.orders].reverse();
+
+    const badge = document.getElementById('history-badge');
+    if (d.total_stored > 0) { badge.textContent = d.total_stored > 99 ? '99+' : d.total_stored; badge.classList.remove('hidden'); }
+    else badge.classList.add('hidden');
+
+    if (historyCache.length) {
+      const avgFill = historyCache.reduce((a,o) => a+o.fill_ratio, 0) / historyCache.length;
+      const succ    = historyCache.filter(o => o.success).length;
+      const avgLat  = historyCache.reduce((a,o) => a+o.routing.routing_latency_us, 0) / historyCache.length;
+      document.getElementById('h-stats').innerHTML = `
+        <div class="metric"><div class="metric-lbl">Total Orders</div><div class="metric-val mono" style="color:#60a5fa">${historyCache.length}</div></div>
+        <div class="metric"><div class="metric-lbl">Avg Fill Rate</div><div class="metric-val mono" style="color:#4ade80">${(avgFill*100).toFixed(1)}%</div></div>
+        <div class="metric"><div class="metric-lbl">Success Rate</div><div class="metric-val mono" style="color:#fbbf24">${((succ/historyCache.length)*100).toFixed(0)}%</div></div>
+        <div class="metric"><div class="metric-lbl">Avg Latency</div><div class="metric-val mono" style="color:#a78bfa">${avgLat.toFixed(0)}µs</div></div>`;
+    }
+
+    document.getElementById('h-rows').innerHTML = historyCache.map((o, idx) => {
+      const pct     = (o.fill_ratio * 100).toFixed(1);
+      const fillCls = o.fill_ratio > 0.95 ? '#4ade80' : o.fill_ratio > 0.5 ? '#fbbf24' : '#f87171';
+      const side    = o.side || '—';
+      return `
+        <tr style="cursor:pointer" onclick="toggleDetail(${idx})">
+          <td style="color:var(--muted);font-family:monospace">${fmtTs(o.timestamp)}</td>
+          <td style="color:#60a5fa;font-family:monospace">${o.order_id.slice(0,12)}…</td>
+          <td style="font-weight:700;color:#60a5fa">${o.routing.primary_venue}</td>
+          <td style="font-weight:700">${o.routing.symbol}</td>
+          <td><span class="badge ${side==='buy'?'badge-buy':'badge-sell'}">${side.toUpperCase()}</span></td>
+          <td style="text-align:right;font-family:monospace">${fmtQty(o.routing.total_quantity)}</td>
+          <td style="text-align:right;font-family:monospace">${fmtQty(o.total_filled)}</td>
+          <td style="text-align:right;font-weight:700;font-family:monospace;color:${fillCls}">${pct}%</td>
+          <td style="text-align:right;font-family:monospace;color:#fde047">${o.vwap != null ? fmt(o.vwap,4) : '—'}</td>
+          <td style="text-align:right;font-family:monospace;color:var(--muted)">${fmt(o.routing.routing_latency_us,1)}µs</td>
+          <td style="text-align:center"><span class="badge ${o.success?'badge-green':'badge-red'}">${o.success?'OK':'FAIL'}</span></td>
+        </tr>`;
+    }).join('');
+  } catch {}
+}
+
+function toggleDetail(idx) {
+  const el  = document.getElementById('h-detail');
+  const cur = el.dataset.idx;
+  if (cur === String(idx) && !el.classList.contains('hidden')) {
+    el.classList.add('hidden'); el.dataset.idx = '';
+  } else {
+    el.textContent = JSON.stringify(historyCache[idx], null, 2);
+    el.classList.remove('hidden'); el.dataset.idx = String(idx);
+    el.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+}
+
+// ── Positions ─────────────────────────────────────────────────────────────────
+async function loadPositions() {
+  try {
+    const [pRes, sRes] = await Promise.all([fetch('/positions/'), fetch('/positions/stats')]);
+    const positions    = await pRes.json();
+    const stats        = await sRes.json();
+
+    document.getElementById('pos-stats').innerHTML = `
+      <div class="metric"><div class="metric-lbl">Symbols Tracked</div><div class="metric-val mono" style="color:#60a5fa">${stats.symbols_tracked}</div></div>
+      <div class="metric"><div class="metric-lbl">Total Fills</div><div class="metric-val mono" style="color:#4ade80">${stats.total_fills}</div></div>
+      <div class="metric"><div class="metric-lbl">Realized P&amp;L</div>
+        <div class="metric-val mono" style="color:${stats.total_realized_pnl>=0?'#4ade80':'#f87171'}">${fmt(stats.total_realized_pnl,2)}</div>
+      </div>`;
+
+    if (!Array.isArray(positions) || positions.length === 0) {
+      document.getElementById('pos-rows').innerHTML =
+        '<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--muted)">No positions yet.</td></tr>';
+      return;
+    }
+
+    document.getElementById('pos-rows').innerHTML = positions.map(p => {
+      const isLong  = p.net_qty >= 0;
+      const pnlCol  = p.realized_pnl >= 0 ? '#4ade80' : '#f87171';
+      const qtyCol  = isLong ? '#93c5fd' : '#fb923c';
+      return `
+        <tr>
+          <td style="font-weight:900;font-size:13px">${p.symbol}</td>
+          <td><span class="badge ${isLong?'badge-buy':'badge-sell'}">${isLong?'LONG':'SHORT'}</span></td>
+          <td style="text-align:right;font-weight:700;font-family:monospace;color:${qtyCol}">${fmtQty(p.net_qty)}</td>
+          <td style="text-align:right;font-family:monospace">${fmt(p.avg_cost,4)}</td>
+          <td style="text-align:right;font-weight:700;font-family:monospace;color:${pnlCol}">${fmt(p.realized_pnl,2)}</td>
+          <td style="text-align:right;font-family:monospace;color:var(--muted)">${fmtQty(p.total_volume)}</td>
+          <td style="text-align:right;color:#4ade80">${p.total_buys}</td>
+          <td style="text-align:right;color:#f87171">${p.total_sells}</td>
+        </tr>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('pos-rows').innerHTML =
+      `<tr><td colspan="8" style="text-align:center;padding:16px;color:#f87171">${e.message}</td></tr>`;
+  }
+}
+
+// ── Algo orders ───────────────────────────────────────────────────────────────
+let currentAlgoType = 'twap';
+let currentAlgoSide = 'buy';
+
+function setAlgoType(t) {
+  currentAlgoType = t;
+  document.getElementById('algo-twap-btn').className = 'btn flex-1 ' + (t==='twap'?'btn-primary':'btn-ghost');
+  document.getElementById('algo-vwap-btn').className = 'btn flex-1 ' + (t==='vwap'?'btn-primary':'btn-ghost');
+}
+function setAlgoSide(s) {
+  currentAlgoSide = s;
+  document.getElementById('algo-buy-btn').className  = 'btn flex-1 ' + (s==='buy' ?'btn-buy' :'btn-ghost');
+  document.getElementById('algo-sell-btn').className = 'btn flex-1 ' + (s==='sell'?'btn-sell':'btn-ghost');
+}
+
+async function submitAlgo() {
+  const sym    = document.getElementById('algo-symbol').value.trim().toUpperCase();
+  const qty    = parseFloat(document.getElementById('algo-qty').value);
+  const dur    = parseFloat(document.getElementById('algo-duration').value);
+  const slices = parseInt(document.getElementById('algo-slices').value);
+  const priceV = document.getElementById('algo-price').value.trim();
+  if (!sym)               { toast('Symbol required', 'err'); return; }
+  if (!qty || qty <= 0)   { toast('Quantity must be positive', 'err'); return; }
+  if (!dur || dur <= 0)   { toast('Duration must be positive', 'err'); return; }
+  if (!slices||slices < 2){ toast('Slices must be >= 2', 'err'); return; }
+  const payload = { symbol: sym, side: currentAlgoSide, total_qty: qty, duration_seconds: dur, slices, base_currency: 'USD' };
+  if (priceV) payload.price = parseFloat(priceV);
+  document.getElementById('btn-algo-submit').disabled = true;
+  try {
+    const r = await fetch(`/algo/${currentAlgoType}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+    const d = await r.json();
+    if (r.ok) { toast(`${currentAlgoType.toUpperCase()} started: ${d.algo_id}`, 'ok'); loadAlgoOrders(); }
+    else toast(d.detail || 'Algo failed', 'err');
+  } catch(e) { toast(e.message, 'err'); }
+  finally { document.getElementById('btn-algo-submit').disabled = false; }
+}
+
+async function loadAlgoOrders() {
+  try {
+    const r = await fetch('/algo/');
+    const d = await r.json();
+    const orders = d.orders || [];
+    if (orders.length === 0) {
+      document.getElementById('algo-orders').innerHTML = '<div class="card p-5" style="color:var(--muted);text-align:center">No algo orders yet.</div>';
+      return;
+    }
+    const statusColors = { running:'#fbbf24', completed:'#4ade80', cancelled:'#fb923c', failed:'#f87171', pending:'#93c5fd' };
+    const progressColors = { running:'#3b82f6', completed:'#22c55e', cancelled:'#64748b', failed:'#ef4444', pending:'#f59e0b' };
+
+    document.getElementById('algo-orders').innerHTML = orders.slice().reverse().map(o => {
+      const fillPct    = Math.min(100, o.fill_ratio * 100);
+      const statusCol  = statusColors[o.status]   || '#94a3b8';
+      const progressCol= progressColors[o.status] || '#64748b';
+      const isActive   = o.status === 'running' || o.status === 'pending';
+      return `
+        <div class="card p-5">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="badge badge-blue">${o.algo_type.toUpperCase()}</span>
+              <span style="font-size:15px;font-weight:900">${o.symbol}</span>
+              <span class="badge ${o.side==='buy'?'badge-buy':'badge-sell'}">${o.side.toUpperCase()}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-weight:700;font-size:12px;color:${statusCol}">${o.status.toUpperCase()}</span>
+              ${isActive ? `<button class="btn btn-ghost" style="padding:3px 10px;font-size:11px" onclick="cancelAlgo('${o.algo_id}')">Cancel</button>` : ''}
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:12px;font-family:monospace">${o.algo_id}</div>
+          <div style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px">
+              <span>Fill Progress</span>
+              <span style="font-weight:700;color:var(--text);font-family:monospace">${fmtQty(o.filled_qty)} / ${fmtQty(o.total_qty)} &nbsp;(${fillPct.toFixed(1)}%)</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width:${fillPct}%;background:${progressCol}"></div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;font-size:11px">
+            <div><div style="color:var(--muted);margin-bottom:3px">Slices</div><div style="font-weight:700">${o.slices}</div></div>
+            <div><div style="color:var(--muted);margin-bottom:3px">Duration</div><div style="font-weight:700">${o.duration_seconds}s</div></div>
+            <div><div style="color:var(--muted);margin-bottom:3px">Fill%</div><div style="font-weight:700;color:${progressCol}">${fillPct.toFixed(1)}%</div></div>
+            <div><div style="color:var(--muted);margin-bottom:3px">VWAP</div><div style="font-weight:700;color:#93c5fd;font-family:monospace">${o.vwap!=null?fmt(o.vwap,4):'—'}</div></div>
+          </div>
+          ${o.error ? `<div style="margin-top:10px;color:#f87171;font-size:11px">${o.error}</div>` : ''}
+        </div>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('algo-orders').innerHTML = `<div class="card p-4" style="color:#f87171">${e.message}</div>`;
+  }
+}
+
+async function cancelAlgo(id) {
+  try {
+    const r = await fetch(`/algo/${id}/cancel`, {method:'POST'});
+    const d = await r.json();
+    if (r.ok) { toast(`Algo ${id} cancelled`, 'inf'); loadAlgoOrders(); }
+    else toast(d.detail || 'Cancel failed', 'err');
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── TCA ───────────────────────────────────────────────────────────────────────
+async function loadTCA() {
+  const sym = document.getElementById('tca-symbol').value.trim().toUpperCase();
+  const url  = sym ? `/tca?symbol=${sym}&limit=200` : '/tca?limit=200';
+  try {
+    const r    = await fetch(url);
+    const data = await r.json();
+    const rows = data.rows || [];
+
+    if (rows.length === 0) {
+      document.getElementById('tca-rows').innerHTML =
+        '<tr><td colspan="11" style="text-align:center;padding:28px;color:var(--muted)">No TCA data. Submit orders first.</td></tr>';
+      document.getElementById('tca-stats').innerHTML = '';
+      document.getElementById('tca-chart').classList.add('hidden');
+      return;
+    }
+
+    const succRows = rows.filter(r => r.success);
+    const avgFill  = rows.reduce((a,r) => a+r.fill_ratio, 0) / rows.length;
+    const avgLat   = rows.reduce((a,r) => a+(r.routing_latency_us||0), 0) / rows.length;
+    const avgVwap  = succRows.filter(r=>r.vwap).reduce((a,r) => a+(r.vwap||0), 0) / (succRows.filter(r=>r.vwap).length||1);
+
+    document.getElementById('tca-stats').innerHTML = `
+      <div class="metric"><div class="metric-lbl">Orders Analyzed</div><div class="metric-val mono" style="color:#60a5fa">${rows.length}</div></div>
+      <div class="metric"><div class="metric-lbl">Avg Fill Rate</div><div class="metric-val mono" style="color:#4ade80">${(avgFill*100).toFixed(1)}%</div></div>
+      <div class="metric"><div class="metric-lbl">Avg Latency</div><div class="metric-val mono" style="color:#a78bfa">${avgLat.toFixed(0)}µs</div></div>
+      <div class="metric"><div class="metric-lbl">Avg VWAP</div><div class="metric-val mono" style="color:#fbbf24">${fmt(avgVwap,4)}</div></div>`;
+
+    const buckets = Array(10).fill(0);
+    rows.forEach(r => { const idx = Math.min(9, Math.floor(r.fill_ratio * 10)); buckets[idx]++; });
+    const maxB = Math.max(1, ...buckets);
+    document.getElementById('tca-chart-bars').innerHTML = buckets.map((v, i) => {
+      const h = Math.max(2, (v / maxB) * 76);
+      const c = i >= 8 ? '#4ade80' : i >= 5 ? '#facc15' : '#f87171';
+      return `<div title="${i*10}-${i*10+10}% (${v} orders)" style="flex:1;height:${h.toFixed(0)}px;background:${c};border-radius:3px 3px 0 0;opacity:0.85;align-self:flex-end"></div>`;
+    }).join('');
+    document.getElementById('tca-chart').classList.remove('hidden');
+
+    document.getElementById('tca-rows').innerHTML = rows.map(r => {
+      const pct     = (r.fill_ratio * 100).toFixed(1);
+      const fillCol = r.fill_ratio > 0.95 ? '#4ade80' : r.fill_ratio > 0.5 ? '#fbbf24' : '#f87171';
+      return `
+        <tr>
+          <td style="color:var(--muted);font-family:monospace">${fmtTs(r.timestamp)}</td>
+          <td style="color:#60a5fa;font-family:monospace">${r.order_id.slice(0,12)}…</td>
+          <td style="font-weight:700">${r.symbol}</td>
+          <td><span class="badge ${r.side==='buy'?'badge-buy':'badge-sell'}">${(r.side||'—').toUpperCase()}</span></td>
+          <td style="font-weight:700;color:#60a5fa">${r.primary_venue}</td>
+          <td style="text-align:right;font-family:monospace">${fmtQty(r.total_filled)}</td>
+          <td style="text-align:right;font-weight:700;font-family:monospace;color:${fillCol}">${pct}%</td>
+          <td style="text-align:right;font-family:monospace;color:#fde047">${r.vwap!=null?fmt(r.vwap,4):'—'}</td>
+          <td style="text-align:right;font-family:monospace;color:var(--muted)">${(r.routing_latency_us||0).toFixed(0)}µs</td>
+          <td style="text-align:center"><span class="badge ${r.is_split?'badge-blue':'badge-green'}">${r.is_split?'SPLIT':'SINGLE'}</span></td>
+          <td style="text-align:center"><span class="badge ${r.success?'badge-green':'badge-red'}">${r.success?'OK':'FAIL'}</span></td>
+        </tr>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('tca-rows').innerHTML =
+      `<tr><td colspan="11" style="text-align:center;padding:16px;color:#f87171">${e.message}</td></tr>`;
+  }
+}
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+async function loadHaltStatus() {
+  try {
+    const r = await fetch('/admin/status');
+    const d = await r.json();
+    const halted = d.halted;
+    const el = document.getElementById('admin-status-text');
+    el.textContent = halted ? 'HALTED' : 'RUNNING';
+    el.style.color = halted ? '#f87171' : '#4ade80';
+    document.getElementById('halt-badge').classList.toggle('hidden', !halted);
+  } catch {}
+}
+
+async function adminHalt() {
+  try {
+    await fetch('/admin/halt', {method:'POST'});
+    toast('System HALTED — all order routing suspended', 'err', 5000);
+    loadHaltStatus();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function adminResume() {
+  try {
+    await fetch('/admin/resume', {method:'POST'});
+    toast('System RESUMED — order routing active', 'ok');
+    loadHaltStatus();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function loadRiskConfig() {
+  try {
+    const r = await fetch('/admin/risk/config');
+    const d = await r.json();
+    document.getElementById('risk-cfg-display').innerHTML = Object.entries(d).map(([k,v]) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted)">${k.replace(/_/g,' ')}</span>
+        <span style="font-weight:700;font-family:monospace">${typeof v === 'number' ? v.toLocaleString() : String(v)}</span>
+      </div>`).join('');
+  } catch {}
+}
+
+async function loadRiskStats() {
+  try {
+    const r = await fetch('/admin/risk');
+    const d = await r.json();
+    document.getElementById('risk-stats').innerHTML = `
+      <div class="metric"><div class="metric-lbl">Checks Total</div><div class="metric-val mono" style="color:#60a5fa">${d.checks_total}</div></div>
+      <div class="metric"><div class="metric-lbl">Blocks Total</div><div class="metric-val mono" style="color:#f87171">${d.blocks_total}</div></div>
+      <div class="metric"><div class="metric-lbl">Daily Notional</div><div class="metric-val mono" style="color:#fbbf24;font-size:20px">${Number(d.daily_notional).toLocaleString()}</div></div>
+      <div class="metric"><div class="metric-lbl">Daily Limit</div><div class="metric-val mono" style="color:#a78bfa;font-size:20px">${Number(d.daily_notional_limit).toLocaleString()}</div></div>`;
+  } catch {}
+}
+
+async function updateRisk() {
+  const changes  = {};
+  const notional = document.getElementById('risk-notional').value;
+  const daily    = document.getElementById('risk-daily').value;
+  const band     = document.getElementById('risk-band').value;
+  if (notional) changes.max_order_notional = parseFloat(notional);
+  if (daily)    changes.max_daily_notional  = parseFloat(daily);
+  if (band)     changes.price_band_pct      = parseFloat(band);
+  if (!Object.keys(changes).length) { toast('No changes entered', 'inf'); return; }
+  try {
+    const r = await fetch('/admin/risk/config', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(changes) });
+    if (r.ok) { toast('Risk parameters updated', 'ok'); loadRiskConfig(); }
+    else { const d = await r.json(); toast(d.detail || 'Update failed', 'err'); }
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function adminResetDaily() {
+  try {
+    await fetch('/admin/risk/reset-daily', {method:'POST'});
+    toast('Daily notional counter reset', 'inf');
+    loadRiskStats();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── Keyboard shortcuts ────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'Enter') {
+    if (!document.getElementById('tab-submit').classList.contains('hidden')) submitOrder();
+  }
+  if (e.key === 'Escape') disconnectBook(true);
+});
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+(async function init() {
+  await Promise.all([loadSymbols(), pollHealth()]);
+  setInterval(pollHealth, 3000);
+  setInterval(() => {
+    if (!document.getElementById('tab-history').classList.contains('hidden'))   loadHistory();
+    if (!document.getElementById('tab-positions').classList.contains('hidden')) loadPositions();
+    if (!document.getElementById('tab-algo').classList.contains('hidden'))      loadAlgoOrders();
+    if (!document.getElementById('tab-admin').classList.contains('hidden'))     { loadRiskStats(); loadHaltStatus(); }
+  }, 5000);
+})();
+</script>
+</body>
+</html>
