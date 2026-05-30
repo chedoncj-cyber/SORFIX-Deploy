@@ -670,14 +670,16 @@
     <div class="overflow-x-auto">
       <table>
         <thead><tr style="border-bottom:1px solid var(--border)">
+          <th style="text-align:left">Date</th>
           <th style="text-align:left">Time</th>
           <th style="text-align:left">Job ID</th>
           <th style="text-align:left">Company</th>
+          <th style="text-align:left">Job Title</th>
           <th style="text-align:left">Symbol</th>
           <th style="text-align:left">Website</th>
         </tr></thead>
         <tbody id="jobs-rows">
-          <tr><td colspan="5" style="text-align:center;padding:36px;color:var(--muted)">Select a company above to see live jobs.</td></tr>
+          <tr><td colspan="7" style="text-align:center;padding:36px;color:var(--muted)">Select a company above to see live jobs.</td></tr>
         </tbody>
       </table>
     </div>
@@ -2089,8 +2091,14 @@ function renderJobsBoard() {
   tbody.innerHTML = rows.slice(0, 100).map(r => {
     const isAlgo   = r._type === 'algo';
     const ts       = r.timestamp || r.start_ts || 0;
-    const timeStr  = ts ? new Date(ts * 1000).toLocaleTimeString() : '—';
+    const tsDate   = ts ? new Date(ts * 1000) : null;
+    const dateStr  = tsDate ? tsDate.toLocaleDateString(undefined, {day:'2-digit',month:'short',year:'numeric'}) : '—';
+    const timeStr  = tsDate ? tsDate.toLocaleTimeString() : '—';
     const id       = (r.order_id || r.algo_id || r.id || '').slice(0, 10);
+    const side     = (r.side || '').toLowerCase();
+    const qty      = r.quantity || r.total_qty || 0;
+    const typeLbl  = isAlgo ? (r.algo_type || 'algo').toUpperCase() : 'ORDER';
+    const jobTitle = `${side.toUpperCase()} ${fmtQty(qty)} · ${typeLbl}`;
     const careerInfo = (typeof CAREERS !== 'undefined' && CAREERS[_jobsSymbol]) || null;
     const websiteHtml = careerInfo
       ? `<button onclick="openJobsWebPanel('${careerInfo.url}','${careerInfo.name}','${careerInfo.flag || ''}')"
@@ -2101,9 +2109,11 @@ function renderJobsBoard() {
       : `<span style="font-size:11px;color:var(--muted)">—</span>`;
 
     return `<tr>
-      <td style="font-size:11px;color:var(--muted)">${timeStr}</td>
+      <td style="font-size:11px;color:var(--muted);white-space:nowrap">${dateStr}</td>
+      <td style="font-size:11px;color:var(--muted);white-space:nowrap">${timeStr}</td>
       <td class="mono" style="font-size:10px;color:var(--muted)">${id}…</td>
       <td style="font-weight:700;color:#60a5fa">${_jobsCompany.split(' ').slice(0,3).join(' ')}</td>
+      <td style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap">${jobTitle}</td>
       <td style="font-weight:700">${_jobsSymbol}</td>
       <td>${websiteHtml}</td>
     </tr>`;
