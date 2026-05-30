@@ -691,14 +691,47 @@
 <div id="tab-apply" class="tab-pane hidden">
 
   <!-- Single aggregate total -->
-  <div class="card p-8 mb-6" style="text-align:center">
-    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:16px">Live Jobs Board — Total Open Positions</div>
-    <div id="apply-total-count" style="font-size:96px;font-weight:900;line-height:1;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">156</div>
-    <div style="font-size:14px;color:var(--muted);margin-top:14px">across 40 companies on 4 African exchanges</div>
+  <div class="card p-6 mb-4" style="text-align:center">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:12px">Live Jobs Board — Total Open Positions</div>
+    <div id="apply-total-count" style="font-size:80px;font-weight:900;line-height:1;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">156</div>
+    <div style="font-size:13px;color:var(--muted);margin-top:10px">across 40 companies on 4 African exchanges</div>
   </div>
 
-  <!-- All company links grouped by venue, rendered by JS -->
-  <div id="apply-links-container"></div>
+  <!-- Company selector -->
+  <div class="card p-4 mb-4" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);white-space:nowrap">Select Company</label>
+    <select id="apply-company" onchange="onApplyCompanyChange()"
+      style="flex:1;min-width:220px;padding:9px 14px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:500;cursor:pointer;outline:none">
+      <option value="">— Choose a company to view their jobs board —</option>
+    </select>
+    <a id="apply-open-link" href="#" target="_blank" rel="noopener noreferrer"
+      style="display:none;padding:9px 20px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;box-shadow:0 3px 12px rgba(99,102,241,0.4)">
+      Open in New Tab &#8599;
+    </a>
+  </div>
+
+  <!-- Embedded jobs board iframe -->
+  <div id="apply-embed-wrap" style="display:none;position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--border)">
+    <!-- Fallback bar shown above iframe in case site blocks embedding -->
+    <div id="apply-fallback-bar" style="display:none;padding:10px 18px;background:#1e1b4b;border-bottom:1px solid rgba(99,102,241,0.3);font-size:12px;color:#a5b4fc;display:flex;align-items:center;gap:10px">
+      <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      <span>This site may not allow embedding — </span>
+      <a id="apply-fallback-link" href="#" target="_blank" rel="noopener noreferrer" style="color:#60a5fa;font-weight:700;text-decoration:underline">open the jobs board directly</a>
+    </div>
+    <iframe id="apply-iframe"
+      src="about:blank"
+      style="width:100%;height:calc(100vh - 280px);min-height:600px;border:none;background:#fff;display:block"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+      title="Company Jobs Board">
+    </iframe>
+  </div>
+
+  <!-- Placeholder when no company selected -->
+  <div id="apply-placeholder" class="card p-12" style="text-align:center;color:var(--muted)">
+    <svg viewBox="0 0 24 24" style="width:48px;height:48px;fill:none;stroke:var(--muted);stroke-width:1.5;margin:0 auto 16px"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M12 12v4M10 14h4"/></svg>
+    <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px">Select a company above</div>
+    <div style="font-size:12px">Their live jobs board will appear here</div>
+  </div>
 
 </div>
 
@@ -2167,64 +2200,66 @@ function initApplyTab() {
   if (_applyInitDone) return;
   _applyInitDone = true;
 
-  // Compute grand total across all companies
+  // Compute grand total
   let total = 0;
   if (typeof JOBS_DATA !== 'undefined') {
     Object.values(JOBS_DATA).forEach(arr => { total += arr.length; });
   }
   if (total > 0) document.getElementById('apply-total-count').textContent = total;
 
-  const VENUE_META = {
-    GSE: { label: 'GSE — Ghana Stock Exchange',        flag: '🇬🇭' },
-    JSE: { label: 'JSE — Johannesburg Stock Exchange',  flag: '🇿🇦' },
-    NGX: { label: 'NGX — Nigerian Exchange Group',      flag: '🇳🇬' },
-    NSE: { label: 'NSE — Nairobi Securities Exchange',  flag: '🇰🇪' },
-  };
-
-  const byVenue = { GSE: [], JSE: [], NGX: [], NSE: [] };
+  // Populate dropdown grouped by venue
+  const sel = document.getElementById('apply-company');
+  const VENUE_LABELS = { GSE:'🇬🇭 GSE — Ghana', JSE:'🇿🇦 JSE — South Africa', NGX:'🇳🇬 NGX — Nigeria', NSE:'🇰🇪 NSE — Kenya' };
+  const byVenue = { GSE:[], JSE:[], NGX:[], NSE:[] };
   Object.entries(CAREERS).forEach(([ticker, c]) => {
     if (byVenue[c.venue]) byVenue[c.venue].push({ ticker, ...c });
   });
-
-  const container = document.getElementById('apply-links-container');
-
-  Object.entries(byVenue).forEach(([venue, companies]) => {
-    if (!companies.length) return;
-    const vm = VENUE_META[venue];
-    const venueTotal = companies.reduce((sum, c) => {
-      return sum + ((typeof JOBS_DATA !== 'undefined' && JOBS_DATA[c.ticker]) || []).length;
-    }, 0);
-
-    const section = document.createElement('div');
-    section.className = 'card mb-5 overflow-hidden';
-    section.innerHTML = `
-      <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;background:var(--card2)">
-        <span style="font-size:26px;line-height:1">${vm.flag}</span>
-        <div>
-          <div style="font-size:14px;font-weight:700;color:var(--text)">${vm.label}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">${venueTotal} open positions &middot; ${companies.length} companies</div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
-        ${companies.map(c => {
-          const cnt = ((typeof JOBS_DATA !== 'undefined' && JOBS_DATA[c.ticker]) || []).length;
-          return `
-            <div style="padding:14px 18px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);display:flex;align-items:center;gap:12px">
-              <div style="flex:1;min-width:0">
-                <div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
-                <div style="font-size:11px;color:var(--muted);margin-top:2px">${c.ticker} &middot; ${cnt} position${cnt !== 1 ? 's' : ''}</div>
-              </div>
-              <a href="${c.url}" target="_blank" rel="noopener noreferrer"
-                style="flex-shrink:0;padding:7px 16px;border-radius:6px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.35);color:#60a5fa;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;transition:background 0.15s"
-                onmouseover="this.style.background='rgba(59,130,246,0.28)'"
-                onmouseout="this.style.background='rgba(59,130,246,0.12)'">
-                View Jobs &#8599;
-              </a>
-            </div>`;
-        }).join('')}
-      </div>`;
-    container.appendChild(section);
+  Object.keys(VENUE_LABELS).forEach(v => {
+    if (!byVenue[v].length) return;
+    const og = document.createElement('optgroup');
+    og.label = VENUE_LABELS[v];
+    byVenue[v].forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.ticker;
+      const cnt = ((typeof JOBS_DATA !== 'undefined' && JOBS_DATA[c.ticker]) || []).length;
+      opt.textContent = `${c.ticker} — ${c.name}  (${cnt} positions)`;
+      og.appendChild(opt);
+    });
+    sel.appendChild(og);
   });
+}
+
+function onApplyCompanyChange() {
+  const ticker  = document.getElementById('apply-company').value;
+  const wrap    = document.getElementById('apply-embed-wrap');
+  const ph      = document.getElementById('apply-placeholder');
+  const openBtn = document.getElementById('apply-open-link');
+  const fallbar = document.getElementById('apply-fallback-bar');
+  const iframe  = document.getElementById('apply-iframe');
+
+  if (!ticker || !CAREERS[ticker]) {
+    wrap.style.display    = 'none';
+    ph.style.display      = '';
+    openBtn.style.display = 'none';
+    iframe.src = 'about:blank';
+    return;
+  }
+
+  const c = CAREERS[ticker];
+
+  // Show "Open in New Tab" button
+  openBtn.href        = c.url;
+  openBtn.style.display = '';
+
+  // Show fallback bar with direct link (always visible — many sites block iframes)
+  document.getElementById('apply-fallback-link').href = c.url;
+  fallbar.style.display = 'flex';
+
+  // Load iframe
+  iframe.src = c.url;
+
+  ph.style.display   = 'none';
+  wrap.style.display = '';
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
