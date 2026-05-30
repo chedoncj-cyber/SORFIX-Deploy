@@ -2088,17 +2088,17 @@ function renderJobsBoard() {
   const statusColor = { filled:'#4ade80', partial:'#facc15', rejected:'#f87171', failed:'#f87171', running:'#60a5fa', pending:'#f59e0b', completed:'#4ade80', cancelled:'#64748b' };
   const statusBg    = { filled:'rgba(34,197,94,0.12)', partial:'rgba(250,204,21,0.12)', rejected:'rgba(239,68,68,0.12)', failed:'rgba(239,68,68,0.12)', running:'rgba(96,165,250,0.12)', pending:'rgba(245,158,11,0.12)', completed:'rgba(34,197,94,0.12)', cancelled:'rgba(100,116,139,0.12)' };
 
-  tbody.innerHTML = rows.slice(0, 100).map(r => {
+  const _realJobs = (typeof JOBS_DATA !== 'undefined' && JOBS_DATA[_jobsSymbol]) || [];
+  tbody.innerHTML = rows.slice(0, 100).map((r, idx) => {
     const isAlgo   = r._type === 'algo';
     const ts       = r.timestamp || r.start_ts || 0;
     const tsDate   = ts ? new Date(ts * 1000) : null;
     const dateStr  = tsDate ? tsDate.toLocaleDateString(undefined, {day:'2-digit',month:'short',year:'numeric'}) : '—';
     const timeStr  = tsDate ? tsDate.toLocaleTimeString() : '—';
     const id       = (r.order_id || r.algo_id || r.id || '').slice(0, 10);
-    const side     = (r.side || '').toLowerCase();
-    const qty      = r.quantity || r.total_qty || 0;
-    const typeLbl  = isAlgo ? (r.algo_type || 'algo').toUpperCase() : 'ORDER';
-    const jobTitle = `${side.toUpperCase()} ${fmtQty(qty)} · ${typeLbl}`;
+    const jobTitle = _realJobs.length
+      ? _realJobs[idx % _realJobs.length].title
+      : (r.side || '').toUpperCase() + ' · ' + (isAlgo ? (r.algo_type || 'ALGO').toUpperCase() : 'ORDER');
     const careerInfo = (typeof CAREERS !== 'undefined' && CAREERS[_jobsSymbol]) || null;
     const websiteHtml = careerInfo
       ? `<button onclick="openJobsWebPanel('${careerInfo.url}','${careerInfo.name}','${careerInfo.flag || ''}')"
