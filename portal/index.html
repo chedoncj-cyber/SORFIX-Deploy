@@ -682,6 +682,39 @@
       </table>
     </div>
   </div>
+
+  <!-- Embedded careers panel — opens when "View Jobs" is clicked -->
+  <div id="jobs-web-panel" style="display:none;margin-top:16px;border-radius:12px;overflow:hidden;border:1px solid var(--border)">
+    <!-- Panel header -->
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 18px;background:var(--card2);border-bottom:1px solid var(--border)">
+      <span id="jobs-web-flag" style="font-size:22px;line-height:1"></span>
+      <div style="flex:1;min-width:0">
+        <div id="jobs-web-title" style="font-size:14px;font-weight:700;color:var(--text)"></div>
+        <div id="jobs-web-url" style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+      </div>
+      <a id="jobs-web-newtab" href="#" target="_blank" rel="noopener noreferrer"
+        style="padding:7px 16px;border-radius:7px;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0">
+        Open in New Tab &#8599;
+      </a>
+      <button onclick="closeJobsWebPanel()"
+        style="padding:7px 12px;border-radius:7px;background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">
+        ✕ Close
+      </button>
+    </div>
+    <!-- Fallback notice — always shown since most sites block iframes -->
+    <div style="padding:10px 18px;background:#0f172a;border-bottom:1px solid rgba(99,102,241,0.25);font-size:12px;color:#a5b4fc;display:flex;align-items:center;gap:8px">
+      <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      If the site doesn't load below, click <strong style="margin:0 3px">Open in New Tab</strong> to view it directly.
+    </div>
+    <!-- iframe -->
+    <iframe id="jobs-web-iframe"
+      src="about:blank"
+      style="width:100%;height:calc(100vh - 320px);min-height:560px;border:none;background:#fff;display:block"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+      title="Company Jobs Board">
+    </iframe>
+  </div>
+
 </div>
 
 <!-- ── APPLY ──────────────────────────────────────────────────────────────── -->
@@ -2060,11 +2093,11 @@ function renderJobsBoard() {
     const id       = (r.order_id || r.algo_id || r.id || '').slice(0, 10);
     const careerInfo = (typeof CAREERS !== 'undefined' && CAREERS[_jobsSymbol]) || null;
     const websiteHtml = careerInfo
-      ? `<a href="${careerInfo.url}" target="_blank" rel="noopener noreferrer"
-           style="padding:5px 14px;border-radius:6px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.35);color:#60a5fa;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap"
+      ? `<button onclick="openJobsWebPanel('${careerInfo.url}','${careerInfo.name}','${careerInfo.flag || ''}')"
+           style="padding:5px 14px;border-radius:6px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.35);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap"
            onmouseover="this.style.background='rgba(59,130,246,0.28)'" onmouseout="this.style.background='rgba(59,130,246,0.12)'">
            View Jobs &#8599;
-         </a>`
+         </button>`
       : `<span style="font-size:11px;color:var(--muted)">—</span>`;
 
     return `<tr>
@@ -2094,6 +2127,31 @@ function updateJobsStats() {
     <div class="metric"><div class="metric-lbl">Fill Rate</div><div class="metric-val" style="font-size:24px;color:var(--green)">${fillRate}%</div><div class="metric-sub">${filled} filled · ${partial} partial</div></div>
     <div class="metric"><div class="metric-lbl">Active</div><div class="metric-val" style="font-size:24px;color:#60a5fa">${running}</div><div class="metric-sub">running / pending</div></div>
     <div class="metric"><div class="metric-lbl">Total Filled</div><div class="metric-val" style="font-size:24px">${fmtQty(totalFill)}</div><div class="metric-sub">avg lat ${avgLat}ms</div></div>`;
+}
+
+function openJobsWebPanel(url, name, flag) {
+  const panel   = document.getElementById('jobs-web-panel');
+  const iframe  = document.getElementById('jobs-web-iframe');
+  const newTab  = document.getElementById('jobs-web-newtab');
+  const titleEl = document.getElementById('jobs-web-title');
+  const urlEl   = document.getElementById('jobs-web-url');
+  const flagEl  = document.getElementById('jobs-web-flag');
+
+  flagEl.textContent  = flag || '';
+  titleEl.textContent = name + ' — Jobs Board';
+  urlEl.textContent   = url;
+  newTab.href         = url;
+  iframe.src          = url;
+
+  panel.style.display = '';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function closeJobsWebPanel() {
+  const panel  = document.getElementById('jobs-web-panel');
+  const iframe = document.getElementById('jobs-web-iframe');
+  panel.style.display = 'none';
+  iframe.src = 'about:blank';
 }
 
 function updateJobsBadge() {
