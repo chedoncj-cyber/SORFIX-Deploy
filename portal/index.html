@@ -690,60 +690,15 @@
 <!-- ── APPLY ──────────────────────────────────────────────────────────────── -->
 <div id="tab-apply" class="tab-pane hidden">
 
-  <div class="card p-6 mb-5" style="text-align:center">
-    <div style="font-size:28px;font-weight:900;color:#60a5fa;margin-bottom:6px">Career Opportunities</div>
-    <div style="font-size:13px;color:var(--muted)">Select a company to see how many positions are open and go directly to their jobs board.</div>
+  <!-- Single aggregate total -->
+  <div class="card p-8 mb-6" style="text-align:center">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:16px">Live Jobs Board — Total Open Positions</div>
+    <div id="apply-total-count" style="font-size:96px;font-weight:900;line-height:1;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">156</div>
+    <div style="font-size:14px;color:var(--muted);margin-top:14px">across 40 companies on 4 African exchanges</div>
   </div>
 
-  <!-- Company selector -->
-  <div class="card p-5 mb-5">
-    <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);display:block;margin-bottom:8px">Select Company</label>
-    <select id="apply-company" onchange="onApplyCompanyChange()"
-      style="width:100%;padding:10px 14px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:500;cursor:pointer;outline:none">
-      <option value="">— Choose a company —</option>
-    </select>
-  </div>
-
-  <!-- Company result card -->
-  <div id="apply-card" class="hidden">
-
-    <!-- Header: flag + name + count + button -->
-    <div class="card p-6 mb-5">
-      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-        <div id="apply-flag" style="font-size:52px;line-height:1"></div>
-        <div style="flex:1;min-width:160px">
-          <div id="apply-company-name" style="font-size:24px;font-weight:900;color:var(--text)"></div>
-          <div id="apply-meta" style="font-size:13px;color:var(--muted);margin-top:3px"></div>
-        </div>
-        <!-- Big count badge -->
-        <div style="text-align:center;padding:16px 28px;border-radius:12px;background:var(--card2);border:1px solid var(--border)">
-          <div id="apply-count-num" style="font-size:44px;font-weight:900;color:#60a5fa;line-height:1">0</div>
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-top:4px">Open Positions</div>
-        </div>
-        <!-- Go to jobs board -->
-        <button onclick="goToJobsBoard()"
-          style="padding:16px 36px;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:16px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;gap:10px;white-space:nowrap;box-shadow:0 4px 18px rgba(99,102,241,0.45)">
-          <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
-          Go to Jobs Board
-        </button>
-      </div>
-      <!-- Jobs board URL shown as a clickable link -->
-      <div style="margin-top:16px;padding:10px 14px;border-radius:8px;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;gap:10px">
-        <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:var(--muted);stroke-width:2;flex-shrink:0"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-        <a id="apply-board-link" href="#" target="_blank" rel="noopener noreferrer"
-          style="font-size:12px;color:#60a5fa;text-decoration:none;word-break:break-all"></a>
-      </div>
-    </div>
-
-    <!-- Job title cards — compact list with Apply link per role -->
-    <div class="card overflow-hidden mb-5">
-      <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">
-        Listed Positions — click <strong style="color:#60a5fa">Apply</strong> to go to the company jobs board
-      </div>
-      <div id="apply-jobs-list" style="padding:8px 0"></div>
-    </div>
-
-  </div>
+  <!-- All company links grouped by venue, rendered by JS -->
+  <div id="apply-links-container"></div>
 
 </div>
 
@@ -2207,87 +2162,69 @@ const CAREERS = {
 };
 
 let _applyInitDone = false;
-let _applyTicker   = '';
 
 function initApplyTab() {
   if (_applyInitDone) return;
   _applyInitDone = true;
-  const sel = document.getElementById('apply-company');
-  const groups = { GSE:'🇬🇭 GSE — Ghana', JSE:'🇿🇦 JSE — South Africa', NGX:'🇳🇬 NGX — Nigeria', NSE:'🇰🇪 NSE — Kenya' };
-  const byVenue = {};
-  Object.entries(CAREERS).forEach(([t, c]) => {
-    if (!byVenue[c.venue]) byVenue[c.venue] = [];
-    byVenue[c.venue].push({ ticker: t, ...c });
-  });
-  Object.keys(groups).forEach(v => {
-    if (!byVenue[v]) return;
-    const og = document.createElement('optgroup');
-    og.label = groups[v];
-    byVenue[v].forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c.ticker;
-      opt.textContent = `${c.ticker} — ${c.name}`;
-      og.appendChild(opt);
-    });
-    sel.appendChild(og);
-  });
-}
 
-function onApplyCompanyChange() {
-  _applyTicker = document.getElementById('apply-company').value;
-  const card = document.getElementById('apply-card');
-  if (!_applyTicker || !CAREERS[_applyTicker]) { card.classList.add('hidden'); return; }
-  const c     = CAREERS[_applyTicker];
-  const jobs  = (typeof JOBS_DATA !== 'undefined' && JOBS_DATA[_applyTicker]) || [];
-  const currs = { GSE:'GHS', JSE:'ZAR', NGX:'NGN', NSE:'KES' };
-
-  document.getElementById('apply-flag').textContent         = c.flag;
-  document.getElementById('apply-company-name').textContent = c.name;
-  document.getElementById('apply-meta').textContent         = `${c.venue} · ${c.country} · ${currs[c.venue]}`;
-  document.getElementById('apply-count-num').textContent    = jobs.length;
-
-  const linkEl = document.getElementById('apply-board-link');
-  linkEl.href        = c.url;
-  linkEl.textContent = c.url;
-
-  card.classList.remove('hidden');
-  renderJobCards(jobs, c);
-}
-
-function renderJobCards(jobs, c) {
-  const list  = document.getElementById('apply-jobs-list');
-  const today = new Date();
-  if (!jobs.length) {
-    list.innerHTML = `<div style="padding:24px;text-align:center;color:var(--muted)">No listed positions — visit the jobs board for current openings.</div>`;
-    return;
+  // Compute grand total across all companies
+  let total = 0;
+  if (typeof JOBS_DATA !== 'undefined') {
+    Object.values(JOBS_DATA).forEach(arr => { total += arr.length; });
   }
-  list.innerHTML = jobs.map(j => {
-    const deadline = new Date(j.deadline);
-    const daysLeft = Math.ceil((deadline - today) / 86400000);
-    const urgency  = daysLeft <= 7 ? '#f87171' : daysLeft <= 14 ? '#facc15' : '#4ade80';
-    return `
-      <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--border)">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:700;color:var(--text)">${j.title}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">
-            <span>${j.dept}</span>
-            <span style="margin:0 6px;opacity:0.4">·</span>
-            <span>${j.location}</span>
-            <span style="margin:0 6px;opacity:0.4">·</span>
-            <span style="color:${urgency};font-weight:600">Closes ${j.deadline} (${daysLeft}d)</span>
-          </div>
-        </div>
-        <a href="${c.url}" target="_blank" rel="noopener noreferrer"
-          style="padding:6px 16px;border-radius:6px;background:#3b82f6;color:#fff;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0">
-          Apply
-        </a>
-      </div>`;
-  }).join('');
-}
+  if (total > 0) document.getElementById('apply-total-count').textContent = total;
 
-function goToJobsBoard() {
-  if (!_applyTicker || !CAREERS[_applyTicker]) return;
-  window.open(CAREERS[_applyTicker].url, '_blank', 'noopener,noreferrer');
+  const VENUE_META = {
+    GSE: { label: 'GSE — Ghana Stock Exchange',        flag: '🇬🇭' },
+    JSE: { label: 'JSE — Johannesburg Stock Exchange',  flag: '🇿🇦' },
+    NGX: { label: 'NGX — Nigerian Exchange Group',      flag: '🇳🇬' },
+    NSE: { label: 'NSE — Nairobi Securities Exchange',  flag: '🇰🇪' },
+  };
+
+  const byVenue = { GSE: [], JSE: [], NGX: [], NSE: [] };
+  Object.entries(CAREERS).forEach(([ticker, c]) => {
+    if (byVenue[c.venue]) byVenue[c.venue].push({ ticker, ...c });
+  });
+
+  const container = document.getElementById('apply-links-container');
+
+  Object.entries(byVenue).forEach(([venue, companies]) => {
+    if (!companies.length) return;
+    const vm = VENUE_META[venue];
+    const venueTotal = companies.reduce((sum, c) => {
+      return sum + ((typeof JOBS_DATA !== 'undefined' && JOBS_DATA[c.ticker]) || []).length;
+    }, 0);
+
+    const section = document.createElement('div');
+    section.className = 'card mb-5 overflow-hidden';
+    section.innerHTML = `
+      <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;background:var(--card2)">
+        <span style="font-size:26px;line-height:1">${vm.flag}</span>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--text)">${vm.label}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${venueTotal} open positions &middot; ${companies.length} companies</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
+        ${companies.map(c => {
+          const cnt = ((typeof JOBS_DATA !== 'undefined' && JOBS_DATA[c.ticker]) || []).length;
+          return `
+            <div style="padding:14px 18px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);display:flex;align-items:center;gap:12px">
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">${c.ticker} &middot; ${cnt} position${cnt !== 1 ? 's' : ''}</div>
+              </div>
+              <a href="${c.url}" target="_blank" rel="noopener noreferrer"
+                style="flex-shrink:0;padding:7px 16px;border-radius:6px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.35);color:#60a5fa;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;transition:background 0.15s"
+                onmouseover="this.style.background='rgba(59,130,246,0.28)'"
+                onmouseout="this.style.background='rgba(59,130,246,0.12)'">
+                View Jobs &#8599;
+              </a>
+            </div>`;
+        }).join('')}
+      </div>`;
+    container.appendChild(section);
+  });
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
