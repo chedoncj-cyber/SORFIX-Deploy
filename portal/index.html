@@ -673,14 +673,11 @@
           <th style="text-align:left">Time</th>
           <th style="text-align:left">Job ID</th>
           <th style="text-align:left">Company</th>
-          <th style="text-align:left">Job Title</th>
           <th style="text-align:left">Symbol</th>
-          <th style="text-align:left">Venue</th>
-          <th style="text-align:right">Latency</th>
-          <th style="text-align:center">Status</th>
+          <th style="text-align:left">Website</th>
         </tr></thead>
         <tbody id="jobs-rows">
-          <tr><td colspan="8" style="text-align:center;padding:36px;color:var(--muted)">Select a company above to see live jobs.</td></tr>
+          <tr><td colspan="5" style="text-align:center;padding:36px;color:var(--muted)">Select a company above to see live jobs.</td></tr>
         </tbody>
       </table>
     </div>
@@ -2061,28 +2058,21 @@ function renderJobsBoard() {
     const ts       = r.timestamp || r.start_ts || 0;
     const timeStr  = ts ? new Date(ts * 1000).toLocaleTimeString() : '—';
     const id       = (r.order_id || r.algo_id || r.id || '').slice(0, 10);
-    const status   = (r.status || '—').toLowerCase();
-    const sCol     = statusColor[status] || 'var(--muted)';
-    const sBg      = statusBg[status]    || 'rgba(100,116,139,0.08)';
-    const side     = (r.side || '').toLowerCase();
-    const qty      = r.quantity || r.total_qty || 0;
-    const filled   = r.filled_qty || 0;
-    const fillPct  = qty > 0 ? Math.min(100, (filled / qty * 100)) : 0;
-    const price    = r.avg_price || r.price || 0;
-    const latency  = r.latency_ms ? `${r.latency_ms.toFixed(1)}ms` : '—';
-    const typeLbl  = isAlgo ? (r.algo_type || 'algo').toUpperCase() : 'ORDER';
-    const typeCol  = isAlgo ? '#a78bfa' : '#60a5fa';
-    const jobTitle = `${side.toUpperCase()} ${fmtQty(qty)} · ${typeLbl}`;
+    const careerInfo = (typeof CAREERS !== 'undefined' && CAREERS[_jobsSymbol]) || null;
+    const websiteHtml = careerInfo
+      ? `<a href="${careerInfo.url}" target="_blank" rel="noopener noreferrer"
+           style="padding:5px 14px;border-radius:6px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.35);color:#60a5fa;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap"
+           onmouseover="this.style.background='rgba(59,130,246,0.28)'" onmouseout="this.style.background='rgba(59,130,246,0.12)'">
+           View Jobs &#8599;
+         </a>`
+      : `<span style="font-size:11px;color:var(--muted)">—</span>`;
 
     return `<tr>
       <td style="font-size:11px;color:var(--muted)">${timeStr}</td>
       <td class="mono" style="font-size:10px;color:var(--muted)">${id}…</td>
       <td style="font-weight:700;color:#60a5fa">${_jobsCompany.split(' ').slice(0,3).join(' ')}</td>
-      <td style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap">${jobTitle}</td>
       <td style="font-weight:700">${_jobsSymbol}</td>
-      <td><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:var(--card2)">${_jobsVenue}</span></td>
-      <td style="text-align:right;font-size:11px;color:var(--muted)">${latency}</td>
-      <td style="text-align:center"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:${sBg};color:${sCol}">${status.toUpperCase()}</span></td>
+      <td>${websiteHtml}</td>
     </tr>`;
   }).join('');
 }
