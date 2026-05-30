@@ -14,6 +14,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from api.routes.orders      import router as orders_router
 from api.routes.market_data import router as market_data_router
@@ -168,6 +169,11 @@ async def portal():
     from pathlib import Path
     return FileResponse(Path(__file__).parent.parent / "portal" / "index.html")
 
+# Serve portal static assets (jobs_data.js, etc.)
+from pathlib import Path as _Path
+_portal_dir = _Path(__file__).parent.parent / "portal"
+app.mount("/portal", StaticFiles(directory=str(_portal_dir)), name="portal-static")
+
 
 @app.get("/tca", tags=["Analytics"], summary="Transaction Cost Analysis — recent orders")
 async def tca(symbol: str = None, limit: int = Query(default=200, ge=1, le=1000)):
@@ -178,7 +184,35 @@ async def tca(symbol: str = None, limit: int = Query(default=200, ge=1, le=1000)
     except RuntimeError as exc:
         from fastapi import HTTPException
         raise HTTPException(status_code=503, detail=str(exc))
-    return {"rows": state.db.tca(symbol=symbol, limit=limit)}
+    raw = state.db.tca(symbol=symbol, limit=limit)
+    rows = []
+    for r in raw:
+        fill_ratio = r.get("fill_ratio") or 0.0
+        filled     = r.get("total_filled") or 0.0
+        quantity   = round(filled / fill_ratio) if fill_ratio > 0 else filled
+        success    = r.get("success", 0)
+        if success:
+            status = "FILLED"
+        elif filled > 0:
+            status = "PARTIAL"
+        else:
+            status = "REJECTED"
+        rows.append({
+            "order_id":   r.get("order_id"),
+            "symbol":     r.get("symbol"),
+            "side":       r.get("side"),
+            "timestamp":  r.get("timestamp"),
+            "filled_qty": filled,
+            "quantity":   quantity,
+            "fill_ratio": fill_ratio,
+            "avg_price":  r.get("vwap"),
+            "total_cost": r.get("total_cost"),
+            "venue":      r.get("primary_venue"),
+            "is_split":   r.get("is_split"),
+            "latency_ms": (r.get("routing_latency_us") or 0.0) / 1000.0,
+            "status":     status,
+        })
+    return {"rows": rows}
 
 
 @app.websocket("/ws/book/{venue}/{symbol}")

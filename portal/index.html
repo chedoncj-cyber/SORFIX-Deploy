@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/portal/jobs_data.js"></script>
   <style>
     :root {
       --bg:       #07080f;
@@ -233,6 +234,17 @@
     TCA
   </button>
 
+  <button class="nav-item tab-btn" onclick="showTab('jobs',this)">
+    <svg class="nsvg" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    Live Jobs
+    <span id="jobs-badge" class="nav-badge hidden">0</span>
+  </button>
+
+  <button class="nav-item tab-btn" onclick="showTab('apply',this)" style="border:1px solid rgba(96,165,250,0.3);margin-top:2px">
+    <svg class="nsvg" viewBox="0 0 24 24"><path d="M21 13v10h-6v-6h-6v6H3V13L12 3z"/></svg>
+    Apply
+  </button>
+
   <div class="sb-label" style="margin-top:16px">System</div>
 
   <button class="nav-item tab-btn" onclick="showTab('admin',this)">
@@ -242,7 +254,7 @@
   </button>
 
   <div class="sb-footer">
-    <div style="font-size:11px;font-weight:600;color:var(--muted)">v2.0.0 · FIX 4.2</div>
+    <div style="font-size:11px;font-weight:600;color:var(--muted)">v3.0.0 · FIX 4.2</div>
     <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
       <span class="dot dot-up" style="width:6px;height:6px"></span>
       <span style="font-size:11px;color:var(--muted)">GSE · JSE · NGX · NSE</span>
@@ -564,6 +576,175 @@
       </tbody>
     </table>
   </div>
+</div>
+
+<!-- ── LIVE JOBS ──────────────────────────────────────────────────────────── -->
+<div id="tab-jobs" class="tab-pane hidden">
+
+  <!-- Company Selector Bar -->
+  <div class="card p-4 mb-5" style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end">
+    <div style="flex:1;min-width:220px">
+      <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);display:block;margin-bottom:6px">Select Company</label>
+      <select id="jobs-company" onchange="onJobsCompanyChange()"
+        style="width:100%;padding:8px 12px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;outline:none">
+        <option value="">— Choose a company —</option>
+      </select>
+    </div>
+    <div id="jobs-company-info" style="display:flex;gap:16px;align-items:center;padding:8px 14px;border-radius:8px;background:var(--card2);border:1px solid var(--border);min-width:200px;flex:1">
+      <div style="font-size:11px;color:var(--muted)">Select a company to view live jobs</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="jobs-live-dot" class="dot dot-warn" title="Idle"></span>
+      <span id="jobs-live-lbl" style="font-size:11px;color:var(--muted)">Idle</span>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div id="jobs-stats" class="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5"></div>
+
+  <!-- Send Job Panel -->
+  <div id="jobs-send-panel" class="card p-5 mb-5 hidden">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:16px">
+      Send Live Job to <span id="jobs-send-company-name" style="color:#60a5fa"></span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+      <div>
+        <label>Side</label>
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <button id="jobs-side-buy"  onclick="setJobSide('buy')"
+            style="padding:7px 18px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid var(--green);color:var(--green);background:rgba(34,197,94,0.12);transition:all 0.15s">BUY</button>
+          <button id="jobs-side-sell" onclick="setJobSide('sell')"
+            style="padding:7px 18px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid var(--border);color:var(--muted);background:transparent;transition:all 0.15s">SELL</button>
+        </div>
+      </div>
+      <div>
+        <label>Quantity</label>
+        <input id="jobs-qty" type="number" min="1" value="500" style="width:120px">
+      </div>
+      <div>
+        <label>Price (optional)</label>
+        <input id="jobs-price" type="number" step="0.01" placeholder="Market" style="width:130px">
+      </div>
+      <div>
+        <label>Type</label>
+        <select id="jobs-type" style="padding:8px 10px;border-radius:6px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:12px">
+          <option value="direct">Direct Order</option>
+          <option value="twap">TWAP Algo</option>
+          <option value="vwap">VWAP Algo</option>
+        </select>
+      </div>
+      <div id="jobs-algo-opts" class="hidden">
+        <label>Duration (s)</label>
+        <input id="jobs-duration" type="number" min="5" value="30" style="width:90px">
+      </div>
+      <div id="jobs-algo-slices" class="hidden">
+        <label>Slices</label>
+        <input id="jobs-slices" type="number" min="2" max="20" value="5" style="width:80px">
+      </div>
+      <button class="btn btn-primary" onclick="sendLiveJob()" style="padding:9px 22px;font-size:13px;font-weight:700">
+        ⚡ Send Job
+      </button>
+    </div>
+    <div id="jobs-send-result" style="margin-top:14px;font-size:12px;min-height:18px"></div>
+  </div>
+
+  <!-- Live Jobs Board -->
+  <div class="card overflow-hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border)">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">
+        Live Jobs Board
+        <span id="jobs-count-lbl" style="margin-left:8px;color:var(--accent);font-size:11px"></span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <select id="jobs-filter-status" onchange="renderJobsBoard()" style="font-size:11px;padding:4px 8px;border-radius:5px;background:var(--card2);border:1px solid var(--border);color:var(--muted)">
+          <option value="">All statuses</option>
+          <option value="filled">Filled</option>
+          <option value="partial">Partial</option>
+          <option value="rejected">Rejected</option>
+          <option value="failed">Failed</option>
+          <option value="running">Running (Algo)</option>
+        </select>
+        <button class="btn btn-ghost" onclick="refreshJobs()" style="font-size:11px;padding:4px 12px">↻ Refresh</button>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table>
+        <thead><tr style="border-bottom:1px solid var(--border)">
+          <th style="text-align:left">Time</th>
+          <th style="text-align:left">Job ID</th>
+          <th style="text-align:left">Company</th>
+          <th style="text-align:left">Job Title</th>
+          <th style="text-align:left">Symbol</th>
+          <th style="text-align:left">Venue</th>
+          <th style="text-align:right">Latency</th>
+          <th style="text-align:center">Status</th>
+        </tr></thead>
+        <tbody id="jobs-rows">
+          <tr><td colspan="8" style="text-align:center;padding:36px;color:var(--muted)">Select a company above to see live jobs.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── APPLY ──────────────────────────────────────────────────────────────── -->
+<div id="tab-apply" class="tab-pane hidden">
+
+  <div class="card p-6 mb-5" style="text-align:center">
+    <div style="font-size:28px;font-weight:900;color:#60a5fa;margin-bottom:6px">Career Opportunities</div>
+    <div style="font-size:13px;color:var(--muted)">Select a company to see how many positions are open and go directly to their jobs board.</div>
+  </div>
+
+  <!-- Company selector -->
+  <div class="card p-5 mb-5">
+    <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);display:block;margin-bottom:8px">Select Company</label>
+    <select id="apply-company" onchange="onApplyCompanyChange()"
+      style="width:100%;padding:10px 14px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:500;cursor:pointer;outline:none">
+      <option value="">— Choose a company —</option>
+    </select>
+  </div>
+
+  <!-- Company result card -->
+  <div id="apply-card" class="hidden">
+
+    <!-- Header: flag + name + count + button -->
+    <div class="card p-6 mb-5">
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+        <div id="apply-flag" style="font-size:52px;line-height:1"></div>
+        <div style="flex:1;min-width:160px">
+          <div id="apply-company-name" style="font-size:24px;font-weight:900;color:var(--text)"></div>
+          <div id="apply-meta" style="font-size:13px;color:var(--muted);margin-top:3px"></div>
+        </div>
+        <!-- Big count badge -->
+        <div style="text-align:center;padding:16px 28px;border-radius:12px;background:var(--card2);border:1px solid var(--border)">
+          <div id="apply-count-num" style="font-size:44px;font-weight:900;color:#60a5fa;line-height:1">0</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-top:4px">Open Positions</div>
+        </div>
+        <!-- Go to jobs board -->
+        <button onclick="goToJobsBoard()"
+          style="padding:16px 36px;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:16px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;gap:10px;white-space:nowrap;box-shadow:0 4px 18px rgba(99,102,241,0.45)">
+          <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+          Go to Jobs Board
+        </button>
+      </div>
+      <!-- Jobs board URL shown as a clickable link -->
+      <div style="margin-top:16px;padding:10px 14px;border-radius:8px;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;gap:10px">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:var(--muted);stroke-width:2;flex-shrink:0"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <a id="apply-board-link" href="#" target="_blank" rel="noopener noreferrer"
+          style="font-size:12px;color:#60a5fa;text-decoration:none;word-break:break-all"></a>
+      </div>
+    </div>
+
+    <!-- Job title cards — compact list with Apply link per role -->
+    <div class="card overflow-hidden mb-5">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">
+        Listed Positions — click <strong style="color:#60a5fa">Apply</strong> to go to the company jobs board
+      </div>
+      <div id="apply-jobs-list" style="padding:8px 0"></div>
+    </div>
+
+  </div>
+
 </div>
 
 <!-- ── ADMIN ──────────────────────────────────────────────────────────────── -->
@@ -957,6 +1138,8 @@ function showTab(name, btn) {
   if (name === 'positions') loadPositions();
   if (name === 'algo')      loadAlgoOrders();
   if (name === 'tca')       loadTCA();
+  if (name === 'jobs')      initJobsTab();
+  if (name === 'apply')     initApplyTab();
   if (name === 'admin')     { loadRiskConfig(); loadRiskStats(); loadHaltStatus(); }
 }
 
@@ -1662,6 +1845,450 @@ document.addEventListener('keydown', e => {
   }
   if (e.key === 'Escape') disconnectBook(true);
 });
+
+// ── Live Jobs ─────────────────────────────────────────────────────────────────
+let _jobsSide       = 'buy';
+let _jobsSymbol     = '';
+let _jobsVenue      = '';
+let _jobsCompany    = '';
+let _jobsInterval   = null;
+let _jobsData       = [];   // all jobs for current symbol (from TCA + algo)
+let _jobsInitDone   = false;
+
+// Build the grouped company dropdown from TOP_COMPANIES + active symbols
+function buildJobsDropdown() {
+  const sel = document.getElementById('jobs-company');
+  sel.innerHTML = '<option value="">— Choose a company —</option>';
+
+  const venueOrder = ['GSE','JSE','NGX','NSE'];
+  venueOrder.forEach(venue => {
+    const all = [];
+    // Active symbols first (from allSymbols)
+    const active = new Set(allSymbols[venue] || []);
+    active.forEach(t => {
+      const info = (TOP_COMPANIES[venue] || []).find(c => c.t === t);
+      all.push({ t, n: info ? info.n : t, active: true });
+    });
+    // Then all other known companies
+    (TOP_COMPANIES[venue] || []).forEach(c => {
+      if (!active.has(c.t)) all.push({ t: c.t, n: c.n, active: false });
+    });
+
+    const grp = document.createElement('optgroup');
+    grp.label = `${venue} — ${{'GSE':'Ghana','JSE':'South Africa','NGX':'Nigeria','NSE':'Kenya'}[venue]}`;
+    all.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = `${venue}::${c.t}::${c.n}`;
+      opt.textContent = `${c.t}  —  ${c.n}${c.active ? '  ✓' : ''}`;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  });
+}
+
+function initJobsTab() {
+  if (!_jobsInitDone) {
+    buildJobsDropdown();
+    _jobsInitDone = true;
+  }
+  startJobsPolling();
+}
+
+function onJobsCompanyChange() {
+  const val = document.getElementById('jobs-company').value;
+  if (!val) {
+    _jobsSymbol = ''; _jobsVenue = ''; _jobsCompany = '';
+    document.getElementById('jobs-send-panel').classList.add('hidden');
+    document.getElementById('jobs-company-info').innerHTML = '<div style="font-size:11px;color:var(--muted)">Select a company to view live jobs</div>';
+    document.getElementById('jobs-stats').innerHTML = '';
+    document.getElementById('jobs-rows').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:36px;color:var(--muted)">Select a company above to see live jobs.</td></tr>';
+    return;
+  }
+  const [venue, ticker, ...nameParts] = val.split('::');
+  _jobsVenue   = venue;
+  _jobsSymbol  = ticker;
+  _jobsCompany = nameParts.join('::');
+
+  // Info strip
+  const currs = { GSE:'GHS', JSE:'ZAR', NGX:'NGN', NSE:'KES' };
+  const flags  = { GSE:'🇬🇭', JSE:'🇿🇦', NGX:'🇳🇬', NSE:'🇰🇪' };
+  const book   = null; // will update on first poll
+  document.getElementById('jobs-company-info').innerHTML = `
+    <div style="font-size:22px">${flags[venue]}</div>
+    <div>
+      <div style="font-size:14px;font-weight:900;color:#60a5fa">${ticker}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:1px">${_jobsCompany}</div>
+    </div>
+    <div style="margin-left:8px;padding:4px 10px;border-radius:5px;background:var(--card);border:1px solid var(--border);font-size:11px;font-weight:700;color:var(--muted)">${venue} · ${currs[venue]}</div>
+    <div id="jobs-book-price" style="margin-left:4px;font-size:12px;font-weight:700;color:var(--muted)">Loading…</div>`;
+
+  document.getElementById('jobs-send-company-name').textContent = `${ticker} — ${_jobsCompany}`;
+  document.getElementById('jobs-send-panel').classList.remove('hidden');
+  setJobSide('buy');
+  refreshJobs();
+}
+
+function setJobSide(side) {
+  _jobsSide = side;
+  const buyBtn  = document.getElementById('jobs-side-buy');
+  const sellBtn = document.getElementById('jobs-side-sell');
+  if (side === 'buy') {
+    buyBtn.style.borderColor  = 'var(--green)';
+    buyBtn.style.color        = 'var(--green)';
+    buyBtn.style.background   = 'rgba(34,197,94,0.14)';
+    sellBtn.style.borderColor = 'var(--border)';
+    sellBtn.style.color       = 'var(--muted)';
+    sellBtn.style.background  = 'transparent';
+  } else {
+    sellBtn.style.borderColor = 'var(--red)';
+    sellBtn.style.color       = '#f87171';
+    sellBtn.style.background  = 'rgba(239,68,68,0.14)';
+    buyBtn.style.borderColor  = 'var(--border)';
+    buyBtn.style.color        = 'var(--muted)';
+    buyBtn.style.background   = 'transparent';
+  }
+}
+
+// Show/hide algo fields based on job type
+document.addEventListener('change', e => {
+  if (e.target.id === 'jobs-type') {
+    const isAlgo = ['twap','vwap'].includes(e.target.value);
+    document.getElementById('jobs-algo-opts').classList.toggle('hidden', !isAlgo);
+    document.getElementById('jobs-algo-slices').classList.toggle('hidden', !isAlgo);
+  }
+});
+
+async function sendLiveJob() {
+  if (!_jobsSymbol) { toast('Select a company first', 'warn'); return; }
+  const qty      = parseFloat(document.getElementById('jobs-qty').value)   || 0;
+  const priceRaw = document.getElementById('jobs-price').value.trim();
+  const price    = priceRaw ? parseFloat(priceRaw) : null;
+  const jobType  = document.getElementById('jobs-type').value;
+
+  if (qty <= 0) { toast('Enter a valid quantity', 'warn'); return; }
+
+  const resultEl = document.getElementById('jobs-send-result');
+  resultEl.style.color = 'var(--muted)';
+  resultEl.textContent = 'Sending…';
+
+  try {
+    let url, body;
+    if (jobType === 'direct') {
+      url  = '/orders/submit';
+      body = { symbol: _jobsSymbol, side: _jobsSide, quantity: qty, price };
+    } else {
+      const dur    = parseInt(document.getElementById('jobs-duration').value) || 30;
+      const slices = parseInt(document.getElementById('jobs-slices').value)   || 5;
+      url  = `/algo/${jobType}`;
+      body = { symbol: _jobsSymbol, side: _jobsSide, total_qty: qty, price, duration_seconds: dur, slices };
+    }
+
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await r.json();
+
+    if (r.ok) {
+      const id = data.order_id || data.algo_id || '—';
+      resultEl.style.color = '#4ade80';
+      resultEl.textContent = `✓ Job sent — ID: ${id.slice(0,16)}…`;
+      toast(`Job sent to ${_jobsSymbol}`, 'ok');
+      setTimeout(refreshJobs, 800);
+    } else {
+      const msg = data.detail || JSON.stringify(data);
+      resultEl.style.color = '#f87171';
+      resultEl.textContent = `✗ ${msg}`;
+      toast(msg.slice(0, 60), 'warn');
+    }
+  } catch (err) {
+    resultEl.style.color = '#f87171';
+    resultEl.textContent = `✗ Network error: ${err.message}`;
+  }
+}
+
+async function refreshJobs() {
+  if (!_jobsSymbol) return;
+
+  // Update live book price
+  try {
+    const br = await fetch(`/market-data/book/${_jobsVenue}/${_jobsSymbol}`);
+    if (br.ok) {
+      const bk = await br.json();
+      const priceEl = document.getElementById('jobs-book-price');
+      if (priceEl) {
+        const bid = bk.best_bid ? bk.best_bid.toFixed ? bk.best_bid.toFixed(4) : bk.best_bid : '—';
+        const ask = bk.best_ask ? bk.best_ask.toFixed ? bk.best_ask.toFixed(4) : bk.best_ask : '—';
+        priceEl.innerHTML = `<span style="color:var(--green)">Bid ${bid}</span> <span style="color:var(--muted)">|</span> <span style="color:var(--red)">Ask ${ask}</span>`;
+      }
+    }
+  } catch {}
+
+  // Fetch TCA rows for this symbol
+  try {
+    const tr = await fetch(`/tca?symbol=${_jobsSymbol}&limit=200`);
+    if (!tr.ok) throw new Error();
+    const tcaRows = await tr.json();
+    _jobsData = (tcaRows.rows || []).map(r => ({ ...r, _type: 'order' }));
+  } catch {
+    _jobsData = [];
+  }
+
+  // Also fetch algo orders and merge
+  try {
+    const ar = await fetch('/algo/');
+    if (ar.ok) {
+      const algos = await ar.json();
+      const matching = (algos.orders || algos || []).filter(a => a.symbol === _jobsSymbol);
+      matching.forEach(a => _jobsData.unshift({ ...a, _type: 'algo' }));
+    }
+  } catch {}
+
+  renderJobsBoard();
+  updateJobsStats();
+  updateJobsBadge();
+}
+
+function renderJobsBoard() {
+  const statusFilter = document.getElementById('jobs-filter-status').value;
+  const tbody = document.getElementById('jobs-rows');
+
+  let rows = _jobsData;
+  if (statusFilter) rows = rows.filter(r => (r.status || '').toLowerCase() === statusFilter);
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:36px;color:var(--muted)">No jobs found for <strong style="color:#60a5fa">${_jobsSymbol}</strong>. Send a job above.</td></tr>`;
+    document.getElementById('jobs-count-lbl').textContent = '';
+    return;
+  }
+
+  document.getElementById('jobs-count-lbl').textContent = `${rows.length} job${rows.length !== 1 ? 's' : ''}`;
+
+  const statusColor = { filled:'#4ade80', partial:'#facc15', rejected:'#f87171', failed:'#f87171', running:'#60a5fa', pending:'#f59e0b', completed:'#4ade80', cancelled:'#64748b' };
+  const statusBg    = { filled:'rgba(34,197,94,0.12)', partial:'rgba(250,204,21,0.12)', rejected:'rgba(239,68,68,0.12)', failed:'rgba(239,68,68,0.12)', running:'rgba(96,165,250,0.12)', pending:'rgba(245,158,11,0.12)', completed:'rgba(34,197,94,0.12)', cancelled:'rgba(100,116,139,0.12)' };
+
+  tbody.innerHTML = rows.slice(0, 100).map(r => {
+    const isAlgo   = r._type === 'algo';
+    const ts       = r.timestamp || r.start_ts || 0;
+    const timeStr  = ts ? new Date(ts * 1000).toLocaleTimeString() : '—';
+    const id       = (r.order_id || r.algo_id || r.id || '').slice(0, 10);
+    const status   = (r.status || '—').toLowerCase();
+    const sCol     = statusColor[status] || 'var(--muted)';
+    const sBg      = statusBg[status]    || 'rgba(100,116,139,0.08)';
+    const side     = (r.side || '').toLowerCase();
+    const qty      = r.quantity || r.total_qty || 0;
+    const filled   = r.filled_qty || 0;
+    const fillPct  = qty > 0 ? Math.min(100, (filled / qty * 100)) : 0;
+    const price    = r.avg_price || r.price || 0;
+    const latency  = r.latency_ms ? `${r.latency_ms.toFixed(1)}ms` : '—';
+    const typeLbl  = isAlgo ? (r.algo_type || 'algo').toUpperCase() : 'ORDER';
+    const typeCol  = isAlgo ? '#a78bfa' : '#60a5fa';
+    const jobTitle = `${side.toUpperCase()} ${fmtQty(qty)} · ${typeLbl}`;
+
+    return `<tr>
+      <td style="font-size:11px;color:var(--muted)">${timeStr}</td>
+      <td class="mono" style="font-size:10px;color:var(--muted)">${id}…</td>
+      <td style="font-weight:700;color:#60a5fa">${_jobsCompany.split(' ').slice(0,3).join(' ')}</td>
+      <td style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap">${jobTitle}</td>
+      <td style="font-weight:700">${_jobsSymbol}</td>
+      <td><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:var(--card2)">${_jobsVenue}</span></td>
+      <td style="text-align:right;font-size:11px;color:var(--muted)">${latency}</td>
+      <td style="text-align:center"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:${sBg};color:${sCol}">${status.toUpperCase()}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function updateJobsStats() {
+  const total     = _jobsData.length;
+  const filled    = _jobsData.filter(r => (r.status || '').toLowerCase() === 'filled').length;
+  const partial   = _jobsData.filter(r => (r.status || '').toLowerCase() === 'partial').length;
+  const running   = _jobsData.filter(r => ['running','pending'].includes((r.status||'').toLowerCase())).length;
+  const fillRate  = total > 0 ? ((filled + partial) / total * 100).toFixed(1) : '0.0';
+  const totalFill = _jobsData.reduce((s, r) => s + (r.filled_qty || 0), 0);
+  const avgLat    = (() => {
+    const lats = _jobsData.filter(r => r.latency_ms > 0).map(r => r.latency_ms);
+    return lats.length ? (lats.reduce((a,b) => a+b,0) / lats.length).toFixed(1) : '—';
+  })();
+
+  document.getElementById('jobs-stats').innerHTML = `
+    <div class="metric"><div class="metric-lbl">Total Jobs</div><div class="metric-val" style="font-size:24px">${total}</div><div class="metric-sub">${_jobsSymbol || '—'}</div></div>
+    <div class="metric"><div class="metric-lbl">Fill Rate</div><div class="metric-val" style="font-size:24px;color:var(--green)">${fillRate}%</div><div class="metric-sub">${filled} filled · ${partial} partial</div></div>
+    <div class="metric"><div class="metric-lbl">Active</div><div class="metric-val" style="font-size:24px;color:#60a5fa">${running}</div><div class="metric-sub">running / pending</div></div>
+    <div class="metric"><div class="metric-lbl">Total Filled</div><div class="metric-val" style="font-size:24px">${fmtQty(totalFill)}</div><div class="metric-sub">avg lat ${avgLat}ms</div></div>`;
+}
+
+function updateJobsBadge() {
+  const active = _jobsData.filter(r => ['running','pending'].includes((r.status||'').toLowerCase())).length;
+  const badge  = document.getElementById('jobs-badge');
+  if (active > 0) {
+    badge.textContent = active;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+function startJobsPolling() {
+  stopJobsPolling();
+  if (!_jobsSymbol) return;
+  const dot = document.getElementById('jobs-live-dot');
+  const lbl = document.getElementById('jobs-live-lbl');
+  dot.className = 'dot dot-live';
+  lbl.textContent = 'Live';
+  _jobsInterval = setInterval(async () => {
+    await refreshJobs();
+  }, 3000);
+}
+
+function stopJobsPolling() {
+  if (_jobsInterval) { clearInterval(_jobsInterval); _jobsInterval = null; }
+  const dot = document.getElementById('jobs-live-dot');
+  const lbl = document.getElementById('jobs-live-lbl');
+  if (dot) { dot.className = 'dot dot-warn'; }
+  if (lbl) { lbl.textContent = 'Idle'; }
+}
+
+// Stop polling when navigating away from jobs tab
+document.addEventListener('click', e => {
+  if (e.target.closest('.tab-btn') && !e.target.closest('[onclick*="jobs"]')) {
+    stopJobsPolling();
+  }
+});
+
+// ── Apply / Careers ───────────────────────────────────────────────────────────
+
+// Verified careers URLs (web-checked May 2026)
+const CAREERS = {
+  // GSE — Ghana Stock Exchange
+  GCB:       { name:'GCB Bank',               venue:'GSE', country:'Ghana',        flag:'🇬🇭', url:'https://www.gcb.com.gh/careers',                                   label:'GCB Bank Careers' },
+  MTNGH:     { name:'MTN Ghana',              venue:'GSE', country:'Ghana',        flag:'🇬🇭', url:'https://mtn.com.gh/careers/',                                      label:'MTN Ghana Careers' },
+  GGBL:      { name:'Guinness Ghana',         venue:'GSE', country:'Ghana',        flag:'🇬🇭', url:'https://www.diageo.com/en/careers/',                               label:'Diageo (Guinness) Careers' },
+  EGL:       { name:'Enterprise Group',       venue:'GSE', country:'Ghana',        flag:'🇬🇭', url:'https://www.enterprisegroup.com.gh/careers',                       label:'Enterprise Group Careers' },
+  CAL:       { name:'CAL Bank Ghana',         venue:'GSE', country:'Ghana',        flag:'🇬🇭', url:'https://calbank.net/careers',                                      label:'CAL Bank Careers' },
+  FML:       { name:'Fan Milk Ghana',         venue:'GSE', country:'Ghana',        flag:'🇬🇭', url:'https://www.danone.com/careers.html',                              label:'Danone (Fan Milk) Careers' },
+  SOGEGH:    { name:'Societe Generale Ghana', venue:'GSE', country:'Ghana',        flag:'🇬🇭', url:'https://societegenerale.com.gh/careers',                          label:'SocGen Ghana Careers' },
+  GOIL:      { name:'GOIL Company',           venue:'GSE', country:'Ghana',        flag:'🇬🇭', url:'https://www.goilcompany.com/careers',                             label:'GOIL Careers' },
+  SCB:       { name:'Standard Chartered Ghana',venue:'GSE',country:'Ghana',        flag:'🇬🇭', url:'https://www.sc.com/gh/careers/',                                  label:'Standard Chartered Ghana Careers' },
+  TOTAL:     { name:'TotalEnergies Ghana',    venue:'GSE', country:'Ghana',        flag:'🇬🇭', url:'https://careers.totalenergies.com/',                              label:'TotalEnergies Careers' },
+  // JSE — Johannesburg Stock Exchange
+  NPN:       { name:'Naspers',               venue:'JSE', country:'South Africa', flag:'🇿🇦', url:'https://www.naspers.com/careers',                                 label:'Naspers Careers' },
+  BHP:       { name:'BHP Group',             venue:'JSE', country:'South Africa', flag:'🇿🇦', url:'https://careers.bhp.com/',                                        label:'BHP Careers Portal' },
+  AGL:       { name:'Anglo American',        venue:'JSE', country:'South Africa', flag:'🇿🇦', url:'https://www.angloamerican.com/careers',                           label:'Anglo American Careers' },
+  SOL:       { name:'Sasol',                 venue:'JSE', country:'South Africa', flag:'🇿🇦', url:'https://jobs.sasol.com/',                                         label:'Sasol Jobs Portal' },
+  MTN:       { name:'MTN Group',             venue:'JSE', country:'South Africa', flag:'🇿🇦', url:'https://group.mtn.com/careers/',                                  label:'MTN Group Careers' },
+  SBK:       { name:'Standard Bank',         venue:'JSE', country:'South Africa', flag:'🇿🇦', url:'https://www.standardbank.com/sbg/standard-bank-group/careers',    label:'Standard Bank Careers' },
+  FSR:       { name:'Firstrand',             venue:'JSE', country:'South Africa', flag:'🇿🇦', url:'https://www.firstrand.co.za/careers/',                            label:'Firstrand Careers' },
+  SHP:       { name:'Shoprite',              venue:'JSE', country:'South Africa', flag:'🇿🇦', url:'https://www.shopriteholdings.co.za/careers.html',                 label:'Shoprite Holdings Careers' },
+  VOD:       { name:'Vodacom',               venue:'JSE', country:'South Africa', flag:'🇿🇦', url:'https://vacancies.vodacom.co.za/',                                label:'Vodacom Vacancies' },
+  NED:       { name:'Nedbank',               venue:'JSE', country:'South Africa', flag:'🇿🇦', url:'https://www.nedbank.co.za/content/nedbank/desktop/gt/en/careers.html', label:'Nedbank Careers' },
+  // NGX — Nigerian Exchange
+  DANGCEM:   { name:'Dangote Cement',        venue:'NGX', country:'Nigeria',      flag:'🇳🇬', url:'https://careers.dangote.com/',                                    label:'Dangote Careers Portal' },
+  ZENITHBANK:{ name:'Zenith Bank',           venue:'NGX', country:'Nigeria',      flag:'🇳🇬', url:'https://www.zenithbank.com/careers/',                             label:'Zenith Bank Careers' },
+  GTCO:      { name:'GTBank (GTCO)',          venue:'NGX', country:'Nigeria',      flag:'🇳🇬', url:'https://www.gtbank.com/about/careers/career-opportunities',       label:'GTBank Career Opportunities' },
+  MTNN:      { name:'MTN Nigeria',           venue:'NGX', country:'Nigeria',      flag:'🇳🇬', url:'https://www.mtn.ng/careers-home/',                               label:'MTN Nigeria Careers' },
+  AIRTELAFRI:{ name:'Airtel Africa',         venue:'NGX', country:'Nigeria',      flag:'🇳🇬', url:'https://www.airtel.africa/careers/',                             label:'Airtel Africa Careers' },
+  ACCESS:    { name:'Access Bank',           venue:'NGX', country:'Nigeria',      flag:'🇳🇬', url:'https://careers.accessbankplc.com/',                             label:'Access Bank Careers Portal' },
+  UBA:       { name:'United Bank for Africa',venue:'NGX', country:'Nigeria',      flag:'🇳🇬', url:'https://www.ubagroup.com/about-us/careers/',                     label:'UBA Careers' },
+  FBNH:      { name:'FBN Holdings',          venue:'NGX', country:'Nigeria',      flag:'🇳🇬', url:'https://www.firstbanknigeria.com/careers/',                     label:'First Bank Careers' },
+  NESTLE:    { name:'Nestle Nigeria',        venue:'NGX', country:'Nigeria',      flag:'🇳🇬', url:'https://www.nestle-ewa.com/en/jobs/',                            label:'Nestle EWA Careers' },
+  BUACEMENT: { name:'BUA Cement',            venue:'NGX', country:'Nigeria',      flag:'🇳🇬', url:'https://www.buacement.com/careers',                             label:'BUA Cement Careers' },
+  // NSE — Nairobi Securities Exchange
+  SAFCOM:    { name:'Safaricom',             venue:'NSE', country:'Kenya',        flag:'🇰🇪', url:'https://www.safaricom.co.ke/careers/',                           label:'Safaricom Careers' },
+  EQUITY:    { name:'Equity Group',          venue:'NSE', country:'Kenya',        flag:'🇰🇪', url:'https://equitybank.taleo.net/careersection/ext_new/jobsearch.ftl', label:'Equity Bank Job Portal' },
+  KCB:       { name:'KCB Group',             venue:'NSE', country:'Kenya',        flag:'🇰🇪', url:'https://kcbgroup.com/careers',                                   label:'KCB Group Careers' },
+  EABL:      { name:'East African Breweries',venue:'NSE', country:'Kenya',        flag:'🇰🇪', url:'https://www.diageo.com/en/careers/',                             label:'Diageo (EABL) Careers' },
+  COOP:      { name:'Co-op Bank Kenya',      venue:'NSE', country:'Kenya',        flag:'🇰🇪', url:'https://www.co-opbank.co.ke/careers/',                           label:'Co-op Bank Careers' },
+  ABSA:      { name:'ABSA Bank Kenya',       venue:'NSE', country:'Kenya',        flag:'🇰🇪', url:'https://www.absa.co.ke/careers/',                               label:'ABSA Kenya Careers' },
+  NCBA:      { name:'NCBA Group',            venue:'NSE', country:'Kenya',        flag:'🇰🇪', url:'https://www.ncbagroup.com/careers/',                             label:'NCBA Careers' },
+  SCBK:      { name:'Standard Chartered Kenya',venue:'NSE',country:'Kenya',       flag:'🇰🇪', url:'https://www.sc.com/ke/careers/',                                label:'Standard Chartered Kenya Careers' },
+  BRITAM:    { name:'Britam Holdings',       venue:'NSE', country:'Kenya',        flag:'🇰🇪', url:'https://www.britam.com/ke/careers/',                            label:'Britam Careers' },
+  KENGEN:    { name:'KenGen',                venue:'NSE', country:'Kenya',        flag:'🇰🇪', url:'https://www.kengen.co.ke/careers/',                             label:'KenGen Careers' },
+};
+
+let _applyInitDone = false;
+let _applyTicker   = '';
+
+function initApplyTab() {
+  if (_applyInitDone) return;
+  _applyInitDone = true;
+  const sel = document.getElementById('apply-company');
+  const groups = { GSE:'🇬🇭 GSE — Ghana', JSE:'🇿🇦 JSE — South Africa', NGX:'🇳🇬 NGX — Nigeria', NSE:'🇰🇪 NSE — Kenya' };
+  const byVenue = {};
+  Object.entries(CAREERS).forEach(([t, c]) => {
+    if (!byVenue[c.venue]) byVenue[c.venue] = [];
+    byVenue[c.venue].push({ ticker: t, ...c });
+  });
+  Object.keys(groups).forEach(v => {
+    if (!byVenue[v]) return;
+    const og = document.createElement('optgroup');
+    og.label = groups[v];
+    byVenue[v].forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.ticker;
+      opt.textContent = `${c.ticker} — ${c.name}`;
+      og.appendChild(opt);
+    });
+    sel.appendChild(og);
+  });
+}
+
+function onApplyCompanyChange() {
+  _applyTicker = document.getElementById('apply-company').value;
+  const card = document.getElementById('apply-card');
+  if (!_applyTicker || !CAREERS[_applyTicker]) { card.classList.add('hidden'); return; }
+  const c     = CAREERS[_applyTicker];
+  const jobs  = (typeof JOBS_DATA !== 'undefined' && JOBS_DATA[_applyTicker]) || [];
+  const currs = { GSE:'GHS', JSE:'ZAR', NGX:'NGN', NSE:'KES' };
+
+  document.getElementById('apply-flag').textContent         = c.flag;
+  document.getElementById('apply-company-name').textContent = c.name;
+  document.getElementById('apply-meta').textContent         = `${c.venue} · ${c.country} · ${currs[c.venue]}`;
+  document.getElementById('apply-count-num').textContent    = jobs.length;
+
+  const linkEl = document.getElementById('apply-board-link');
+  linkEl.href        = c.url;
+  linkEl.textContent = c.url;
+
+  card.classList.remove('hidden');
+  renderJobCards(jobs, c);
+}
+
+function renderJobCards(jobs, c) {
+  const list  = document.getElementById('apply-jobs-list');
+  const today = new Date();
+  if (!jobs.length) {
+    list.innerHTML = `<div style="padding:24px;text-align:center;color:var(--muted)">No listed positions — visit the jobs board for current openings.</div>`;
+    return;
+  }
+  list.innerHTML = jobs.map(j => {
+    const deadline = new Date(j.deadline);
+    const daysLeft = Math.ceil((deadline - today) / 86400000);
+    const urgency  = daysLeft <= 7 ? '#f87171' : daysLeft <= 14 ? '#facc15' : '#4ade80';
+    return `
+      <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--border)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">${j.title}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">
+            <span>${j.dept}</span>
+            <span style="margin:0 6px;opacity:0.4">·</span>
+            <span>${j.location}</span>
+            <span style="margin:0 6px;opacity:0.4">·</span>
+            <span style="color:${urgency};font-weight:600">Closes ${j.deadline} (${daysLeft}d)</span>
+          </div>
+        </div>
+        <a href="${c.url}" target="_blank" rel="noopener noreferrer"
+          style="padding:6px 16px;border-radius:6px;background:#3b82f6;color:#fff;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0">
+          Apply
+        </a>
+      </div>`;
+  }).join('');
+}
+
+function goToJobsBoard() {
+  if (!_applyTicker || !CAREERS[_applyTicker]) return;
+  window.open(CAREERS[_applyTicker].url, '_blank', 'noopener,noreferrer');
+}
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 (async function init() {
