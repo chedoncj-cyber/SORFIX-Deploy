@@ -1,3 +1,6 @@
+# Copyright (c) 2026 CheDon1CJ. All Rights Reserved.
+# Proprietary and confidential. Unauthorised copying, distribution,
+# or use of this file is strictly prohibited. See LICENSE for details.
 """
 FastAPI gateway for FIX_Aggregator_SOR_Complete APP.
 Provides REST endpoints + WebSocket streaming for live order book data.
