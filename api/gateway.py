@@ -123,7 +123,12 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:9090",
+        "http://localhost:9091",
+        "https://pan-sorfix.onrender.com",
+        "https://world-sorfix.onrender.com",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
