@@ -1,5 +1,5 @@
 """
-Pydantic request/response models for the FIX_Aggregator_SOR_APP REST API.
+Pydantic request/response models for the Pan SORFIX REST API.
 """
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
@@ -52,6 +52,7 @@ class VenueScoreResponse(BaseModel):
     fx_cost:       float
     latency:       float
     available_qty: float
+    reliability:   float = 1.0
 
 
 class RoutingDecisionResponse(BaseModel):

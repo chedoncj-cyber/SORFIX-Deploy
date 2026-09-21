@@ -1,9 +1,10 @@
 routing:
-  liquidity_weight: 0.30
-  spread_weight: 0.20
-  fee_weight: 0.20
-  fx_weight: 0.20
-  latency_weight: 0.10
+  liquidity_weight:   0.28
+  spread_weight:      0.18
+  fee_weight:         0.16
+  fx_weight:          0.18
+  latency_weight:     0.10
+  reliability_weight: 0.10
   max_order_splits: 5
   min_split_quantity: 100.0
 
@@ -23,14 +24,18 @@ execution:
 
 fx_rates:
   base_currency: USD
-  GHS: 15.2
-  ZAR: 18.8
-  NGN: 1580.0
-  KES: 133.5
+  USD: 1.0
+  GBP: 0.79
+  HKD: 7.82
+  JPY: 158.5
+  CNY: 7.25
+  SAR: 3.75
+  INR: 84.2
+  EUR: 0.92
 
 api:
   host: 0.0.0.0
-  port: 9090
+  port: 9091
   workers: 1
 
 market_data:
@@ -41,10 +46,10 @@ market_data:
 risk:
   enabled: true
   max_order_qty: 1000000.0
-  max_order_notional: 10000000.0
+  max_order_notional: 50000000.0
   price_band_pct: 0.05
-  max_daily_notional: 50000000.0
-  max_position_qty: 5000000.0
+  max_daily_notional: 500000000.0
+  max_position_qty: 10000000.0
 
 auth:
   enabled: false

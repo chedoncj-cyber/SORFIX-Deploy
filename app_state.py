@@ -24,10 +24,15 @@ from tools.risk_engine             import RiskEngine, RiskConfig
 from tools.position_tracker        import PositionTracker
 from tools.algo_engine             import AlgoEngine
 from tools.db                      import OrderDB
-from tools.venue_adapters.gse_adapter import GSEAdapter
-from tools.venue_adapters.jse_adapter import JSEAdapter
-from tools.venue_adapters.ngx_adapter import NGXAdapter
-from tools.venue_adapters.nse_adapter import NSEAdapter
+from tools.venue_adapters.nyse_adapter     import NYSEAdapter
+from tools.venue_adapters.lse_adapter      import LSEAdapter
+from tools.venue_adapters.hkex_adapter     import HKEXAdapter
+from tools.venue_adapters.tse_adapter      import TSEAdapter
+from tools.venue_adapters.sse_adapter      import SSEAdapter
+from tools.venue_adapters.szse_adapter     import SZSEAdapter
+from tools.venue_adapters.tadawul_adapter  import TADAWULAdapter
+from tools.venue_adapters.nse_in_adapter   import NSEINAdapter
+from tools.venue_adapters.euronext_adapter import EURONEXTAdapter
 
 
 @dataclass
@@ -42,10 +47,15 @@ class AppState:
     positions:   PositionTracker
     algo:        AlgoEngine
     db:          OrderDB
-    gse:         GSEAdapter
-    jse:         JSEAdapter
-    ngx:         NGXAdapter
-    nse:         NSEAdapter
+    nyse:        NYSEAdapter
+    lse:         LSEAdapter
+    hkex:        HKEXAdapter
+    tse:         TSEAdapter
+    sse:         SSEAdapter
+    szse:        SZSEAdapter
+    tadawul:     TADAWULAdapter
+    nse_in:      NSEINAdapter
+    euronext:    EURONEXTAdapter
     halted:      bool = False
 
 
@@ -89,11 +99,12 @@ def _validated_sor_config(r: dict) -> SORConfig:
         fee_weight=float(r["fee_weight"]),
         fx_weight=float(r["fx_weight"]),
         latency_weight=float(r["latency_weight"]),
+        reliability_weight=float(r.get("reliability_weight", 0.0)),
         max_splits=int(r.get("max_order_splits", 5)),
         min_split_qty=float(r.get("min_split_quantity", 100.0)),
     )
     total = (cfg.liquidity_weight + cfg.spread_weight + cfg.fee_weight
-             + cfg.fx_weight + cfg.latency_weight)
+             + cfg.fx_weight + cfg.latency_weight + cfg.reliability_weight)
     if abs(total - 1.0) > 1e-6:
         raise RuntimeError(
             f"sor_config.yaml routing weights must sum to 1.0, got {total:.6f}"
@@ -188,8 +199,16 @@ def init_app_state(simulate: bool = None) -> AppState:
             update_interval=sor_cfg["update_interval"],
         )
 
-        _sender_ids = {"GSE": "BROKER_GH", "JSE": "BROKER_ZA", "NGX": "BROKER_NG", "NSE": "BROKER_KE"}
-        _target_ids = {"GSE": "GSE_TRADING", "JSE": "JSE_TRADING", "NGX": "NGX_TRADING", "NSE": "NSE_TRADING"}
+        _sender_ids = {
+            "NYSE": "BROKER_US", "LSE": "BROKER_GB", "HKEX": "BROKER_HK", "TSE": "BROKER_JP",
+            "SSE": "BROKER_CN_SH", "SZSE": "BROKER_CN_SZ", "TADAWUL": "BROKER_SA",
+            "NSE_IN": "BROKER_IN", "EURONEXT": "BROKER_EU",
+        }
+        _target_ids = {
+            "NYSE": "NYSE_TRADING", "LSE": "LSE_TRADING", "HKEX": "HKEX_TRADING", "TSE": "TSE_TRADING",
+            "SSE": "SSE_TRADING", "SZSE": "SZSE_TRADING", "TADAWUL": "TADAWUL_TRADING",
+            "NSE_IN": "NSE_IN_TRADING", "EURONEXT": "EURONEXT_TRADING",
+        }
         sessions = {
             name: FIXSession(
                 sender=_sender_ids.get(name, f"BROKER_{name}"),
@@ -213,21 +232,27 @@ def init_app_state(simulate: bool = None) -> AppState:
 
         adapters_connected = []
         try:
-            gse = GSEAdapter()
-            gse.connect()
-            adapters_connected.append(gse)
+            nyse = NYSEAdapter()
+            nyse.connect()
+            adapters_connected.append(nyse)
 
-            jse = JSEAdapter()
-            jse.connect()
-            adapters_connected.append(jse)
+            lse = LSEAdapter()
+            lse.connect()
+            adapters_connected.append(lse)
 
-            ngx = NGXAdapter()
-            ngx.connect()
-            adapters_connected.append(ngx)
+            hkex = HKEXAdapter()
+            hkex.connect()
+            adapters_connected.append(hkex)
 
-            nse = NSEAdapter()
-            nse.connect()
-            adapters_connected.append(nse)
+            tse = TSEAdapter()
+            tse.connect()
+            adapters_connected.append(tse)
+
+            sse = SSEAdapter();     sse.connect();     adapters_connected.append(sse)
+            szse = SZSEAdapter();   szse.connect();    adapters_connected.append(szse)
+            tadawul = TADAWULAdapter(); tadawul.connect(); adapters_connected.append(tadawul)
+            nse_in = NSEINAdapter(); nse_in.connect();  adapters_connected.append(nse_in)
+            euronext = EURONEXTAdapter(); euronext.connect(); adapters_connected.append(euronext)
 
             pipeline.start()
         except Exception:
@@ -269,7 +294,8 @@ def init_app_state(simulate: bool = None) -> AppState:
                 venue_scores=[VenueScoreResponse(venue=s.venue, score=round(s.total,6),
                                liquidity=round(s.liquidity,6), spread=round(s.spread,6),
                                fee=round(s.fee,6), fx_cost=round(s.fx_cost,6),
-                               latency=round(s.latency,6), available_qty=s.available_qty)
+                               latency=round(s.latency,6), available_qty=s.available_qty,
+                               reliability=round(s.reliability,6))
                                for s in decision.venue_scores],
             )
             resp = OrderResponse(
@@ -311,10 +337,15 @@ def init_app_state(simulate: bool = None) -> AppState:
             positions=positions,
             algo=algo_engine,
             db=order_db,
-            gse=gse,
-            jse=jse,
-            ngx=ngx,
-            nse=nse,
+            nyse=nyse,
+            lse=lse,
+            hkex=hkex,
+            tse=tse,
+            sse=sse,
+            szse=szse,
+            tadawul=tadawul,
+            nse_in=nse_in,
+            euronext=euronext,
         )
         return _state
 

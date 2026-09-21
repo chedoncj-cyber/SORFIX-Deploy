@@ -2,7 +2,7 @@
 # Proprietary and confidential. Unauthorised copying, distribution,
 # or use of this file is strictly prohibited. See LICENSE for details.
 """
-FastAPI gateway for FIX_Aggregator_SOR_Complete APP.
+FastAPI gateway for World SORFIX.
 Provides REST endpoints + WebSocket streaming for live order book data.
 """
 import asyncio
@@ -38,7 +38,7 @@ logger = logging.getLogger("gateway")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from app_state import init_app_state
-    logger.info("FIX_Aggregator_SOR_Complete APP starting...")
+    logger.info("World SORFIX starting...")
     try:
         init_app_state()  # simulate flag driven by sor_config.yaml
     except RuntimeError as exc:
@@ -57,8 +57,11 @@ async def lifespan(app: FastAPI):
             state.db.close()
         except Exception as exc:
             logger.warning("DB close error: %s", exc)
-        for fn in (state.gse.disconnect, state.jse.disconnect,
-                   state.ngx.disconnect, state.nse.disconnect):
+        for fn in (state.nyse.disconnect, state.lse.disconnect,
+                   state.hkex.disconnect, state.tse.disconnect,
+                   state.sse.disconnect, state.szse.disconnect,
+                   state.tadawul.disconnect, state.nse_in.disconnect,
+                   state.euronext.disconnect):
             try:
                 fn()
             except Exception as exc:
@@ -98,17 +101,19 @@ _rate_last_cleanup: float = 0.0  # epoch seconds of last purge
 
 
 app = FastAPI(
-    title="FIX_Aggregator_SOR_Complete APP",
+    title="World SORFIX",
     description=(
-        "Pan-African Low-Latency Smart Order Router.\n\n"
-        "Routes orders across GSE, JSE, NGX, NSE using real-time venue scoring "
-        "(liquidity 30%, spread 20%, fee 20%, FX 20%, latency 10%).\n\n"
-        "**Active exchanges:** GSE (Ghana) · JSE (South Africa) · NGX (Nigeria) · NSE (Kenya).\n"
-        "All four venues are fully wired with FIX 4.2 adapters and live order book data.\n\n"
-        "**New:** Pre-trade risk engine · Position tracking · TWAP/VWAP algo execution · "
-        "SQLite order persistence · Kill switch · Market impact scoring."
+        "Global Low-Latency Smart Order Router — **Version 3.0**.\n\n"
+        "Routes orders across 9 global exchanges using 6-factor venue scoring: "
+        "liquidity 28% · spread 18% · FX 18% · fee 16% · latency 10% · reliability 10%.\n\n"
+        "**Active exchanges:** NYSE (USA · USD) · LSE (UK · GBP) · HKEX (Hong Kong · HKD) · "
+        "TSE (Japan · JPY) · SSE (Shanghai · CNY) · SZSE (Shenzhen · CNY) · "
+        "TADAWUL (Saudi Arabia · SAR) · NSE_IN (India · INR) · EURONEXT (Europe · EUR).\n"
+        "All 9 venues wired with FIX 4.2 adapters, GBM price simulation, and 10-level order books.\n\n"
+        "**Features:** 6-factor SOR · GBM market data · 99.8% fill rate · global FX cost model · "
+        "246 listed companies · proportional allocation · staleness multiplier · Live portal."
     ),
-    version="2.0.0",
+    version="3.0.0",
     lifespan=lifespan,
 )
 
@@ -170,7 +175,10 @@ app.include_router(algo_router)
 @app.get("/portal", include_in_schema=False)
 async def portal():
     from pathlib import Path
-    return FileResponse(Path(__file__).parent.parent / "portal" / "index.html")
+    resp = FileResponse(Path(__file__).parent.parent / "portal" / "index.html")
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
+    return resp
 
 # Serve portal static assets (jobs_data.js, etc.)
 from pathlib import Path as _Path
@@ -222,7 +230,7 @@ async def tca(symbol: str = None, limit: int = Query(default=200, ge=1, le=1000)
 async def stream_order_book(websocket: WebSocket, venue: str, symbol: str):
     """
     WebSocket stream: pushes order book snapshot every 500ms.
-    Connect: ws://localhost:9090/ws/book/GSE/GCB
+    Connect: ws://localhost:9091/ws/book/NYSE/AAPL
     Closes with code 1008 if venue is unknown or disabled.
     """
     from app_state import get_app_state
@@ -281,9 +289,9 @@ async def root(request: Request):
     base_url = str(request.base_url).rstrip("/")
     ws_base  = base_url.replace("http://", "ws://").replace("https://", "wss://")
     return {
-        "app":         "FIX_Aggregator_SOR_Complete APP",
-        "version":     "2.0.0",
-        "description": "Pan-African Smart Order Router",
+        "app":         "World SORFIX",
+        "version":     "3.0.0",
+        "description": "World SORFIX — Global Smart Order Router",
         "docs":        "/docs",
         "portal":      "/portal",
         "health":      "/health",
@@ -298,9 +306,14 @@ async def root(request: Request):
             "market":    "/market-data/book/{venue}/{symbol}",
         },
         "exchanges":   {
-            "GSE": "active (Ghana Stock Exchange — GHS)",
-            "JSE": "active (Johannesburg Stock Exchange — ZAR)",
-            "NGX": "active (Nigerian Exchange Group — NGN)",
-            "NSE": "active (Nairobi Securities Exchange — KES)",
+            "NYSE":     "active (New York Stock Exchange — USD)",
+            "LSE":      "active (London Stock Exchange — GBP)",
+            "HKEX":     "active (Hong Kong Exchanges and Clearing — HKD)",
+            "TSE":      "active (Tokyo Stock Exchange — JPY)",
+            "SSE":      "active (Shanghai Stock Exchange — CNY)",
+            "SZSE":     "active (Shenzhen Stock Exchange — CNY)",
+            "TADAWUL":  "active (Saudi Exchange — SAR)",
+            "NSE_IN":   "active (National Stock Exchange India — INR)",
+            "EURONEXT": "active (Euronext — EUR)",
         },
     }

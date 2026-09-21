@@ -1,56 +1,126 @@
 venues:
-  GSE:
-    name: Ghana Stock Exchange
-    host: fix.gse.com.gh
-    port: 9876
-    sender_comp_id: BROKER_GH
-    target_comp_id: GSE_TRADING
-    currency: GHS
+  NYSE:
+    name: New York Stock Exchange
+    host: fix.nyse.com
+    port: 9880
+    sender_comp_id: BROKER_US
+    target_comp_id: NYSE_TRADING
+    currency: USD
+    taker_fee: 0.0005
+    latency_ms: 1.0
+    enabled: true
+    settlement: T+1
+    trading_hours_utc: "13:30-20:00"
+    symbols: [AAPL, MSFT, GOOGL, AMZN, META, NVDA, TSLA, JPM, JNJ, V]
+
+  LSE:
+    name: London Stock Exchange
+    host: fix.lse.co.uk
+    port: 9881
+    sender_comp_id: BROKER_GB
+    target_comp_id: LSE_TRADING
+    currency: GBP
+    taker_fee: 0.001
+    latency_ms: 3.0
+    enabled: true
+    settlement: T+2
+    trading_hours_utc: "08:00-16:30"
+    symbols: [SHEL, HSBA, ULVR, AZN, BP, RIO, LSEG, GSK, BT, BARC]
+
+  HKEX:
+    name: Hong Kong Exchanges and Clearing
+    host: fix.hkex.com.hk
+    port: 9882
+    sender_comp_id: BROKER_HK
+    target_comp_id: HKEX_TRADING
+    currency: HKD
+    taker_fee: 0.0012
+    latency_ms: 8.0
+    enabled: true
+    settlement: T+2
+    trading_hours_utc: "01:30-08:00"
+    symbols: [TENCENT, ALIBABA, HSBCHK, AIA, CNOOC, BIDU, XIAOMI, MEITUAN, PING, BYD]
+
+  TSE:
+    name: Tokyo Stock Exchange
+    host: fix.jpx.co.jp
+    port: 9883
+    sender_comp_id: BROKER_JP
+    target_comp_id: TSE_TRADING
+    currency: JPY
+    taker_fee: 0.0008
+    latency_ms: 10.0
+    enabled: true
+    settlement: T+2
+    trading_hours_utc: "00:00-06:00"
+    symbols: [TOYOTA, SONY, SOFTBANK, KEYENCE, RECRUIT, MITSUBISHI, HONDA, NINTENDO, FANUC, CANON]
+
+  SSE:
+    name: Shanghai Stock Exchange
+    host: fix.sse.com.cn
+    port: 9884
+    sender_comp_id: BROKER_CN_SH
+    target_comp_id: SSE_TRADING
+    currency: CNY
+    taker_fee: 0.0003
+    latency_ms: 5.0
+    enabled: true
+    settlement: T+1
+    trading_hours_utc: "01:30-07:00"
+    symbols: [ICBC_A, CCB_A, BOC_A, PINGAN, SINOPEC_A, PETROCHINA_A, CNOOC_A, CMOBILE_A, BAOSHAN, WANHUA]
+
+  SZSE:
+    name: Shenzhen Stock Exchange
+    host: fix.szse.cn
+    port: 9885
+    sender_comp_id: BROKER_CN_SZ
+    target_comp_id: SZSE_TRADING
+    currency: CNY
+    taker_fee: 0.0003
+    latency_ms: 6.0
+    enabled: true
+    settlement: T+1
+    trading_hours_utc: "01:30-07:00"
+    symbols: [BYD_A, CATL, MWKJ, HIKVISION, GREE, MIDEA, SMIC_A, ZTE_A, LUXSHARE, MINDRAY]
+
+  TADAWUL:
+    name: Saudi Exchange (Tadawul)
+    host: fix.tadawul.com.sa
+    port: 9886
+    sender_comp_id: BROKER_SA
+    target_comp_id: TADAWUL_TRADING
+    currency: SAR
     taker_fee: 0.0015
     latency_ms: 8.0
     enabled: true
-    settlement: T+3
-    trading_hours_utc: "09:30-15:00"
-    symbols: [GCB, MTNGH, GOIL, UNIL, SIC, EGL]
+    settlement: T+2
+    trading_hours_utc: "06:00-12:00"
+    symbols: [ARAMCO, SNB, ALINMA, RAJHI, SABIC, STC, RIYAD, NCB, MAADEN, SABIC_AGRI]
 
-  JSE:
-    name: Johannesburg Stock Exchange
-    host: fix.jse.co.za
-    port: 9877
-    sender_comp_id: BROKER_ZA
-    target_comp_id: JSE_TRADING
-    currency: ZAR
-    taker_fee: 0.002
-    latency_ms: 2.0
+  NSE_IN:
+    name: National Stock Exchange of India
+    host: fix.nseindia.com
+    port: 9887
+    sender_comp_id: BROKER_IN
+    target_comp_id: NSE_IN_TRADING
+    currency: INR
+    taker_fee: 0.0003
+    latency_ms: 8.0
     enabled: true
-    settlement: T+3
-    trading_hours_utc: "07:00-15:00"
-    symbols: [MTN, NPN, SOL, BHP, AGL]
+    settlement: T+1
+    trading_hours_utc: "03:45-10:00"
+    symbols: [RELIANCE, TCS, HDFCBANK, INFY, HINDUNILVR, ICICIBANK, BHARTIARTL, SBIN, BAJFINANCE, KOTAKBANK]
 
-  NGX:
-    name: Nigerian Exchange Group
-    host: fix.ngxgroup.com
-    port: 9878
-    sender_comp_id: BROKER_NG
-    target_comp_id: NGX_TRADING
-    currency: NGN
-    taker_fee: 0.003
-    latency_ms: 12.0
+  EURONEXT:
+    name: Euronext (Pan-European)
+    host: fix.euronext.com
+    port: 9888
+    sender_comp_id: BROKER_EU
+    target_comp_id: EURONEXT_TRADING
+    currency: EUR
+    taker_fee: 0.0010
+    latency_ms: 4.0
     enabled: true
-    settlement: T+3
-    trading_hours_utc: "10:00-14:30"
-    symbols: [DANGCEM, GTCO, AIRTELAFRI, ZENITHBANK, MTNN]
-
-  NSE:
-    name: Nairobi Securities Exchange
-    host: fix.nse.co.ke
-    port: 9879
-    sender_comp_id: BROKER_KE
-    target_comp_id: NSE_TRADING
-    currency: KES
-    taker_fee: 0.0021
-    latency_ms: 15.0
-    enabled: true
-    settlement: T+3
-    trading_hours_utc: "09:00-15:00"
-    symbols: [SAFCOM, EABL, KCB, EQUITY, BAMBURI]
+    settlement: T+2
+    trading_hours_utc: "07:00-15:30"
+    symbols: [LVMH, ASML, TOTALENERGIES, SANOFI, AIRBUS, LORAL, BNPPARIBAS, STELLANTIS, LOREAL, UNIBAIL]

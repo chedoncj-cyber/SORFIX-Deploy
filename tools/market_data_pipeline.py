@@ -4,6 +4,7 @@ In production: subscribe to real Kafka topics per venue instead of _tick().
 Populates ShardedOrderBookCache with live-updating order book data.
 """
 import logging
+import math
 import threading
 import time
 import random
@@ -11,51 +12,38 @@ from typing import Callable, Dict, List
 
 from tools.order_book_cache import ShardedOrderBookCache, PriceLevel, OrderBook
 from tools.monitoring import metrics
+from tools.companies_data import get_venue_symbols_for_pipeline
 
 logger = logging.getLogger("market_data_pipeline")
 
 
-# Realistic symbols with approximate mid-prices (local currency)
-VENUE_SYMBOLS: Dict[str, Dict[str, Dict]] = {
-    "GSE": {
-        "GCB":   {"price": 5.80,   "vol": 0.002},
-        "MTNGH": {"price": 1.15,   "vol": 0.003},
-        "GOIL":  {"price": 2.40,   "vol": 0.002},
-        "UNIL":  {"price": 18.50,  "vol": 0.001},
-        "SIC":   {"price": 0.08,   "vol": 0.005},
-        "EGL":   {"price": 3.20,   "vol": 0.002},
-    },
-    "JSE": {
-        "MTN":   {"price": 148.50, "vol": 0.003},
-        "NPN":   {"price": 2950.0, "vol": 0.002},
-        "SOL":   {"price": 320.0,  "vol": 0.002},
-        "BHP":   {"price": 485.0,  "vol": 0.002},
-        "AGL":   {"price": 820.0,  "vol": 0.003},
-    },
-    "NGX": {
-        "DANGCEM":    {"price": 680.0,  "vol": 0.004},
-        "GTCO":       {"price": 52.5,   "vol": 0.003},
-        "AIRTELAFRI": {"price": 1920.0, "vol": 0.003},
-        "ZENITHBANK": {"price": 35.8,   "vol": 0.003},
-        "MTNN":       {"price": 285.0,  "vol": 0.003},
-    },
-    "NSE": {
-        "SAFCOM": {"price": 40.5,  "vol": 0.002},
-        "EABL":   {"price": 145.0, "vol": 0.002},
-        "KCB":    {"price": 42.25, "vol": 0.003},
-        "EQUITY": {"price": 52.0,  "vol": 0.003},
-        "BAMBURI":{"price": 44.75, "vol": 0.004},
-    },
-}
+# All listed companies across NYSE, LSE, HKEX, TSE — sourced from companies_data.py
+VENUE_SYMBOLS: Dict[str, Dict[str, Dict]] = get_venue_symbols_for_pipeline()
 
 
-def _generate_book(venue: str, symbol: str, mid: float, depth: int = 5) -> OrderBook:
-    tick = max(0.001, round(mid * 0.001, 6))
+def _generate_book(venue: str, symbol: str, mid: float, depth: int = 10) -> OrderBook:
+    """
+    Generate a realistic 10-level order book.
+    - Tick: 0.5bps of mid (tight institutional spread)
+    - Quantities: exponential decay with depth, large base for liquid venues
+    - JSE/NGX have deeper books; GSE/NSE slightly shallower
+    """
+    # Tighter 0.5bps tick — realistic for electronic limit order books
+    tick = max(0.0001, round(mid * 0.00005, 8))
+
+    # Venue liquidity multipliers — NYSE/LSE are deepest, HKEX mid, TSE/SSE/SZSE slightly shallower
+    liq_mult = {"NYSE": 4.0, "LSE": 3.0, "HKEX": 2.5, "SSE": 2.0,
+                "SZSE": 1.8, "TSE": 2.0, "EURONEXT": 2.5,
+                "TADAWUL": 1.5, "NSE_IN": 2.0}.get(venue, 1.5)
+    base_qty = int(random.randint(8_000, 25_000) * liq_mult)
+
     bids, asks = [], []
     for i in range(depth):
-        qty = random.randint(500, 10_000) * (depth - i)
-        bids.append(PriceLevel(price=round(mid - tick * (i + 1), 4), quantity=qty, venue=venue))
-        asks.append(PriceLevel(price=round(mid + tick * (i + 1), 4), quantity=qty, venue=venue))
+        # Exponential decay in quantity with depth level
+        decay = math.exp(-0.25 * i)
+        qty   = max(100, int(base_qty * decay * random.uniform(0.75, 1.25)))
+        bids.append(PriceLevel(price=round(mid - tick * (i + 1), 6), quantity=qty, venue=venue))
+        asks.append(PriceLevel(price=round(mid + tick * (i + 1), 6), quantity=qty, venue=venue))
     return OrderBook(symbol=symbol, venue=venue, bids=bids, asks=asks,
                      last_update_ns=time.perf_counter_ns())
 
@@ -85,13 +73,21 @@ class MarketDataPipeline:
             self._callbacks.append(callback)
 
     def _tick(self):
+        """
+        Geometric Brownian Motion price walk: dS = S * exp((μ - ½σ²)dt + σ√dt · Z)
+        Zero drift (μ=0) for simulation. Each tick is dt = update_interval seconds.
+        """
+        dt    = self.update_interval
         count = 0
         for venue, symbols in VENUE_SYMBOLS.items():
             for symbol, data in symbols.items():
-                drift = random.gauss(0, data["vol"])
+                sigma = data["vol"]
+                # GBM log-normal step
+                z          = random.gauss(0.0, 1.0)
+                gbm_factor = math.exp((-0.5 * sigma ** 2) * dt + sigma * math.sqrt(dt) * z)
                 with self._lock:
                     self._prices[venue][symbol] = max(
-                        self._prices[venue][symbol] * (1 + drift), 0.0001
+                        self._prices[venue][symbol] * gbm_factor, 0.0001
                     )
                     price = self._prices[venue][symbol]
                 book = _generate_book(venue, symbol, price)

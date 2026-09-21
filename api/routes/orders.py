@@ -51,6 +51,7 @@ def _routing_response(decision) -> RoutingDecisionResponse:
                 fx_cost=round(s.fx_cost, 6),
                 latency=round(s.latency, 6),
                 available_qty=s.available_qty,
+                reliability=round(s.reliability, 6),
             )
             for s in decision.venue_scores
         ],
