@@ -1,10 +1,24 @@
-﻿services:
+services:
   - type: web
     name: pan-sorfix
     runtime: docker
-    dockerfilePath: ./Dockerfile
-    branch: pan-sorfix
     repo: https://github.com/chedoncj-cyber/SORFIX-Deploy
+    branch: pan-sorfix
+    dockerfilePath: ./Dockerfile
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: LOG_LEVEL
+        value: INFO
+
+  - type: web
+    name: world-sorfix
+    runtime: docker
+    repo: https://github.com/chedoncj-cyber/SORFIX-Deploy
+    branch: world-sorfix
+    dockerfilePath: ./Dockerfile
     plan: free
     autoDeploy: true
     envVars:
