@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FIX SOR Portal</title>
+  <title>Pan SORFIX Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -89,6 +89,48 @@
     .venue-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; transition: border-color 0.15s; }
     .venue-card:hover { border-color: rgba(59,130,246,0.3); }
 
+    /* ── Live Roles ── */
+    .roles-pill { padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.14s; }
+    .roles-pill:hover { border-color:rgba(167,139,250,0.5);color:var(--text); }
+    .roles-pill-active, .roles-pill.active-pill { background:rgba(167,139,250,0.15);border-color:#a78bfa;color:#a78bfa; }
+    .roles-pill-gse.active-pill  { background:rgba(34,197,94,0.12);border-color:#4ade80;color:#4ade80; }
+    .roles-pill-jse.active-pill  { background:rgba(96,165,250,0.12);border-color:#60a5fa;color:#60a5fa; }
+    .roles-pill-ngx.active-pill  { background:rgba(248,113,113,0.12);border-color:#f87171;color:#f87171; }
+    .roles-pill-nse.active-pill  { background:rgba(167,139,250,0.12);border-color:#a78bfa;color:#a78bfa; }
+    .roles-pill-cse.active-pill  { background:rgba(34,211,238,0.12);border-color:#22d3ee;color:#22d3ee; }
+    .roles-pill-egx.active-pill  { background:rgba(251,146,60,0.12);border-color:#fb923c;color:#fb923c; }
+    .roles-pill-brvm.active-pill { background:rgba(234,179,8,0.12);border-color:#eab308;color:#eab308; }
+    .roles-pill-bse.active-pill  { background:rgba(52,211,153,0.12);border-color:#34d399;color:#34d399; }
+    .roles-pill-nsx.active-pill  { background:rgba(56,189,248,0.12);border-color:#38bdf8;color:#38bdf8; }
+    .roles-pill-sem.active-pill  { background:rgba(244,114,182,0.12);border-color:#f472b6;color:#f472b6; }
+    .roles-pill-mse.active-pill  { background:rgba(163,230,53,0.12);border-color:#a3e635;color:#a3e635; }
+    .roles-pill-bvmt.active-pill { background:rgba(251,113,133,0.12);border-color:#fb7185;color:#fb7185; }
+    .roles-pill-dse.active-pill  { background:rgba(129,140,248,0.12);border-color:#818cf8;color:#818cf8; }
+    .roles-pill-zse.active-pill  { background:rgba(45,212,191,0.12);border-color:#2dd4bf;color:#2dd4bf; }
+    .roles-pill-luse.active-pill { background:rgba(251,191,36,0.12);border-color:#fbbf24;color:#fbbf24; }
+    .role-card { background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 16px;cursor:pointer;transition:all 0.16s;display:flex;flex-direction:column;gap:8px; }
+    .role-card:hover { border-color:rgba(167,139,250,0.5);background:var(--card2);transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,0.3); }
+    .role-card.selected { border-color:#a78bfa;background:rgba(167,139,250,0.08); }
+    .role-initials { width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0; }
+    .role-exbadge { display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:800;letter-spacing:0.06em; }
+    .role-exbadge-GSE  { background:rgba(34,197,94,0.2);color:#4ade80; }
+    .role-exbadge-JSE  { background:rgba(96,165,250,0.2);color:#60a5fa; }
+    .role-exbadge-NGX  { background:rgba(248,113,113,0.2);color:#f87171; }
+    .role-exbadge-NSE  { background:rgba(167,139,250,0.2);color:#a78bfa; }
+    .role-exbadge-CSE  { background:rgba(34,211,238,0.2);color:#22d3ee; }
+    .role-exbadge-EGX  { background:rgba(251,146,60,0.2);color:#fb923c; }
+    .role-exbadge-BRVM { background:rgba(234,179,8,0.2);color:#eab308; }
+    .role-exbadge-BSE  { background:rgba(52,211,153,0.2);color:#34d399; }
+    .role-exbadge-NSX  { background:rgba(56,189,248,0.2);color:#38bdf8; }
+    .role-exbadge-SEM  { background:rgba(244,114,182,0.2);color:#f472b6; }
+    .role-exbadge-MSE  { background:rgba(163,230,53,0.2);color:#a3e635; }
+    .role-exbadge-BVMT { background:rgba(251,113,133,0.2);color:#fb7185; }
+    .role-exbadge-DSE  { background:rgba(129,140,248,0.2);color:#818cf8; }
+    .role-exbadge-ZSE  { background:rgba(45,212,191,0.2);color:#2dd4bf; }
+    .role-exbadge-LUSE { background:rgba(251,191,36,0.2);color:#fbbf24; }
+    .role-view-btn { margin-top:auto;padding:7px 0;border-radius:7px;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.25);color:#a78bfa;font-size:11px;font-weight:700;text-align:center;transition:all 0.14s; }
+    .role-card:hover .role-view-btn { background:rgba(167,139,250,0.22);border-color:#a78bfa; }
+
     /* ── Sec header ── */
     .sec-hdr { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 12px 16px; border-bottom: 1px solid var(--border); }
 
@@ -157,9 +199,10 @@
     #toast-root { position: fixed; bottom: 22px; right: 22px; z-index: 9999; display: flex; flex-direction: column-reverse; gap: 8px; pointer-events: none; }
     .toast { padding: 12px 18px; border-radius: 9px; font-size: 12px; font-weight: 600; pointer-events: all; min-width: 240px; max-width: 340px; opacity: 0; transform: translateX(24px); transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
     .toast.show { opacity: 1; transform: none; }
-    .toast-ok  { background: rgba(22,163,74,0.95);  color: #fff; border: 1px solid rgba(74,222,128,0.3); }
-    .toast-err { background: rgba(185,28,28,0.95);  color: #fff; border: 1px solid rgba(248,113,113,0.3); }
-    .toast-inf { background: rgba(59,130,246,0.95); color: #fff; border: 1px solid rgba(147,197,253,0.3); }
+    .toast-ok   { background: rgba(22,163,74,0.95);  color: #fff; border: 1px solid rgba(74,222,128,0.3); }
+    .toast-err  { background: rgba(185,28,28,0.95);  color: #fff; border: 1px solid rgba(248,113,113,0.3); }
+    .toast-inf  { background: rgba(59,130,246,0.95); color: #fff; border: 1px solid rgba(147,197,253,0.3); }
+    .toast-warn { background: rgba(217,119,6,0.95);  color: #fff; border: 1px solid rgba(251,191,36,0.3); }
 
     /* ── Animations ── */
     .fade-in { animation: fadeIn 0.22s ease; }
@@ -177,7 +220,7 @@
 
 <!-- ═══ HEADER ════════════════════════════════════════════════════════════════ -->
 <header id="hdr">
-  <div class="logo">FIX SOR</div>
+  <div class="logo">Pan SORFIX <span style="font-size:11px;opacity:0.7;font-weight:500">v3</span></div>
   <div class="logo-sub">Pan-African Smart Order Router</div>
   <div class="hdr-spacer"></div>
   <div class="hdr-chip">
@@ -240,6 +283,11 @@
     <span id="jobs-badge" class="nav-badge hidden">0</span>
   </button>
 
+  <button class="nav-item tab-btn" onclick="showTab('roles',this)" style="border:1px solid rgba(167,139,250,0.35);margin-top:2px;background:rgba(167,139,250,0.06)">
+    <svg class="nsvg" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+    Live Roles
+  </button>
+
   <button class="nav-item tab-btn" onclick="showTab('apply',this)" style="border:1px solid rgba(96,165,250,0.3);margin-top:2px">
     <svg class="nsvg" viewBox="0 0 24 24"><path d="M21 13v10h-6v-6h-6v6H3V13L12 3z"/></svg>
     Apply
@@ -257,7 +305,7 @@
     <div style="font-size:11px;font-weight:600;color:var(--muted)">v3.0.0 · FIX 4.2</div>
     <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
       <span class="dot dot-up" style="width:6px;height:6px"></span>
-      <span style="font-size:11px;color:var(--muted)">GSE · JSE · NGX · NSE</span>
+      <span style="font-size:11px;color:var(--muted)">GSE · JSE · NGX · NSE · CSE · EGX · BRVM · BSE · NSX · SEM · MSE · BVMT · DSE · ZSE · LUSE</span>
     </div>
   </div>
 </nav>
@@ -312,6 +360,9 @@
       <select id="b-venue" onchange="onVenueChange()" style="width:120px">
         <option value="">Select…</option>
         <option>GSE</option><option>JSE</option><option>NGX</option><option>NSE</option>
+        <option>CSE</option><option>EGX</option><option>BRVM</option><option>BSE</option>
+        <option>NSX</option><option>SEM</option><option>MSE</option><option>BVMT</option>
+        <option>DSE</option><option>ZSE</option><option>LUSE</option>
       </select>
     </div>
     <div>
@@ -377,13 +428,75 @@
     <div class="card p-6">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:20px">Order Parameters</div>
       <div style="display:flex;flex-direction:column;gap:16px">
-        <div>
-          <label>Symbol</label>
-          <input id="o-symbol" list="symbol-list" placeholder="e.g. GCB, MTN, DANGCEM…"
-                 oninput="this.value=this.value.toUpperCase(); highlightChip(this.value)">
-          <datalist id="symbol-list"></datalist>
-          <div id="o-chips" style="margin-top:12px;display:flex;flex-direction:column;gap:8px"></div>
+        <!-- hidden symbol field — keeps buildPayload() unchanged -->
+        <input id="o-symbol" type="hidden" value="">
+
+        <!-- Exchange + Company stacked together, always visible -->
+        <div style="display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+
+          <!-- Exchange row -->
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--card2)">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:6px">Exchange</div>
+            <select id="o-exchange" onchange="onSubmitExchangeChange('o')"
+              style="background:transparent;border:none;color:var(--text);width:100%;font-size:14px;font-weight:600;outline:none;cursor:pointer;padding:0">
+              <option value="">— Select exchange —</option>
+              <option value="GSE">🇬🇭 GSE · Ghana Stock Exchange</option>
+              <option value="JSE">🇿🇦 JSE · Johannesburg Stock Exchange</option>
+              <option value="NGX">🇳🇬 NGX · Nigerian Exchange Group</option>
+              <option value="NSE">🇰🇪 NSE · Nairobi Securities Exchange</option>
+              <option value="CSE">🇲🇦 CSE · Casablanca Stock Exchange</option>
+              <option value="EGX">🇪🇬 EGX · Egyptian Exchange</option>
+              <option value="BRVM">🌍 BRVM · Bourse Regionale UEMOA</option>
+              <option value="BSE">🇧🇼 BSE · Botswana Stock Exchange</option>
+              <option value="NSX">🇳🇦 NSX · Namibia Stock Exchange</option>
+              <option value="SEM">🇲🇺 SEM · Stock Exchange of Mauritius</option>
+              <option value="MSE">🇲🇼 MSE · Malawi Stock Exchange</option>
+              <option value="BVMT">🇹🇳 BVMT · Bourse de Tunis</option>
+              <option value="DSE">🇹🇿 DSE · Dar es Salaam Stock Exchange</option>
+              <option value="ZSE">🇿🇼 ZSE · Zimbabwe Stock Exchange</option>
+              <option value="LUSE">🇿🇲 LUSE · Lusaka Securities Exchange</option>
+            </select>
+          </div>
+
+          <!-- Company row — always shown, disabled until exchange chosen -->
+          <div style="padding:10px 14px;background:var(--surface)">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:6px">Company</div>
+            <select id="o-company" onchange="onSubmitCompanyChange('o')"
+              style="background:transparent;border:none;color:var(--text);width:100%;font-size:14px;font-weight:600;outline:none;cursor:pointer;padding:0"
+              disabled>
+              <option value="">— Select exchange first —</option>
+            </select>
+          </div>
+
         </div>
+        <!-- keep this hidden row for JS compat -->
+        <div id="o-company-row" style="display:none"></div>
+
+        <!-- Company info bar — appears after company selected -->
+        <div id="o-company-info" style="display:none;padding:12px 16px;border-radius:10px;background:var(--card2);border:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+            <div>
+              <div id="o-co-name" style="font-size:14px;font-weight:700;color:var(--text)"></div>
+              <div id="o-co-meta" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
+            </div>
+            <div style="display:flex;gap:18px;font-size:12px">
+              <div style="text-align:center">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:2px">Bid</div>
+                <div id="o-co-bid" class="mono" style="font-weight:700;color:#4ade80">—</div>
+              </div>
+              <div style="text-align:center">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:2px">Ask</div>
+                <div id="o-co-ask" class="mono" style="font-weight:700;color:#f87171">—</div>
+              </div>
+              <div style="text-align:center">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:2px">Spread</div>
+                <div id="o-co-spread" class="mono" style="font-weight:700;color:#fbbf24">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="o-chips" style="display:flex;flex-direction:column;gap:8px"></div>
         <div>
           <label>Side</label>
           <div style="display:flex;gap:8px">
@@ -488,9 +601,46 @@
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div>
-            <label>Symbol</label>
-            <input id="algo-symbol" list="symbol-list" placeholder="e.g. GCB" oninput="this.value=this.value.toUpperCase()">
+          <div style="grid-column:1/-1">
+            <input id="algo-symbol" type="hidden" value="">
+            <!-- Exchange + Company always-visible stacked box -->
+            <div style="display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px">
+              <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--card2)">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:6px">Exchange</div>
+                <select id="algo-exchange" onchange="onSubmitExchangeChange('algo')"
+                  style="background:transparent;border:none;color:var(--text);width:100%;font-size:13px;font-weight:600;outline:none;cursor:pointer;padding:0">
+                  <option value="">— Select exchange —</option>
+                  <option value="GSE">🇬🇭 GSE · Ghana Stock Exchange</option>
+                  <option value="JSE">🇿🇦 JSE · Johannesburg Stock Exchange</option>
+                  <option value="NGX">🇳🇬 NGX · Nigerian Exchange Group</option>
+                  <option value="NSE">🇰🇪 NSE · Nairobi Securities Exchange</option>
+                  <option value="CSE">🇲🇦 CSE · Casablanca Stock Exchange</option>
+                  <option value="EGX">🇪🇬 EGX · Egyptian Exchange</option>
+                  <option value="BRVM">🌍 BRVM · Bourse Regionale UEMOA</option>
+                  <option value="BSE">🇧🇼 BSE · Botswana Stock Exchange</option>
+                  <option value="NSX">🇳🇦 NSX · Namibia Stock Exchange</option>
+                  <option value="SEM">🇲🇺 SEM · Stock Exchange of Mauritius</option>
+                  <option value="MSE">🇲🇼 MSE · Malawi Stock Exchange</option>
+                  <option value="BVMT">🇹🇳 BVMT · Bourse de Tunis</option>
+                  <option value="DSE">🇹🇿 DSE · Dar es Salaam Stock Exchange</option>
+                  <option value="ZSE">🇿🇼 ZSE · Zimbabwe Stock Exchange</option>
+                  <option value="LUSE">🇿🇲 LUSE · Lusaka Securities Exchange</option>
+                </select>
+              </div>
+              <div style="padding:10px 14px;background:var(--surface)">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:6px">Company</div>
+                <select id="algo-company" onchange="onSubmitCompanyChange('algo')"
+                  style="background:transparent;border:none;color:var(--text);width:100%;font-size:13px;font-weight:600;outline:none;cursor:pointer;padding:0"
+                  disabled>
+                  <option value="">— Select exchange first —</option>
+                </select>
+              </div>
+            </div>
+            <div id="algo-company-row" style="display:none"></div>
+            <div id="algo-company-info" style="display:none;padding:8px 12px;border-radius:8px;background:var(--card2);border:1px solid var(--border);font-size:11px;color:var(--muted)">
+              <span id="algo-co-name" style="font-weight:700;color:var(--text)"></span>
+              <span id="algo-co-meta" style="margin-left:8px"></span>
+            </div>
           </div>
           <div>
             <label>Side</label>
@@ -543,6 +693,7 @@
       <label>Filter Symbol</label>
       <input id="tca-symbol" list="symbol-list" placeholder="All symbols" style="width:170px"
              oninput="this.value=this.value.toUpperCase()">
+      <datalist id="symbol-list"></datalist>
     </div>
     <button class="btn btn-primary" onclick="loadTCA()">Load TCA</button>
     <button class="btn btn-ghost" onclick="document.getElementById('tca-symbol').value=''; loadTCA()">Clear Filter</button>
@@ -719,6 +870,80 @@
 
 </div>
 
+<!-- ── LIVE ROLES ─────────────────────────────────────────────────────────── -->
+<div id="tab-roles" class="tab-pane hidden">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+    <div>
+      <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.02em">Live Roles</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:3px">Employment opportunities at Pan-African listed companies</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <input id="roles-search" type="text" placeholder="Search company…"
+        oninput="filterRolesGrid()"
+        style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;width:210px;outline:none">
+      <span id="roles-count-lbl" style="font-size:11px;color:var(--muted);white-space:nowrap"></span>
+    </div>
+  </div>
+
+  <!-- Exchange filter pills -->
+  <div id="roles-pills" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+    <button onclick="setRolesExchange('ALL',this)"  class="roles-pill roles-pill-active">All Exchanges</button>
+    <button onclick="setRolesExchange('GSE',this)"  class="roles-pill roles-pill-gse">🇬🇭 GSE · Ghana</button>
+    <button onclick="setRolesExchange('JSE',this)"  class="roles-pill roles-pill-jse">🇿🇦 JSE · South Africa</button>
+    <button onclick="setRolesExchange('NGX',this)"  class="roles-pill roles-pill-ngx">🇳🇬 NGX · Nigeria</button>
+    <button onclick="setRolesExchange('NSE',this)"  class="roles-pill roles-pill-nse">🇰🇪 NSE · Kenya</button>
+    <button onclick="setRolesExchange('CSE',this)"  class="roles-pill roles-pill-cse">🇲🇦 CSE · Morocco</button>
+    <button onclick="setRolesExchange('EGX',this)"  class="roles-pill roles-pill-egx">🇪🇬 EGX · Egypt</button>
+    <button onclick="setRolesExchange('BRVM',this)" class="roles-pill roles-pill-brvm">🌍 BRVM · W. Africa</button>
+    <button onclick="setRolesExchange('BSE',this)"  class="roles-pill roles-pill-bse">🇧🇼 BSE · Botswana</button>
+    <button onclick="setRolesExchange('NSX',this)"  class="roles-pill roles-pill-nsx">🇳🇦 NSX · Namibia</button>
+    <button onclick="setRolesExchange('SEM',this)"  class="roles-pill roles-pill-sem">🇲🇺 SEM · Mauritius</button>
+    <button onclick="setRolesExchange('MSE',this)"  class="roles-pill roles-pill-mse">🇲🇼 MSE · Malawi</button>
+    <button onclick="setRolesExchange('BVMT',this)" class="roles-pill roles-pill-bvmt">🇹🇳 BVMT · Tunisia</button>
+    <button onclick="setRolesExchange('DSE',this)"  class="roles-pill roles-pill-dse">🇹🇿 DSE · Tanzania</button>
+    <button onclick="setRolesExchange('ZSE',this)"  class="roles-pill roles-pill-zse">🇿🇼 ZSE · Zimbabwe</button>
+    <button onclick="setRolesExchange('LUSE',this)" class="roles-pill roles-pill-luse">🇿🇲 LUSE · Zambia</button>
+  </div>
+
+  <!-- Company card grid -->
+  <div id="roles-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:14px;margin-bottom:24px"></div>
+
+  <!-- Careers panel — appears below grid after selecting a company -->
+  <div id="roles-panel" style="display:none">
+    <!-- Panel header -->
+    <div id="roles-panel-hdr" class="card p-4 mb-0" style="border-bottom-left-radius:0;border-bottom-right-radius:0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div id="roles-panel-badge" style="width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff"></div>
+        <div>
+          <div id="roles-panel-name"  style="font-size:16px;font-weight:800;color:var(--text)"></div>
+          <div id="roles-panel-meta"  style="font-size:11px;color:var(--muted);margin-top:2px"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <a id="roles-panel-link" href="#" target="_blank" rel="noopener noreferrer"
+          style="padding:9px 20px;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#6366f1);color:#fff;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;box-shadow:0 3px 12px rgba(124,58,237,0.4)">
+          Open Careers Page &#8599;
+        </a>
+        <button onclick="closeRolesPanel()" style="padding:9px 14px;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer">✕ Close</button>
+      </div>
+    </div>
+    <!-- Embed note + iframe -->
+    <div class="card" style="border-top:none;border-top-left-radius:0;border-top-right-radius:0;padding:0;overflow:hidden">
+      <div id="roles-embed-note" style="padding:10px 18px;background:#1e1b4b;border-bottom:1px solid rgba(99,102,241,0.3);font-size:12px;color:#a5b4fc;display:flex;align-items:center;gap:10px">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        If the page does not load below, click <strong style="color:#fff;margin:0 4px">Open Careers Page ↗</strong> to open it directly in a new tab.
+      </div>
+      <iframe id="roles-iframe" src="about:blank"
+        style="width:100%;height:calc(100vh - 320px);min-height:580px;border:none;background:#fff;display:block"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+        title="Company Careers"></iframe>
+    </div>
+  </div>
+
+</div>
+
 <!-- ── APPLY ──────────────────────────────────────────────────────────────── -->
 <div id="tab-apply" class="tab-pane hidden">
 
@@ -726,7 +951,7 @@
   <div class="card p-6 mb-4" style="text-align:center">
     <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:12px">Live Jobs Board — Total Open Positions</div>
     <div id="apply-total-count" style="font-size:80px;font-weight:900;line-height:1;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">156</div>
-    <div style="font-size:13px;color:var(--muted);margin-top:10px">across 40 companies on 4 African exchanges</div>
+    <div style="font-size:13px;color:var(--muted);margin-top:10px">across 150 companies on 15 African exchanges</div>
   </div>
 
   <!-- Company selector -->
@@ -834,303 +1059,24 @@ let prevMdCount   = 0, prevMdTime = Date.now();
 let prevBid = null, prevAsk = null;
 const MAX_SPARK = 80;
 const VENUE_LABELS = {
-  GSE: 'Ghana Stock Exchange',
-  JSE: 'Johannesburg Stock Exchange',
-  NGX: 'Nigerian Exchange Group',
-  NSE: 'Nairobi Securities Exchange',
+  GSE:  'Ghana Stock Exchange',
+  JSE:  'Johannesburg Stock Exchange',
+  NGX:  'Nigerian Exchange Group',
+  NSE:  'Nairobi Securities Exchange',
+  CSE:  'Casablanca Stock Exchange',
+  EGX:  'Egyptian Exchange',
+  BRVM: 'Bourse Regionale des Valeurs Mobilieres',
+  BSE:  'Botswana Stock Exchange',
+  NSX:  'Namibia Stock Exchange',
+  SEM:  'Stock Exchange of Mauritius',
+  MSE:  'Malawi Stock Exchange',
+  BVMT: 'Bourse des Valeurs Mobilieres de Tunis',
+  DSE:  'Dar es Salaam Stock Exchange',
+  ZSE:  'Zimbabwe Stock Exchange',
+  LUSE: 'Lusaka Securities Exchange',
 };
 
-// Top listed companies per exchange — used for the "Find other" catalog dropdown
-const TOP_COMPANIES = {
-  GSE: [
-    {t:'ABL',     n:'Aluworks Limited'},
-    {t:'ACCESS',  n:'Access Bank Ghana'},
-    {t:'ACI',     n:'African Champion Industries'},
-    {t:'AYRTN',   n:'Ayrton Drugs Manufacturing'},
-    {t:'BOPP',    n:'Benso Oil Palm Plantation'},
-    {t:'CAL',     n:'CAL Bank'},
-    {t:'CLYD',    n:'Clydestone Ghana'},
-    {t:'CMLT',    n:'Camelot Ghana'},
-    {t:'CPC',     n:'Cocoa Processing Company'},
-    {t:'EGL',     n:'Enterprise Group Limited'},
-    {t:'FML',     n:'Fan Milk Limited'},
-    {t:'GCB',     n:'GCB Bank'},
-    {t:'GGBL',    n:'Guinness Ghana Breweries'},
-    {t:'GOIL',    n:'GOIL Company'},
-    {t:'GWEB',    n:'GW-Afr Properties'},
-    {t:'HFCB',    n:'Republic Bank Ghana'},
-    {t:'MTNGH',   n:'MTN Ghana'},
-    {t:'NIB',     n:'National Investment Bank'},
-    {t:'PBC',     n:'Produce Buying Company'},
-    {t:'PRIMUS',  n:'Primus One'},
-    {t:'RBGH',    n:'Royal Bank Ghana'},
-    {t:'SCB',     n:'Standard Chartered Bank Ghana'},
-    {t:'SIC',     n:'SIC Insurance'},
-    {t:'SOGEGH',  n:'Societe Generale Ghana'},
-    {t:'TBL',     n:'Trust Bancorp'},
-    {t:'TOTAL',   n:'TotalEnergies Marketing Ghana'},
-    {t:'TRANSOL', n:'Transol Solutions'},
-    {t:'UNIL',    n:'Unilever Ghana'},
-  ],
-  JSE: [
-    {t:'ABG',  n:'Absa Group'},
-    {t:'ADH',  n:'ADvTECH'},
-    {t:'AFR',  n:'Afrocentric Investment'},
-    {t:'AGL',  n:'Anglo American'},
-    {t:'AIA',  n:'Alexander Forbes Group'},
-    {t:'AMS',  n:'Anglo American Platinum'},
-    {t:'ARA',  n:'Argent Industrial'},
-    {t:'AVI',  n:'AVI Limited'},
-    {t:'BAW',  n:'Barloworld'},
-    {t:'BHP',  n:'BHP Group'},
-    {t:'BID',  n:'Bid Corporation'},
-    {t:'BTI',  n:'British American Tobacco'},
-    {t:'BVT',  n:'Bidvest Group'},
-    {t:'CFR',  n:'Compagnie Financière Richemont'},
-    {t:'CLH',  n:'City Lodge Hotels'},
-    {t:'CML',  n:'Coronation Fund Managers'},
-    {t:'CPI',  n:'Capitec Bank Holdings'},
-    {t:'CRG',  n:'Curro Holdings'},
-    {t:'DCP',  n:'Dis-Chem Pharmacies'},
-    {t:'DRD',  n:'DRDGold'},
-    {t:'DSY',  n:'Discovery'},
-    {t:'EMI',  n:'enX Group'},
-    {t:'EXX',  n:'Exxaro Resources'},
-    {t:'FBR',  n:'Famous Brands'},
-    {t:'FFB',  n:'Fortress Real Estate Investments'},
-    {t:'FSR',  n:'FirstRand'},
-    {t:'GFI',  n:'Gold Fields'},
-    {t:'GLN',  n:'Glencore'},
-    {t:'GND',  n:'Grindrod'},
-    {t:'GRT',  n:'Growthpoint Properties'},
-    {t:'HAR',  n:'Harmony Gold Mining'},
-    {t:'HCI',  n:'Hosken Consolidated Investments'},
-    {t:'IMP',  n:'Impala Platinum Holdings'},
-    {t:'INL',  n:'Investec'},
-    {t:'JSE',  n:'JSE Limited'},
-    {t:'KAP',  n:'KAP Industrial Holdings'},
-    {t:'LHC',  n:'Life Healthcare Group'},
-    {t:'MCG',  n:'MultiChoice Group'},
-    {t:'MEI',  n:'Metair Investments'},
-    {t:'MMI',  n:'Momentum Metropolitan Holdings'},
-    {t:'MNP',  n:'Mondi'},
-    {t:'MSM',  n:'Massmart Holdings'},
-    {t:'MTN',  n:'MTN Group'},
-    {t:'MUR',  n:'Murray & Roberts'},
-    {t:'NED',  n:'Nedbank Group'},
-    {t:'NHM',  n:'Northam Platinum'},
-    {t:'NPN',  n:'Naspers'},
-    {t:'NRP',  n:'Nampak'},
-    {t:'OCE',  n:'Oceana Group'},
-    {t:'OMU',  n:'Old Mutual'},
-    {t:'PAN',  n:'Pan African Resources'},
-    {t:'PIK',  n:'Pick n Pay Stores'},
-    {t:'PPH',  n:'Pepkor Holdings'},
-    {t:'PPC',  n:'PPC Limited'},
-    {t:'PRX',  n:'Prosus'},
-    {t:'PSG',  n:'PSG Group'},
-    {t:'RCL',  n:'RCL Foods'},
-    {t:'REM',  n:'Remgro'},
-    {t:'RNI',  n:'Redefine Properties'},
-    {t:'SAP',  n:'Sappi'},
-    {t:'SBK',  n:'Standard Bank Group'},
-    {t:'SHP',  n:'Shoprite Holdings'},
-    {t:'SLM',  n:'Sanlam'},
-    {t:'SNT',  n:'Santam'},
-    {t:'SOL',  n:'Sasol'},
-    {t:'SPP',  n:'The Spar Group'},
-    {t:'SSW',  n:'Sibanye-Stillwater'},
-    {t:'SUI',  n:'Sun International'},
-    {t:'TBS',  n:'Tiger Brands'},
-    {t:'TFG',  n:'The Foschini Group'},
-    {t:'TKG',  n:'Telkom SA SOC'},
-    {t:'TRU',  n:'Truworths International'},
-    {t:'TSH',  n:'Tharisa'},
-    {t:'VKE',  n:'Vukile Property Fund'},
-    {t:'VOD',  n:'Vodacom Group'},
-    {t:'WHL',  n:'Woolworths Holdings'},
-    {t:'RBP',  n:'Royal Bafokeng Platinum'},
-    {t:'RMH',  n:'RMB Holdings'},
-    {t:'SER',  n:'Seriti Resources'},
-    {t:'TON',  n:'Tongaat Hulett'},
-    {t:'SNH',  n:'Steinhoff International'},
-    {t:'COH',  n:'Comair Holdings'},
-    {t:'GRF',  n:'Griffin Mining'},
-    {t:'MRF',  n:'Merafe Resources'},
-    {t:'PGR',  n:'Pan African Gold Resources'},
-    {t:'SGL',  n:'Sibanye Gold'},
-    {t:'ADI',  n:'Astral Foods'},
-    {t:'RDF',  n:'Resilient REIT'},
-    {t:'EPP',  n:'EPP N.V.'},
-    {t:'HYP',  n:'Hyprop Investments'},
-    {t:'ACL',  n:'ArcelorMittal South Africa'},
-    {t:'ATT',  n:'Attacq'},
-    {t:'CCO',  n:'Capital & Counties'},
-    {t:'OML',  n:'Old Mutual Limited'},
-    {t:'NPK',  n:'Nampak'},
-    {t:'RLO',  n:'Reunert'},
-    {t:'SRG',  n:'Sasfin Holdings'},
-    {t:'TGA',  n:'Thungela Resources'},
-    {t:'GPT',  n:'Grindrod Shipping'},
-    {t:'MEP',  n:'Merafe Resources'},
-    {t:'NRI',  n:'Nutritional Holdings'},
-    {t:'SEA',  n:'Seardel Investment'},
-  ],
-  NGX: [
-    {t:'ACCESS',      n:'Access Holdings'},
-    {t:'AFRIPRUD',    n:'Africa Prudential'},
-    {t:'AIICO',       n:'AIICO Insurance'},
-    {t:'AIRTELAFRI',  n:'Airtel Africa'},
-    {t:'ARDOVA',      n:'Ardova Plc'},
-    {t:'BETAGLASS',   n:'Beta Glass'},
-    {t:'BUACEMENT',   n:'BUA Cement'},
-    {t:'BUAFOODS',    n:'BUA Foods'},
-    {t:'CADBURY',     n:'Cadbury Nigeria'},
-    {t:'CAP',         n:'CAP Plc'},
-    {t:'CAVERTON',    n:'Caverton Offshore Support Group'},
-    {t:'CHAMPION',    n:'Champion Breweries'},
-    {t:'CHAMS',       n:'Chams Holding Company'},
-    {t:'CONOIL',      n:'Conoil Plc'},
-    {t:'CORNERST',    n:'Cornerstone Insurance'},
-    {t:'COURTVILLE',  n:'Courtville Business Solutions'},
-    {t:'CUTIX',       n:'Cutix Plc'},
-    {t:'DANGCEM',     n:'Dangote Cement'},
-    {t:'DANGSUGAR',   n:'Dangote Sugar Refinery'},
-    {t:'ETERNA',      n:'Eterna Plc'},
-    {t:'ETI',         n:'Ecobank Transnational'},
-    {t:'FBNH',        n:'FBN Holdings'},
-    {t:'FCMB',        n:'FCMB Group'},
-    {t:'FIDSON',      n:'Fidson Healthcare'},
-    {t:'FIDELITYBK',  n:'Fidelity Bank'},
-    {t:'FLOURMILL',   n:'Flour Mills of Nigeria'},
-    {t:'GEREGU',      n:'Geregu Power'},
-    {t:'GTCO',        n:'Guaranty Trust Holding Company'},
-    {t:'GUINNESS',    n:'Guinness Nigeria'},
-    {t:'HONYFLOUR',   n:'Honeywell Flour Mills'},
-    {t:'INTBREW',     n:'International Breweries'},
-    {t:'JAIZ',        n:'Jaiz Bank'},
-    {t:'JAPAUL',      n:'Japaul Gold & Ventures'},
-    {t:'JOHN-HOLT',   n:'John Holt'},
-    {t:'LEARNAFRICA', n:'Learn Africa'},
-    {t:'LIVESTOCK',   n:'Livestock Feeds'},
-    {t:'MANSARD',     n:'AXA Mansard Insurance'},
-    {t:'MAYBAKER',    n:'May & Baker Nigeria'},
-    {t:'MCNICHOLS',   n:'McNichols Consolidated'},
-    {t:'MEYER',       n:'Meyer Plc'},
-    {t:'MIXEDRT',     n:'Mixta Real Estate'},
-    {t:'MRS',         n:'MRS Oil Nigeria'},
-    {t:'MTNN',        n:'MTN Nigeria Communications'},
-    {t:'MULTIVERSE',  n:'Multiverse Mining & Exploration'},
-    {t:'NASCON',      n:'NASCON Allied Industries'},
-    {t:'NB',          n:'Nigerian Breweries'},
-    {t:'NCAM',        n:'NC Alliance'},
-    {t:'NEM',         n:'NEM Insurance'},
-    {t:'NESTLE',      n:'Nestle Nigeria'},
-    {t:'NNFM',        n:'Northern Nigeria Flour Mills'},
-    {t:'NOTORE',      n:'Notore Chemical Industries'},
-    {t:'OANDO',       n:'Oando Plc'},
-    {t:'OKOMUOIL',    n:'Okomu Oil Palm'},
-    {t:'PHARMDEKO',   n:'Pharmdeko Plc'},
-    {t:'PRESCO',      n:'Presco Plc'},
-    {t:'PZ',          n:'PZ Cussons Nigeria'},
-    {t:'REGALINS',    n:'Regal Insurance'},
-    {t:'ROYALEX',     n:'Royalex Plc'},
-    {t:'SEPLAT',      n:'Seplat Energy'},
-    {t:'STANBIC',     n:'Stanbic IBTC Holdings'},
-    {t:'STERLINBANK', n:'Sterling Financial Holdings'},
-    {t:'TANTALIZERS', n:'Tantalizers Plc'},
-    {t:'THOMAS',      n:'Thomas Wyatt Nigeria'},
-    {t:'TOTAL',       n:'TotalEnergies Marketing Nigeria'},
-    {t:'TRANSCORP',   n:'Transnational Corporation'},
-    {t:'TRIPLEG',     n:'Triple Gee & Company'},
-    {t:'UBA',         n:'United Bank for Africa'},
-    {t:'UACN',        n:'UAC of Nigeria'},
-    {t:'UNILEVER',    n:'Unilever Nigeria'},
-    {t:'VITAFOAM',    n:'Vitafoam Nigeria'},
-    {t:'WEMA',        n:'Wema Bank'},
-    {t:'ZENITHBANK',  n:'Zenith Bank'},
-    {t:'AFRIPRUD',    n:'Africa Prudential Registrars'},
-    {t:'BERGER',      n:'Berger Paints Nigeria'},
-    {t:'CWG',         n:'CWG Plc'},
-    {t:'DNMAYER',     n:'DN Meyer'},
-    {t:'GOLDBREW',    n:'Golden Guinea Breweries'},
-    {t:'MBENEFIT',    n:'Mutual Benefits Assurance'},
-    {t:'REGENCY',     n:'Regency Alliance Insurance'},
-    {t:'UACPROP',     n:'UAC Property Development'},
-    {t:'VERITASKAP',  n:'Veritas Kapital Assurance'},
-    {t:'DAAR',        n:'DAAR Communications'},
-    {t:'ACADEMY',     n:'Academy Press'},
-    {t:'AFMIP',       n:'African Minerals & Mining'},
-    {t:'LINKASSURE',  n:'Linkage Assurance'},
-    {t:'FIDSON',      n:'Fidson Healthcare'},
-    {t:'LASACO',      n:'Lasaco Assurance'},
-    {t:'MORISON',     n:'Morison Industries'},
-    {t:'NCR',         n:'NCR (Nigeria)'},
-    {t:'REDSTAREX',   n:'Red Star Express'},
-    {t:'RTBRISCOE',   n:'R.T. Briscoe (Nigeria)'},
-    {t:'SOVEREIGN',   n:'Sovereign Trust Insurance'},
-    {t:'UNIONDICON',  n:'Union Dicon Salt'},
-  ],
-  NSE: [
-    {t:'ABSA',       n:'Absa Bank Kenya'},
-    {t:'ARM',        n:'ARM Cement'},
-    {t:'BAT',        n:'British American Tobacco Kenya'},
-    {t:'BAMBURI',    n:'Bamburi Cement'},
-    {t:'BOC',        n:'BOC Kenya'},
-    {t:'BRITAM',     n:'Britam Holdings'},
-    {t:'CARBACID',   n:'Carbacid Investments'},
-    {t:'CENTUM',     n:'Centum Investment'},
-    {t:'CHL',        n:'Crown Paints Kenya'},
-    {t:'CIC',        n:'CIC Insurance Group'},
-    {t:'COOP',       n:'Co-operative Bank of Kenya'},
-    {t:'DTB',        n:'Diamond Trust Bank Kenya'},
-    {t:'EABL',       n:'East African Breweries'},
-    {t:'EQUITY',     n:'Equity Group Holdings'},
-    {t:'EXPRESS',    n:'Express Kenya'},
-    {t:'FAHARI',     n:'ILAM Fahari I-REIT'},
-    {t:'HFCK',       n:'HF Group'},
-    {t:'IMH',        n:'I&M Holdings'},
-    {t:'JUBILEE',    n:'Jubilee Holdings'},
-    {t:'KAKUZI',     n:'Kakuzi'},
-    {t:'KAPCHORUA',  n:'Kapchorua Tea Kenya'},
-    {t:'KCB',        n:'KCB Group'},
-    {t:'KENGEN',     n:'Kenya Electricity Generating Company'},
-    {t:'KPLC',       n:'Kenya Power & Lighting'},
-    {t:'LIBERTY',    n:'Liberty Holdings Kenya'},
-    {t:'LIMURU',     n:'Limuru Tea'},
-    {t:'LONGHORN',   n:'Longhorn Publishers'},
-    {t:'MSC',        n:'Marshalls East Africa'},
-    {t:'MUMIAS',     n:'Mumias Sugar'},
-    {t:'NCBA',       n:'NCBA Group'},
-    {t:'NMG',        n:'Nation Media Group'},
-    {t:'OLYMPIA',    n:'Olympia Capital Holdings'},
-    {t:'SAFCOM',     n:'Safaricom'},
-    {t:'SANLAM',     n:'Sanlam Kenya'},
-    {t:'SCBL',       n:'Standard Chartered Bank Kenya'},
-    {t:'SGL',        n:'Standard Group'},
-    {t:'STANCHART',  n:'Standard Chartered Bank Kenya'},
-    {t:'TCL',        n:'TransCentury'},
-    {t:'TPS',        n:'TPS Eastern Africa (Serena Hotels)'},
-    {t:'UNGA',       n:'Unga Group'},
-    {t:'WILLIAMSTEA',n:'Williamson Tea Kenya'},
-    {t:'KENOLKOBIL', n:'KenolKobil (Rubis Energy)'},
-    {t:'ATHI',       n:'Athi River Mining'},
-    {t:'SCAN',       n:'Scangroup'},
-    {t:'NATION',     n:'Nation Media Group'},
-    {t:'HERITAGE',   n:'Heritage Insurance Kenya'},
-    {t:'ICDC',       n:'ICDC Investment Company'},
-    {t:'EVEREADY',   n:'Eveready East Africa'},
-    {t:'KENYA RE',   n:'Kenya Reinsurance Corporation'},
-    {t:'TOTAL',      n:'TotalEnergies Kenya'},
-    {t:'NAIROBI',    n:'Nairobi Business Ventures'},
-    {t:'MARSABIT',   n:'Marsabit Farm'},
-    {t:'KAPCHORUA',  n:'Kapchorua Tea Kenya'},
-    {t:'UNGA',       n:'Unga Group'},
-    {t:'LONGHORN',   n:'Longhorn Publishers'},
-    {t:'EVEREADY',   n:'Eveready East Africa'},
-    {t:'SPORT',      n:'SportPesa Racing Point'},
-  ],
-};
+
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 const fmt    = (n, d=2) => n == null ? '—' : Number(n).toFixed(d);
@@ -1159,6 +1105,7 @@ function showTab(name, btn) {
   if (name === 'algo')      loadAlgoOrders();
   if (name === 'tca')       loadTCA();
   if (name === 'jobs')      initJobsTab();
+  if (name === 'roles')     initRolesTab();
   if (name === 'apply')     initApplyTab();
   if (name === 'admin')     { loadRiskConfig(); loadRiskStats(); loadHaltStatus(); }
 }
@@ -1192,8 +1139,8 @@ async function pollHealth() {
       <div class="venue-card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
           <div style="font-size:22px;font-weight:900;color:#60a5fa">${v.venue}</div>
-          <span class="badge ${v.circuit_breaker_state === 'closed' ? 'badge-green' : 'badge-red'}">
-            ${v.circuit_breaker_state.toUpperCase()}
+          <span class="badge ${v.circuit_breaker_state === 'closed' ? 'badge-green' : v.circuit_breaker_state === 'half_open' ? 'badge-yellow' : 'badge-red'}">
+            ${{ closed: 'HEALTHY', half_open: 'RECOVERING', open: 'TRIPPED' }[v.circuit_breaker_state] || v.circuit_breaker_state.toUpperCase()}
           </span>
         </div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:12px">${VENUE_LABELS[v.venue] || ''}</div>
@@ -1252,7 +1199,12 @@ function renderChips() {
       </div>`).join('');
 }
 function selectSymbol(s) {
-  document.getElementById('o-symbol').value = s;
+  let foundVenue = '';
+  for (const [v, comps] of Object.entries(TOP_COMPANIES)) {
+    if (comps.find(c => c.t === s)) { foundVenue = v; break; }
+  }
+  if (foundVenue) _applySubmitSelection('o', foundVenue, s);
+  else document.getElementById('o-symbol').value = s;
   highlightChip(s);
 }
 function highlightChip(val) {
@@ -1263,9 +1215,106 @@ function selectOtherSymbol(venue, ticker) {
   const submitBtn = Array.from(document.querySelectorAll('.tab-btn'))
     .find(btn => (btn.getAttribute('onclick') || '').includes("'submit'"));
   if (submitBtn) showTab('submit', submitBtn);
-  document.getElementById('o-symbol').value = ticker;
+  _applySubmitSelection('o', venue, ticker);
   highlightChip(ticker);
   toast(`${ticker} selected — set quantity and submit`, 'inf', 3000);
+}
+
+// ── Submit Order / Algo: Exchange → Company cascading dropdowns ───────────────
+
+function onSubmitExchangeChange(prefix) {
+  const venue   = document.getElementById(`${prefix}-exchange`).value;
+  const compSel = document.getElementById(`${prefix}-company`);
+  const infoDiv = document.getElementById(`${prefix}-company-info`);
+  document.getElementById(`${prefix}-symbol`).value = '';
+  if (infoDiv) infoDiv.style.display = 'none';
+
+  if (!venue) {
+    compSel.innerHTML = '<option value="">— Select exchange first —</option>';
+    compSel.disabled = true;
+    return;
+  }
+
+  // PRIMARY: TOP_COMPANIES always available (284 companies, named) — no API dependency
+  const tcList  = TOP_COMPANIES[venue] || [];
+  const nameMap = {};
+  tcList.forEach(c => { nameMap[c.t] = { n: c.n, s: c.s || '' }; });
+
+  // MERGE: add any live API tickers not already in TOP_COMPANIES
+  const apiTickers = (allSymbols[venue] || []).filter(t => !nameMap[t]);
+  apiTickers.forEach(t => { nameMap[t] = { n: t, s: '' }; });
+
+  // Sort: TOP_COMPANIES order (original listing order), then any extras A-Z
+  const ordered = tcList.map(c => c.t);
+  const extras  = apiTickers.filter(t => !ordered.includes(t)).sort();
+  const allTickers = [...ordered, ...extras];
+
+  compSel.innerHTML =
+    `<option value="">— ${venue} companies (${allTickers.length}) —</option>` +
+    allTickers.map(t => {
+      const info  = nameMap[t];
+      const label = info && info.n !== t ? `${t} — ${info.n}` : t;
+      const sector = info && info.s ? ` [${info.s}]` : '';
+      return `<option value="${t}">${label}${sector}</option>`;
+    }).join('');
+
+  compSel.disabled = false;
+  compSel.value = '';
+}
+
+function onSubmitCompanyChange(prefix) {
+  const ticker = document.getElementById(`${prefix}-company`).value;
+  const venue  = document.getElementById(`${prefix}-exchange`).value;
+  if (!ticker) return;
+  _applySubmitSelection(prefix, venue, ticker);
+}
+
+async function _applySubmitSelection(prefix, venue, ticker) {
+  document.getElementById(`${prefix}-symbol`).value = ticker;
+  highlightChip(ticker);
+  const exEl = document.getElementById(`${prefix}-exchange`);
+  if (exEl && exEl.value !== venue) {
+    exEl.value = venue;
+    onSubmitExchangeChange(prefix);
+  }
+  const compEl = document.getElementById(`${prefix}-company`);
+  if (compEl) {
+    // ensure option exists then select it
+    if (!compEl.querySelector(`option[value="${ticker}"]`)) {
+      const opt = document.createElement('option');
+      opt.value = ticker;
+      const comp = (TOP_COMPANIES[venue] || []).find(c => c.t === ticker);
+      opt.textContent = `${ticker} — ${comp ? comp.n : ticker}`;
+      compEl.appendChild(opt);
+    }
+    compEl.value = ticker;
+    compEl.disabled = false;
+  }
+  const infoDiv = document.getElementById(`${prefix}-company-info`);
+  if (!infoDiv) return;
+  const comp = (TOP_COMPANIES[venue] || []).find(c => c.t === ticker);
+  const name = comp ? comp.n : ticker;
+  const sect = comp ? (comp.s || '') : '';
+  if (prefix === 'o') {
+    document.getElementById('o-co-name').textContent   = name;
+    document.getElementById('o-co-meta').textContent   = `${venue}  ·  ${sect}`;
+    document.getElementById('o-co-bid').textContent    = '…';
+    document.getElementById('o-co-ask').textContent    = '…';
+    document.getElementById('o-co-spread').textContent = '…';
+    infoDiv.style.display = '';
+    try {
+      const bk = await fetch(`/market-data/book/${venue}/${ticker}`).then(r => r.json());
+      document.getElementById('o-co-bid').textContent    = bk.best_bid != null ? Number(bk.best_bid).toFixed(4) : '—';
+      document.getElementById('o-co-ask').textContent    = bk.best_ask != null ? Number(bk.best_ask).toFixed(4) : '—';
+      document.getElementById('o-co-spread').textContent = bk.spread   != null ? (bk.spread*10000).toFixed(1)+'bps' : '—';
+    } catch(_) {}
+  } else {
+    const nm = document.getElementById(`${prefix}-co-name`);
+    const mt = document.getElementById(`${prefix}-co-meta`);
+    if (nm) nm.textContent = name;
+    if (mt) mt.textContent = `${venue}  ·  ${sect}`;
+    infoDiv.style.display = '';
+  }
 }
 
 // ── Live order book ───────────────────────────────────────────────────────────
@@ -1341,22 +1390,22 @@ function renderBook(d) {
   }
 
   const bids = d.bids || [], asks = d.asks || [];
-  const maxQty = Math.max(1, ...bids.map(l => l.qty), ...asks.map(l => l.qty));
+  const maxQty = Math.max(1, ...bids.map(l => l.quantity), ...asks.map(l => l.quantity));
 
   const bidRow = l => {
-    const pct = (l.qty / maxQty * 100).toFixed(1);
+    const pct = (l.quantity / maxQty * 100).toFixed(1);
     return `<tr style="border-bottom:1px solid var(--border);background:linear-gradient(to left,rgba(34,197,94,0.12) ${pct}%,transparent ${pct}%)">
       <td style="text-align:right;font-weight:700;color:#4ade80;font-family:monospace">${fmt(l.price,4)}</td>
-      <td style="text-align:right;font-family:monospace">${fmtQty(l.qty)}</td>
-      <td style="text-align:right;font-family:monospace;color:var(--muted)">${fmtQty(l.price*l.qty)}</td>
+      <td style="text-align:right;font-family:monospace">${fmtQty(l.quantity)}</td>
+      <td style="text-align:right;font-family:monospace;color:var(--muted)">${fmtQty(l.price*l.quantity)}</td>
     </tr>`;
   };
   const askRow = l => {
-    const pct = (l.qty / maxQty * 100).toFixed(1);
+    const pct = (l.quantity / maxQty * 100).toFixed(1);
     return `<tr style="border-bottom:1px solid var(--border);background:linear-gradient(to right,rgba(239,68,68,0.12) ${pct}%,transparent ${pct}%)">
       <td style="text-align:right;font-weight:700;color:#f87171;font-family:monospace">${fmt(l.price,4)}</td>
-      <td style="text-align:right;font-family:monospace">${fmtQty(l.qty)}</td>
-      <td style="text-align:right;font-family:monospace;color:var(--muted)">${fmtQty(l.price*l.qty)}</td>
+      <td style="text-align:right;font-family:monospace">${fmtQty(l.quantity)}</td>
+      <td style="text-align:right;font-family:monospace;color:var(--muted)">${fmtQty(l.price*l.quantity)}</td>
     </tr>`;
   };
   document.getElementById('b-bids').innerHTML = bids.map(bidRow).join('');
@@ -1406,7 +1455,11 @@ function buildPayload() {
   const symbol = document.getElementById('o-symbol').value.trim().toUpperCase();
   const qty    = parseFloat(document.getElementById('o-qty').value);
   const price  = document.getElementById('o-price').value.trim();
-  if (!symbol)        { toast('Symbol is required.', 'err'); return null; }
+  if (!symbol) {
+    toast('Select an exchange then a company first.', 'err');
+    document.getElementById('o-exchange').focus();
+    return null;
+  }
   if (!qty || qty<=0) { toast('Quantity must be positive.', 'err'); return null; }
   const p = { symbol, side: currentSide, quantity: qty };
   if (price) p.price = parseFloat(price);
@@ -1640,7 +1693,7 @@ async function submitAlgo() {
   const dur    = parseFloat(document.getElementById('algo-duration').value);
   const slices = parseInt(document.getElementById('algo-slices').value);
   const priceV = document.getElementById('algo-price').value.trim();
-  if (!sym)               { toast('Symbol required', 'err'); return; }
+  if (!sym) { toast('Select an exchange and company first.', 'err'); document.getElementById('algo-exchange').focus(); return; }
   if (!qty || qty <= 0)   { toast('Quantity must be positive', 'err'); return; }
   if (!dur || dur <= 0)   { toast('Duration must be positive', 'err'); return; }
   if (!slices||slices < 2){ toast('Slices must be >= 2', 'err'); return; }
@@ -1880,7 +1933,7 @@ function buildJobsDropdown() {
   const sel = document.getElementById('jobs-company');
   sel.innerHTML = '<option value="">— Choose a company —</option>';
 
-  const venueOrder = ['GSE','JSE','NGX','NSE'];
+  const venueOrder = ['GSE','JSE','NGX','NSE','CSE','EGX','BRVM','BSE','NSX','SEM','MSE','BVMT','DSE','ZSE','LUSE'];
   venueOrder.forEach(venue => {
     const all = [];
     // Active symbols first (from allSymbols)
@@ -1895,7 +1948,7 @@ function buildJobsDropdown() {
     });
 
     const grp = document.createElement('optgroup');
-    grp.label = `${venue} — ${{'GSE':'Ghana','JSE':'South Africa','NGX':'Nigeria','NSE':'Kenya'}[venue]}`;
+    grp.label = `${venue} — ${{ GSE:'Ghana', JSE:'South Africa', NGX:'Nigeria', NSE:'Kenya', CSE:'Morocco', EGX:'Egypt', BRVM:'West Africa', BSE:'Botswana', NSX:'Namibia', SEM:'Mauritius', MSE:'Malawi', BVMT:'Tunisia', DSE:'Tanzania', ZSE:'Zimbabwe', LUSE:'Zambia' }[venue]}`;
     all.forEach(c => {
       const opt = document.createElement('option');
       opt.value = `${venue}::${c.t}::${c.n}`;
@@ -1921,7 +1974,7 @@ function onJobsCompanyChange() {
     document.getElementById('jobs-send-panel').classList.add('hidden');
     document.getElementById('jobs-company-info').innerHTML = '<div style="font-size:11px;color:var(--muted)">Select a company to view live jobs</div>';
     document.getElementById('jobs-stats').innerHTML = '';
-    document.getElementById('jobs-rows').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:36px;color:var(--muted)">Select a company above to see live jobs.</td></tr>';
+    document.getElementById('jobs-rows').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:36px;color:var(--muted)">Select a company above to see live jobs.</td></tr>';
     return;
   }
   const [venue, ticker, ...nameParts] = val.split('::');
@@ -1930,8 +1983,8 @@ function onJobsCompanyChange() {
   _jobsCompany = nameParts.join('::');
 
   // Info strip
-  const currs = { GSE:'GHS', JSE:'ZAR', NGX:'NGN', NSE:'KES' };
-  const flags  = { GSE:'🇬🇭', JSE:'🇿🇦', NGX:'🇳🇬', NSE:'🇰🇪' };
+  const currs = { GSE:'GHS', JSE:'ZAR', NGX:'NGN', NSE:'KES', CSE:'MAD', EGX:'EGP', BRVM:'XOF', BSE:'BWP', NSX:'NAD', SEM:'MUR', MSE:'MWK', BVMT:'TND', DSE:'TZS', ZSE:'ZWG', LUSE:'ZMW' };
+  const flags  = { GSE:'🇬🇭', JSE:'🇿🇦', NGX:'🇳🇬', NSE:'🇰🇪', CSE:'🇲🇦', EGX:'🇪🇬', BRVM:'🌍', BSE:'🇧🇼', NSX:'🇳🇦', SEM:'🇲🇺', MSE:'🇲🇼', BVMT:'🇹🇳', DSE:'🇹🇿', ZSE:'🇿🇼', LUSE:'🇿🇲' };
   const book   = null; // will update on first poll
   document.getElementById('jobs-company-info').innerHTML = `
     <div style="font-size:22px">${flags[venue]}</div>
@@ -2078,7 +2131,7 @@ function renderJobsBoard() {
   if (statusFilter) rows = rows.filter(r => (r.status || '').toLowerCase() === statusFilter);
 
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:36px;color:var(--muted)">No jobs found for <strong style="color:#60a5fa">${_jobsSymbol}</strong>. Send a job above.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:36px;color:var(--muted)">No jobs found for <strong style="color:#60a5fa">${_jobsSymbol}</strong>. Send a job above.</td></tr>`;
     document.getElementById('jobs-count-lbl').textContent = '';
     return;
   }
@@ -2250,7 +2303,256 @@ const CAREERS = {
   SCBK:      { name:'Standard Chartered Kenya',venue:'NSE',country:'Kenya',       flag:'🇰🇪', url:'https://www.sc.com/ke/careers/',                                label:'Standard Chartered Kenya Careers' },
   BRITAM:    { name:'Britam Holdings',       venue:'NSE', country:'Kenya',        flag:'🇰🇪', url:'https://www.britam.com/ke/careers/',                            label:'Britam Careers' },
   KENGEN:    { name:'KenGen',                venue:'NSE', country:'Kenya',        flag:'🇰🇪', url:'https://www.kengen.co.ke/careers/',                             label:'KenGen Careers' },
+  // CSE — Casablanca Stock Exchange
+  ATW:       { name:'Attijariwafa Bank',     venue:'CSE', country:'Morocco',      flag:'🇲🇦', url:'https://www.attijariwafabank.com/fr/carrieres',                   label:'Attijariwafa Careers' },
+  IAM:       { name:'Maroc Telecom',         venue:'CSE', country:'Morocco',      flag:'🇲🇦', url:'https://www.iam.ma/Particuliers/Espace-Recrutement.aspx',          label:'Maroc Telecom Careers' },
+  OCP:       { name:'OCP Group',             venue:'CSE', country:'Morocco',      flag:'🇲🇦', url:'https://www.ocpgroup.ma/en/careers',                              label:'OCP Group Careers' },
+  BCP:       { name:'Banque Centrale Populaire',venue:'CSE',country:'Morocco',   flag:'🇲🇦', url:'https://www.gbp.ma/recrutement/',                                  label:'BCP Careers' },
+  BMCE:      { name:'Bank of Africa',        venue:'CSE', country:'Morocco',      flag:'🇲🇦', url:'https://www.bankofafrica.ma/recrutement/',                        label:'Bank of Africa Careers' },
+  CIH:       { name:'CIH Bank',              venue:'CSE', country:'Morocco',      flag:'🇲🇦', url:'https://www.cihbank.ma/Particuliers/recrutement.aspx',             label:'CIH Bank Careers' },
+  HPS:       { name:'HPS',                   venue:'CSE', country:'Morocco',      flag:'🇲🇦', url:'https://www.hps-worldwide.com/careers/',                          label:'HPS Careers' },
+  COSUMAR:   { name:'Cosumar',               venue:'CSE', country:'Morocco',      flag:'🇲🇦', url:'https://www.cosumar.co.ma/emplois',                               label:'Cosumar Careers' },
+  CIMAR:     { name:'Ciments du Maroc',      venue:'CSE', country:'Morocco',      flag:'🇲🇦', url:'https://www.cimentsdumaroc.com/fr/carrieres',                     label:'Ciments du Maroc Careers' },
+  WAFA:      { name:'Wafa Assurance',        venue:'CSE', country:'Morocco',      flag:'🇲🇦', url:'https://www.wafaassurance.ma/recrutement',                        label:'Wafa Assurance Careers' },
+  // EGX — Egyptian Exchange
+  COMI:      { name:'Commercial International Bank',venue:'EGX',country:'Egypt', flag:'🇪🇬', url:'https://www.cibeg.com/en/careers',                                label:'CIB Egypt Careers' },
+  HRHO:      { name:'Heliopolis Housing',    venue:'EGX', country:'Egypt',        flag:'🇪🇬', url:'https://www.heliopolishousingeg.com/careers',                    label:'Heliopolis Housing Careers' },
+  TMGH:      { name:'SODIC',                 venue:'EGX', country:'Egypt',        flag:'🇪🇬', url:'https://www.sodic.com/en/careers',                                label:'SODIC Careers' },
+  ESRS:      { name:'Ezz Steel',             venue:'EGX', country:'Egypt',        flag:'🇪🇬', url:'https://www.ezzgroup.com/careers',                                label:'Ezz Steel Careers' },
+  SWDY:      { name:'Sidi Kerir Petrochem',  venue:'EGX', country:'Egypt',        flag:'🇪🇬', url:'https://www.sidpec.com/careers/',                                 label:'SIDPEC Careers' },
+  MNHD:      { name:'Medinet Nasr Housing',  venue:'EGX', country:'Egypt',        flag:'🇪🇬', url:'https://www.mnhd.com.eg/careers',                                 label:'MNHD Careers' },
+  FWRY:      { name:'Fawry for Banking',     venue:'EGX', country:'Egypt',        flag:'🇪🇬', url:'https://www.fawry.com/careers/',                                  label:'Fawry Careers' },
+  PHDC:      { name:'Palm Hills Developments',venue:'EGX',country:'Egypt',        flag:'🇪🇬', url:'https://www.palmhillsdevelopments.com/en/careers',                label:'Palm Hills Careers' },
+  JUFO:      { name:'Juhayna Food Industries',venue:'EGX',country:'Egypt',        flag:'🇪🇬', url:'https://www.juhayna.com/careers',                                 label:'Juhayna Careers' },
+  OCDI:      { name:'Oriental Weavers',      venue:'EGX', country:'Egypt',        flag:'🇪🇬', url:'https://www.orientalweavers.com/careers/',                        label:'Oriental Weavers Careers' },
+  // BRVM — Bourse Regionale des Valeurs Mobilieres
+  SNTS:      { name:'Sonatel',               venue:'BRVM',country:'Senegal',      flag:'🌍', url:'https://www.orange.sn/recrutement',                                label:'Orange/Sonatel Careers' },
+  SGBCI:     { name:'Societe Generale CI',   venue:'BRVM',country:'Cote d\'Ivoire',flag:'🌍', url:'https://recrutement.societegenerale.ci/',                         label:'SocGen CI Careers' },
+  ORANGECI:  { name:'Orange Cote d\'Ivoire', venue:'BRVM',country:'Cote d\'Ivoire',flag:'🌍', url:'https://www.orange.ci/offres-emploi',                             label:'Orange CI Careers' },
+  SAPH:      { name:'SAPH Hevea',            venue:'BRVM',country:'Cote d\'Ivoire',flag:'🌍', url:'https://www.michelin.com/fr/emplois/',                            label:'SAPH/Michelin Careers' },
+  SIFCA:     { name:'SIFCA Group',           venue:'BRVM',country:'Cote d\'Ivoire',flag:'🌍', url:'https://www.sifca.ci/recrutement',                                label:'SIFCA Careers' },
+  ECOBANK:   { name:'Ecobank Group',         venue:'BRVM',country:'Togo',         flag:'🌍', url:'https://ecobank.taleo.net/careersection/ext/jobsearch.ftl',          label:'Ecobank Careers' },
+  CORIS:     { name:'Coris Bank',            venue:'BRVM',country:'Burkina Faso', flag:'🌍', url:'https://www.corisbank.com/recrutement/',                           label:'Coris Bank Careers' },
+  NSIABN:    { name:'NSIA Banque CI',        venue:'BRVM',country:'Cote d\'Ivoire',flag:'🌍', url:'https://www.nsiabanque.ci/recrutements/',                         label:'NSIA Banque Careers' },
+  TOTALCI:   { name:'TotalEnergies CI',      venue:'BRVM',country:'Cote d\'Ivoire',flag:'🌍', url:'https://careers.totalenergies.com/',                              label:'TotalEnergies CI Careers' },
+  SOLIBRA:   { name:'SOLIBRA Breweries',     venue:'BRVM',country:'Cote d\'Ivoire',flag:'🌍', url:'https://www.heineken.com/careers/',                               label:'SOLIBRA/Heineken Careers' },
+  // BSE — Botswana Stock Exchange
+  FNBB:      { name:'FNB Botswana',          venue:'BSE', country:'Botswana',     flag:'🇧🇼', url:'https://www.fnbbotswana.co.bw/careers/',                          label:'FNB Botswana Careers' },
+  CHOBE:     { name:'Chobe Holdings',        venue:'BSE', country:'Botswana',     flag:'🇧🇼', url:'https://www.chobeholdings.co.bw/careers/',                        label:'Chobe Holdings Careers' },
+  SEFALANA:  { name:'Sefalana Holdings',     venue:'BSE', country:'Botswana',     flag:'🇧🇼', url:'https://www.sefalana.co.bw/careers',                              label:'Sefalana Careers' },
+  STANBW:    { name:'Standard Chartered BW', venue:'BSE', country:'Botswana',     flag:'🇧🇼', url:'https://www.sc.com/bw/careers/',                                  label:'Standard Chartered BW Careers' },
+  LETSHEGO:  { name:'Letshego Holdings',     venue:'BSE', country:'Botswana',     flag:'🇧🇼', url:'https://www.letshego.com/careers/',                               label:'Letshego Careers' },
+  BTCL:      { name:'Botswana Telecom',      venue:'BSE', country:'Botswana',     flag:'🇧🇼', url:'https://www.btcl.co.bw/careers/',                                 label:'BTCL Careers' },
+  BOTASH:    { name:'Botash',                venue:'BSE', country:'Botswana',     flag:'🇧🇼', url:'https://www.botash.co.bw/careers/',                               label:'Botash Careers' },
+  BIHL:      { name:'Botswana Insurance Hldgs',venue:'BSE',country:'Botswana',   flag:'🇧🇼', url:'https://www.bihl.co.bw/careers/',                                  label:'BIHL Careers' },
+  CRESTA:    { name:'Cresta Hotels',         venue:'BSE', country:'Botswana',     flag:'🇧🇼', url:'https://www.crestamarakanelo.co.bw/careers/',                     label:'Cresta Hotels Careers' },
+  SECHABA:   { name:'Sechaba Brewery',       venue:'BSE', country:'Botswana',     flag:'🇧🇼', url:'https://www.heineken.com/careers/',                               label:'Sechaba/Heineken Careers' },
+  // NSX — Namibia Stock Exchange
+  FNBN:      { name:'FNB Namibia',           venue:'NSX', country:'Namibia',      flag:'🇳🇦', url:'https://www.fnbnamibia.com.na/careers/',                          label:'FNB Namibia Careers' },
+  CGP:       { name:'Capricorn Group',       venue:'NSX', country:'Namibia',      flag:'🇳🇦', url:'https://www.capricorngroup.com/careers/',                         label:'Capricorn Group Careers' },
+  BIDVNA:    { name:'Bidvest Namibia',       venue:'NSX', country:'Namibia',      flag:'🇳🇦', url:'https://www.bidvestnamibia.com/careers/',                         label:'Bidvest Namibia Careers' },
+  OLDMUT_NA: { name:'Old Mutual Namibia',    venue:'NSX', country:'Namibia',      flag:'🇳🇦', url:'https://www.oldmutual.com.na/careers/',                           label:'Old Mutual Namibia Careers' },
+  NAMCO:     { name:'Namibia Breweries',     venue:'NSX', country:'Namibia',      flag:'🇳🇦', url:'https://www.namibiabreweries.com/careers/',                      label:'Namibia Breweries Careers' },
+  ORYX:      { name:'Oryx Properties',       venue:'NSX', country:'Namibia',      flag:'🇳🇦', url:'https://www.oryxproperties.com.na/careers/',                     label:'Oryx Properties Careers' },
+  TCO:       { name:'Trustco Group',         venue:'NSX', country:'Namibia',      flag:'🇳🇦', url:'https://www.trustco.com.na/careers/',                             label:'Trustco Careers' },
+  STANBK_NA: { name:'Standard Bank Namibia', venue:'NSX', country:'Namibia',      flag:'🇳🇦', url:'https://www.standardbank.com.na/careers/',                       label:'Standard Bank Namibia Careers' },
+  LHN:       { name:'Letshego Namibia',      venue:'NSX', country:'Namibia',      flag:'🇳🇦', url:'https://www.letshego.com/careers/',                               label:'Letshego Namibia Careers' },
+  OHLTHAVER: { name:'Ohlthaver & List',      venue:'NSX', country:'Namibia',      flag:'🇳🇦', url:'https://www.olfgroup.com/careers/',                               label:'OLF Group Careers' },
+  // SEM — Stock Exchange of Mauritius
+  MCB:       { name:'MCB Group',             venue:'SEM', country:'Mauritius',    flag:'🇲🇺', url:'https://www.mcbgroup.com/careers/',                               label:'MCB Group Careers' },
+  SBM:       { name:'SBM Holdings',          venue:'SEM', country:'Mauritius',    flag:'🇲🇺', url:'https://www.sbmgroup.mu/careers/',                                label:'SBM Holdings Careers' },
+  ENL:       { name:'ENL Group',             venue:'SEM', country:'Mauritius',    flag:'🇲🇺', url:'https://www.enlgroup.com/careers/',                               label:'ENL Group Careers' },
+  CIEL:      { name:'CIEL Ltd',              venue:'SEM', country:'Mauritius',    flag:'🇲🇺', url:'https://www.cielgroup.com/careers/',                              label:'CIEL Careers' },
+  ROGERS:    { name:'Rogers & Co',           venue:'SEM', country:'Mauritius',    flag:'🇲🇺', url:'https://www.rogers.mu/careers/',                                  label:'Rogers Careers' },
+  IBL:       { name:'IBL Ltd',               venue:'SEM', country:'Mauritius',    flag:'🇲🇺', url:'https://www.iblgroup.mu/careers/',                                label:'IBL Group Careers' },
+  PHOENIX:   { name:'Phoenix Beverages',     venue:'SEM', country:'Mauritius',    flag:'🇲🇺', url:'https://www.phoenixbev.mu/careers/',                             label:'Phoenix Beverages Careers' },
+  SWAN:      { name:'Swan General Insurance',venue:'SEM', country:'Mauritius',    flag:'🇲🇺', url:'https://www.swangroup.mu/careers/',                              label:'Swan Group Careers' },
+  HAREL:     { name:'Harel Mallac',          venue:'SEM', country:'Mauritius',    flag:'🇲🇺', url:'https://www.harelmallac.mu/careers/',                            label:'Harel Mallac Careers' },
+  TERRA:     { name:'Terra Mauricia',        venue:'SEM', country:'Mauritius',    flag:'🇲🇺', url:'https://www.terramauricia.com/careers/',                         label:'Terra Mauricia Careers' },
+  // MSE — Malawi Stock Exchange
+  NBM:       { name:'National Bank of Malawi',venue:'MSE',country:'Malawi',       flag:'🇲🇼', url:'https://www.natbankmw.com/careers/',                              label:'National Bank Malawi Careers' },
+  NICO:      { name:'NICO Holdings',         venue:'MSE', country:'Malawi',       flag:'🇲🇼', url:'https://www.nico.mw/careers/',                                   label:'NICO Holdings Careers' },
+  TNM:       { name:'Telekom Networks Malawi',venue:'MSE',country:'Malawi',       flag:'🇲🇼', url:'https://www.tnm.co.mw/careers/',                                 label:'TNM Careers' },
+  AIRTELMW:  { name:'Airtel Malawi',         venue:'MSE', country:'Malawi',       flag:'🇲🇼', url:'https://www.airtel.mw/careers/',                                 label:'Airtel Malawi Careers' },
+  PCL:       { name:'Press Corporation',     venue:'MSE', country:'Malawi',       flag:'🇲🇼', url:'https://www.presscorporation.mw/careers/',                       label:'Press Corp Careers' },
+  FMBCH:     { name:'FMB Capital Holdings',  venue:'MSE', country:'Malawi',       flag:'🇲🇼', url:'https://www.fmbcapital.mw/careers/',                             label:'FMB Capital Careers' },
+  ILLOVO:    { name:'Illovo Sugar Malawi',   venue:'MSE', country:'Malawi',       flag:'🇲🇼', url:'https://www.illovosugarafrica.com/careers/',                     label:'Illovo Sugar Careers' },
+  SUNBIRD:   { name:'Sunbird Tourism',       venue:'MSE', country:'Malawi',       flag:'🇲🇼', url:'https://www.sunbirdmalawi.com/about/work-with-us/',               label:'Sunbird Tourism Careers' },
+  STANBIC_MW:{ name:'Stanbic Bank Malawi',   venue:'MSE', country:'Malawi',       flag:'🇲🇼', url:'https://www.stanbicbank.co.mw/careers/',                         label:'Stanbic Malawi Careers' },
+  LAFARGE_MW:{ name:'Lafarge Cement Malawi', venue:'MSE', country:'Malawi',       flag:'🇲🇼', url:'https://www.holcim.com/careers/',                                label:'Lafarge/Holcim Careers' },
+  // BVMT — Bourse de Tunis
+  ATTIJARITN:{ name:'Attijari Bank Tunisie', venue:'BVMT',country:'Tunisia',      flag:'🇹🇳', url:'https://www.attijaribank.com.tn/recrutement/',                   label:'Attijari Bank TN Careers' },
+  BIAT:      { name:'BIAT',                  venue:'BVMT',country:'Tunisia',      flag:'🇹🇳', url:'https://www.biat.com.tn/Recrutement/',                           label:'BIAT Careers' },
+  SFBT:      { name:'SFBT',                  venue:'BVMT',country:'Tunisia',      flag:'🇹🇳', url:'https://www.sfbt.com.tn/recrutement/',                           label:'SFBT Careers' },
+  POULINA:   { name:'Poulina Group',         venue:'BVMT',country:'Tunisia',      flag:'🇹🇳', url:'https://www.poulinagroup.com/recrutement/',                      label:'Poulina Group Careers' },
+  DELICE:    { name:'Delice Holding',        venue:'BVMT',country:'Tunisia',      flag:'🇹🇳', url:'https://www.delice.com.tn/recrutement/',                         label:'Delice Careers' },
+  ORANGE_TN: { name:'Orange Tunisie',        venue:'BVMT',country:'Tunisia',      flag:'🇹🇳', url:'https://www.orange.tn/recrutement/',                             label:'Orange Tunisie Careers' },
+  TELNET_TN: { name:'Telnet Holding',        venue:'BVMT',country:'Tunisia',      flag:'🇹🇳', url:'https://www.telnet.tn/careers/',                                 label:'Telnet Careers' },
+  ALKIMIA:   { name:'Alkimia',               venue:'BVMT',country:'Tunisia',      flag:'🇹🇳', url:'https://www.alkimia.com.tn/recrutement/',                        label:'Alkimia Careers' },
+  CITYC:     { name:'City Cars',             venue:'BVMT',country:'Tunisia',      flag:'🇹🇳', url:'https://www.citycars.com.tn/recrutement/',                       label:'City Cars Careers' },
+  STAR_TN:   { name:'STAR Insurance',        venue:'BVMT',country:'Tunisia',      flag:'🇹🇳', url:'https://www.star.com.tn/recrutement/',                           label:'STAR Careers' },
+  // DSE — Dar es Salaam Stock Exchange
+  CRDB:      { name:'CRDB Bank Tanzania',    venue:'DSE', country:'Tanzania',     flag:'🇹🇿', url:'https://www.crdbbank.co.tz/careers/',                            label:'CRDB Bank Careers' },
+  NMB_TZ:    { name:'NMB Bank Tanzania',     venue:'DSE', country:'Tanzania',     flag:'🇹🇿', url:'https://www.nmbbank.co.tz/careers/',                             label:'NMB Tanzania Careers' },
+  TBL_TZ:    { name:'Tanzania Breweries',    venue:'DSE', country:'Tanzania',     flag:'🇹🇿', url:'https://www.sabmiller.com/careers/',                            label:'Tanzania Breweries Careers' },
+  TCCL:      { name:'Tanzania Cigarette Co', venue:'DSE', country:'Tanzania',     flag:'🇹🇿', url:'https://www.bat.com/group/sites/uk__9d9kcy.nsf/vwPagesWebLive/DO9EE3TT', label:'BAT Tanzania Careers' },
+  TPCC:      { name:'Tanzania Portland Cement',venue:'DSE',country:'Tanzania',    flag:'🇹🇿', url:'https://www.holcim.com/careers/',                               label:'TPCC/Holcim Careers' },
+  VODA_TZ:   { name:'Vodacom Tanzania',      venue:'DSE', country:'Tanzania',     flag:'🇹🇿', url:'https://www.vodacom.co.tz/careers/',                            label:'Vodacom Tanzania Careers' },
+  STANBIC_TZ:{ name:'Stanbic Bank Tanzania', venue:'DSE', country:'Tanzania',     flag:'🇹🇿', url:'https://www.stanbicbank.co.tz/careers/',                        label:'Stanbic Tanzania Careers' },
+  KCB_TZ:    { name:'KCB Bank Tanzania',     venue:'DSE', country:'Tanzania',     flag:'🇹🇿', url:'https://kcbgroup.com/careers/',                                 label:'KCB Tanzania Careers' },
+  DCB:       { name:'DCB Commercial Bank',   venue:'DSE', country:'Tanzania',     flag:'🇹🇿', url:'https://www.dcbbank.co.tz/careers/',                            label:'DCB Bank Careers' },
+  EQUITY_TZ: { name:'Equity Bank Tanzania',  venue:'DSE', country:'Tanzania',     flag:'🇹🇿', url:'https://equitybank.taleo.net/careersection/ext_new/jobsearch.ftl', label:'Equity Bank TZ Careers' },
+  // ZSE — Zimbabwe Stock Exchange
+  ECONET:    { name:'Econet Wireless Zimbabwe',venue:'ZSE',country:'Zimbabwe',    flag:'🇿🇼', url:'https://www.econet.co.zw/careers/',                              label:'Econet Wireless Careers' },
+  DELTA_ZW:  { name:'Delta Beverages Zimbabwe',venue:'ZSE',country:'Zimbabwe',   flag:'🇿🇼', url:'https://www.deltabev.co.zw/careers/',                            label:'Delta Beverages Careers' },
+  INNSCOR:   { name:'Innscor Africa',        venue:'ZSE', country:'Zimbabwe',     flag:'🇿🇼', url:'https://www.innscor.com/careers/',                               label:'Innscor Careers' },
+  CBZ:       { name:'CBZ Holdings',          venue:'ZSE', country:'Zimbabwe',     flag:'🇿🇼', url:'https://www.cbzbank.co.zw/careers/',                             label:'CBZ Holdings Careers' },
+  FBC_ZW:    { name:'FBC Holdings',          venue:'ZSE', country:'Zimbabwe',     flag:'🇿🇼', url:'https://www.fbch.co.zw/careers/',                               label:'FBC Holdings Careers' },
+  STANBIC_ZW:{ name:'Stanbic Bank Zimbabwe', venue:'ZSE', country:'Zimbabwe',     flag:'🇿🇼', url:'https://www.stanbicbank.co.zw/careers/',                        label:'Stanbic Zimbabwe Careers' },
+  OLDMUT_ZW: { name:'Old Mutual Zimbabwe',   venue:'ZSE', country:'Zimbabwe',     flag:'🇿🇼', url:'https://www.oldmutual.co.zw/careers/',                          label:'Old Mutual Zimbabwe Careers' },
+  SIMBISA:   { name:'Simbisa Brands',        venue:'ZSE', country:'Zimbabwe',     flag:'🇿🇼', url:'https://www.simbisabrands.com/careers/',                        label:'Simbisa Brands Careers' },
+  SEEDCO_ZW: { name:'SeedCo Zimbabwe',       venue:'ZSE', country:'Zimbabwe',     flag:'🇿🇼', url:'https://www.seedcogroup.com/careers/',                          label:'SeedCo Zimbabwe Careers' },
+  NATFOODS:  { name:'National Foods Zimbabwe',venue:'ZSE',country:'Zimbabwe',     flag:'🇿🇼', url:'https://www.natfoods.co.zw/careers/',                           label:'National Foods Careers' },
+  // LUSE — Lusaka Securities Exchange
+  ZAMBEEF:   { name:'Zambeef Products',      venue:'LUSE',country:'Zambia',       flag:'🇿🇲', url:'https://www.zambeef.co.zm/careers/',                            label:'Zambeef Careers' },
+  ZANACO:    { name:'Zambia National Bank',  venue:'LUSE',country:'Zambia',       flag:'🇿🇲', url:'https://www.zanaco.co.zm/careers/',                             label:'ZANACO Careers' },
+  CEC:       { name:'Copperbelt Energy Corp',venue:'LUSE',country:'Zambia',       flag:'🇿🇲', url:'https://www.cec.co.zm/careers/',                                label:'CEC Careers' },
+  ZAMBREW:   { name:'Zambia Breweries',      venue:'LUSE',country:'Zambia',       flag:'🇿🇲', url:'https://www.ab-inbev.com/careers/',                             label:'Zambia Breweries Careers' },
+  ZCCM_IH:   { name:'ZCCM Investment Holdings',venue:'LUSE',country:'Zambia',    flag:'🇿🇲', url:'https://www.zccm-ih.com.zm/careers/',                            label:'ZCCM-IH Careers' },
+  STANDARD_ZM:{ name:'Standard Chartered Zambia',venue:'LUSE',country:'Zambia',  flag:'🇿🇲', url:'https://www.sc.com/zm/careers/',                                 label:'Standard Chartered Zambia Careers' },
+  AIRTELZM:  { name:'Airtel Networks Zambia',venue:'LUSE',country:'Zambia',       flag:'🇿🇲', url:'https://www.airtel.co.zm/careers/',                             label:'Airtel Zambia Careers' },
+  STANBIC_ZM:{ name:'Stanbic Bank Zambia',   venue:'LUSE',country:'Zambia',       flag:'🇿🇲', url:'https://www.stanbicbank.co.zm/careers/',                        label:'Stanbic Zambia Careers' },
+  ZAMBIA_SUGAR:{ name:'Zambia Sugar',        venue:'LUSE',country:'Zambia',       flag:'🇿🇲', url:'https://www.zambiasugar.co.zm/careers/',                        label:'Zambia Sugar Careers' },
+  CHILANGA:  { name:'Chilanga Cement',       venue:'LUSE',country:'Zambia',       flag:'🇿🇲', url:'https://www.holcim.com/careers/',                               label:'Chilanga/Holcim Careers' },
 };
+
+// ── LIVE ROLES TAB ───────────────────────────────────────────────────────────
+
+const VENUE_COLORS = {
+  GSE:  { bg:'#1B5E20', pill:'roles-pill-gse' },
+  JSE:  { bg:'#0D47A1', pill:'roles-pill-jse' },
+  NGX:  { bg:'#B71C1C', pill:'roles-pill-ngx' },
+  NSE:  { bg:'#4A148C', pill:'roles-pill-nse' },
+  CSE:  { bg:'#006064', pill:'roles-pill-cse' },
+  EGX:  { bg:'#E65100', pill:'roles-pill-egx' },
+  BRVM: { bg:'#827717', pill:'roles-pill-brvm' },
+  BSE:  { bg:'#064E3B', pill:'roles-pill-bse' },
+  NSX:  { bg:'#0C4A6E', pill:'roles-pill-nsx' },
+  SEM:  { bg:'#831843', pill:'roles-pill-sem' },
+  MSE:  { bg:'#365314', pill:'roles-pill-mse' },
+  BVMT: { bg:'#9A3412', pill:'roles-pill-bvmt' },
+  DSE:  { bg:'#1E1B4B', pill:'roles-pill-dse' },
+  ZSE:  { bg:'#134E4A', pill:'roles-pill-zse' },
+  LUSE: { bg:'#78350F', pill:'roles-pill-luse' },
+};
+
+// For companies without a CAREERS entry, fall back to a LinkedIn/Google search
+function _careersUrl(ticker, companyName) {
+  if (CAREERS[ticker]) return CAREERS[ticker].url;
+  const q = encodeURIComponent(companyName + ' careers jobs');
+  return `https://www.google.com/search?q=${q}`;
+}
+
+let _rolesExchange  = 'ALL';
+let _rolesInitDone  = false;
+let _selectedRoleTicker = null;
+
+function initRolesTab() {
+  if (_rolesInitDone) return;
+  _rolesInitDone = true;
+  buildRolesGrid();
+}
+
+function buildRolesGrid() {
+  const grid    = document.getElementById('roles-grid');
+  const search  = (document.getElementById('roles-search').value || '').toLowerCase().trim();
+  const ex      = _rolesExchange;
+
+  // Flatten all companies from TOP_COMPANIES, filtered by exchange + search
+  let companies = [];
+  const venues  = ex === 'ALL' ? ['GSE','JSE','NGX','NSE','CSE','EGX','BRVM','BSE','NSX','SEM','MSE','BVMT','DSE','ZSE','LUSE'] : [ex];
+  venues.forEach(v => {
+    (TOP_COMPANIES[v] || []).forEach(c => {
+      if (search && !c.n.toLowerCase().includes(search) && !c.t.toLowerCase().includes(search)) return;
+      companies.push({ ticker: c.t, name: c.n, sector: c.s || '—', venue: v });
+    });
+  });
+
+  document.getElementById('roles-count-lbl').textContent =
+    `${companies.length} compan${companies.length !== 1 ? 'ies' : 'y'}`;
+
+  if (!companies.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted);font-size:13px">
+      No companies found${search ? ` matching "<strong style="color:var(--text)">${search}</strong>"` : ''}.
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = companies.map(c => {
+    const vc      = VENUE_COLORS[c.venue] || { bg:'#374151' };
+    const initials = c.ticker.slice(0, 3);
+    const isSelected = c.ticker === _selectedRoleTicker;
+    const hasCareer  = !!CAREERS[c.ticker];
+    return `
+      <div class="role-card${isSelected ? ' selected' : ''}" onclick="openRolesPanel('${c.ticker}','${c.name.replace(/'/g,"\\'")}','${c.venue}','${c.sector}')">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="role-initials" style="background:${vc.bg}">${initials}</div>
+          <span class="role-exbadge role-exbadge-${c.venue}">${c.venue}</span>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.3;min-height:36px">${c.name}</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">${c.sector}</div>
+        <div class="role-view-btn">${hasCareer ? 'View Roles ↗' : 'Search Roles ↗'}</div>
+      </div>`;
+  }).join('');
+}
+
+function setRolesExchange(venue, btn) {
+  _rolesExchange = venue;
+  // Update active pill
+  document.querySelectorAll('.roles-pill').forEach(p => p.classList.remove('active-pill'));
+  btn.classList.add('active-pill');
+  buildRolesGrid();
+}
+
+function filterRolesGrid() {
+  buildRolesGrid();
+}
+
+function openRolesPanel(ticker, name, venue, sector) {
+  _selectedRoleTicker = ticker;
+  buildRolesGrid(); // re-render to mark selected card
+
+  const career    = CAREERS[ticker];
+  const url       = career ? career.url : _careersUrl(ticker, name);
+  const label     = career ? career.label : (name + ' — Job Search');
+  const vc        = VENUE_COLORS[venue] || { bg:'#374151' };
+  const initials  = ticker.slice(0, 3);
+  const flag      = career ? (career.flag || '') : '';
+  const country   = career ? (career.country || venue) : venue;
+
+  document.getElementById('roles-panel-badge').textContent  = initials;
+  document.getElementById('roles-panel-badge').style.background = vc.bg;
+  document.getElementById('roles-panel-name').textContent   = name;
+  document.getElementById('roles-panel-meta').innerHTML     =
+    `${flag} ${country} &nbsp;·&nbsp; ${venue} &nbsp;·&nbsp; ${sector}`;
+  document.getElementById('roles-panel-link').href = url;
+  document.getElementById('roles-panel-link').title = label;
+  document.getElementById('roles-iframe').src = url;
+
+  const panel = document.getElementById('roles-panel');
+  panel.style.display = '';
+  // Smooth scroll to panel
+  setTimeout(() => panel.scrollIntoView({ behavior:'smooth', block:'start' }), 80);
+}
+
+function closeRolesPanel() {
+  document.getElementById('roles-panel').style.display = 'none';
+  document.getElementById('roles-iframe').src = 'about:blank';
+  _selectedRoleTicker = null;
+  buildRolesGrid();
+}
+
+// ── END LIVE ROLES ────────────────────────────────────────────────────────────
 
 let _applyInitDone = false;
 
@@ -2267,8 +2569,8 @@ function initApplyTab() {
 
   // Populate dropdown grouped by venue
   const sel = document.getElementById('apply-company');
-  const VENUE_LABELS = { GSE:'🇬🇭 GSE — Ghana', JSE:'🇿🇦 JSE — South Africa', NGX:'🇳🇬 NGX — Nigeria', NSE:'🇰🇪 NSE — Kenya' };
-  const byVenue = { GSE:[], JSE:[], NGX:[], NSE:[] };
+  const VENUE_LABELS = { GSE:'🇬🇭 GSE — Ghana', JSE:'🇿🇦 JSE — South Africa', NGX:'🇳🇬 NGX — Nigeria', NSE:'🇰🇪 NSE — Kenya', CSE:'🇲🇦 CSE — Morocco', EGX:'🇪🇬 EGX — Egypt', BRVM:'🌍 BRVM — West Africa', BSE:'🇧🇼 BSE — Botswana', NSX:'🇳🇦 NSX — Namibia', SEM:'🇲🇺 SEM — Mauritius', MSE:'🇲🇼 MSE — Malawi', BVMT:'🇹🇳 BVMT — Tunisia', DSE:'🇹🇿 DSE — Tanzania', ZSE:'🇿🇼 ZSE — Zimbabwe', LUSE:'🇿🇲 LUSE — Zambia' };
+  const byVenue = { GSE:[], JSE:[], NGX:[], NSE:[], CSE:[], EGX:[], BRVM:[], BSE:[], NSX:[], SEM:[], MSE:[], BVMT:[], DSE:[], ZSE:[], LUSE:[] };
   Object.entries(CAREERS).forEach(([ticker, c]) => {
     if (byVenue[c.venue]) byVenue[c.venue].push({ ticker, ...c });
   });

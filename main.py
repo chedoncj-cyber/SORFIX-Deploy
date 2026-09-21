@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FIX_Aggregator_SOR_Complete APP
+Pan SORFIX
 Pan-African Low-Latency Smart Order Router
 
 Usage:
@@ -38,32 +38,74 @@ def _load_api_config() -> dict:
         cfg["host"] = os.environ["APP_HOST"]
     if os.environ.get("APP_PORT"):
         cfg["port"] = int(os.environ["APP_PORT"])
+    if os.environ.get("PORT"):  # Render.com sets PORT automatically — highest priority
+        cfg["port"] = int(os.environ["PORT"])
     return cfg
 
 
 def _setup_logging():
     import logging
-    sys.stdout.reconfigure(line_buffering=True)
+    from logging.handlers import RotatingFileHandler
+    from pathlib import Path
+
+    if sys.stdout is not None and hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(line_buffering=True)
+
     level = getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), logging.INFO)
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s %(name)s %(levelname)s %(message)s",
-        stream=sys.stdout,
+    fmt   = "%(asctime)s %(name)s %(levelname)s %(message)s"
+
+    handlers = []
+    if sys.stdout is not None:
+        handlers.append(logging.StreamHandler(sys.stdout))
+
+    # Rotating file log — 5 MB per file, keep 3 backups (15 MB total)
+    log_dir = Path(__file__).parent / "logs"
+    log_dir.mkdir(exist_ok=True)
+    handlers.append(
+        RotatingFileHandler(
+            log_dir / "app.log",
+            maxBytes=5 * 1024 * 1024,
+            backupCount=3,
+            encoding="utf-8",
+        )
     )
+
+    logging.basicConfig(level=level, format=fmt, handlers=handlers)
 
 
 def run_server(port: int = None):
+    import threading
+    import urllib.request
     import uvicorn
+
     cfg = _load_api_config()
     host    = cfg["host"]
     port    = port if port is not None else cfg["port"]
     workers = cfg["workers"]
     display_host = "localhost" if host in ("0.0.0.0", "::") else host
-    print(f"FIX_Aggregator_SOR_Complete APP  v1.0.0", flush=True)
+    print(f"Pan SORFIX  v3.0.0", flush=True)
     print(f"  API docs : http://{display_host}:{port}/docs", flush=True)
     print(f"  Health   : http://{display_host}:{port}/health", flush=True)
     print(f"  WebSocket: ws://{display_host}:{port}/ws/book/{{venue}}/{{symbol}}", flush=True)
     print(f"  Workers  : {workers}", flush=True)
+    print(f"  Log file : logs/app.log  (5 MB rotating, 3 backups)", flush=True)
+
+    def _health_check(_port):
+        import time as _t, urllib.request as _ur
+        _t.sleep(3)  # give uvicorn time to bind and lifespan to complete
+        for attempt in range(1, 11):
+            try:
+                with _ur.urlopen(f"http://localhost:{_port}/health", timeout=2) as r:
+                    if r.status == 200:
+                        print(f"  Health check PASSED (attempt {attempt}) — server is ready", flush=True)
+                        return
+            except Exception:
+                pass
+            _t.sleep(1)
+        print("  WARNING: Health check did not pass after 10s — check logs/app.log for errors", flush=True)
+
+    threading.Thread(target=_health_check, args=(port,), daemon=True, name="HealthCheck").start()
+
     # workers > 1 uses uvicorn multiprocess supervisor (Linux/production).
     # workers == 1 runs in-process — no subprocess race on stdout, simpler on Windows.
     uvicorn.run(
@@ -82,7 +124,7 @@ def run_demo():
     from tools.smart_order_router import Order, OrderSide
 
     print("=" * 60)
-    print("  FIX_Aggregator_SOR_Complete APP -- Demo Mode")
+    print("  Pan SORFIX  v3.0 -- Demo Mode")
     print("  Pan-African SOR: GSE | JSE | NGX | NSE")
     print("=" * 60)
 
@@ -157,7 +199,7 @@ def run_demo():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="FIX_Aggregator_SOR_Complete APP")
+    parser = argparse.ArgumentParser(description="Pan SORFIX — Pan-African Smart Order Router")
     parser.add_argument("--demo", action="store_true", help="Run demo routing and exit")
     parser.add_argument("--port", type=int, default=None, help="API server port (default: from sor_config.yaml api.port)")
     args = parser.parse_args()

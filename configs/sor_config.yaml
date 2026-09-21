@@ -1,9 +1,10 @@
 routing:
-  liquidity_weight: 0.30
-  spread_weight: 0.20
-  fee_weight: 0.20
-  fx_weight: 0.20
-  latency_weight: 0.10
+  liquidity_weight:   0.28
+  spread_weight:      0.18
+  fee_weight:         0.16
+  fx_weight:          0.18
+  latency_weight:     0.10
+  reliability_weight: 0.10
   max_order_splits: 5
   min_split_quantity: 100.0
 
@@ -27,6 +28,17 @@ fx_rates:
   ZAR: 18.8
   NGN: 1580.0
   KES: 133.5
+  MAD: 9.9
+  EGP: 48.0
+  XOF: 597.0
+  BWP: 13.5
+  NAD: 18.8
+  MUR: 45.5
+  MWK: 1730.0
+  TND: 3.1
+  TZS: 2580.0
+  ZWG: 13.56
+  ZMW: 26.5
 
 api:
   host: 0.0.0.0

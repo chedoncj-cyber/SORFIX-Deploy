@@ -1,8 +1,10 @@
 """
 Smart Order Router — core routing logic.
 Scores venues using weighted factors and splits orders to minimize cost + latency.
-Weights match the PDF spec: liquidity 30%, spread 20%, fee 20%, FX 20%, latency 10%.
+Six scoring dimensions: liquidity 28%, spread 18%, fee 16%, FX 18%, latency 10%, reliability 10%.
+Weights are configured in configs/sor_config.yaml and must sum to 1.0.
 """
+import math
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -42,6 +44,7 @@ class VenueScore:
     fx_cost: float
     latency: float
     available_qty: float
+    reliability: float = 1.0
 
 
 @dataclass
@@ -72,13 +75,14 @@ class RoutingDecision:
 
 @dataclass
 class SORConfig:
-    liquidity_weight: float = 0.30
-    spread_weight: float    = 0.20
-    fee_weight: float       = 0.20
-    fx_weight: float        = 0.20
-    latency_weight: float   = 0.10
-    max_splits: int         = 5
-    min_split_qty: float    = 100.0
+    liquidity_weight:   float = 0.28
+    spread_weight:      float = 0.18
+    fee_weight:         float = 0.16
+    fx_weight:          float = 0.18
+    latency_weight:     float = 0.10
+    reliability_weight: float = 0.10
+    max_splits:         int   = 5
+    min_split_qty:      float = 100.0
 
 
 @dataclass
@@ -109,35 +113,65 @@ class SmartOrderRouter:
         )
 
     def _score_venue(self, order: Order, venue_name: str, book: OrderBook) -> VenueScore:
-        import math
         venue = self.venues[venue_name]
         cfg   = self.config
 
-        avail     = book.liquidity_at_levels(3)
-        liquidity = min(1.0, avail / max(order.quantity, 1))
+        # 1. Side-aware liquidity: consume ask depth for buys, bid depth for sells.
+        #    5 levels captures realistic sweep depth better than 3.
+        if order.side == OrderSide.BUY:
+            avail = sum(lvl.quantity for lvl in book.asks[:5])
+        else:
+            avail = sum(lvl.quantity for lvl in book.bids[:5])
+        avail = max(avail, 1.0)
 
-        raw_spread = book.spread if book.spread is not None else 0.05
-        spread     = max(0.0, 1.0 - raw_spread / 0.05)
+        # Market impact: sqrt participation model with stronger coefficient.
+        participation = order.quantity / avail
+        impact_penalty = min(0.45, 0.20 * math.sqrt(participation))
+        liquidity = max(0.0, min(1.0, avail / max(order.quantity, 1.0)) - impact_penalty)
 
+        # 2. Spread: exponential decay eliminates the hard 5% cliff.
+        #    10bps → 0.90, 50bps → 0.61, 200bps → 0.14
+        spread_bps = (book.spread * 10_000) if book.spread is not None else 300.0
+        spread = math.exp(-spread_bps / 100.0)
+
+        # 3. Fee: linear, calibrated against 50bps ceiling (unchanged — well-calibrated).
         fee = max(0.0, 1.0 - venue.taker_fee / 0.005)
 
-        fx_cost_val = self.fx.get_conversion_cost(order.base_currency, venue.currency)
-        fx_cost     = max(0.0, 1.0 - fx_cost_val)
+        # 4. FX cost: per-pair costs (ZAR 8bps < GHS 12bps < KES 15bps < NGN 20bps),
+        #    normalized against 30bps worst-case so same-currency always scores 1.0.
+        fx_raw  = self.fx.get_conversion_cost(order.base_currency, venue.currency)
+        fx_cost = max(0.0, 1.0 - fx_raw / self.fx.WORST_CASE_COST)
 
-        latency = max(0.0, 1.0 - venue.latency_ms / 100.0)
+        # 5. Latency: exponential decay gives log-scale effect.
+        #    2ms → 0.90, 8ms → 0.67, 15ms → 0.47 — 4x latency is now meaningfully penalized.
+        latency = math.exp(-venue.latency_ms / 20.0)
 
-        # Market impact penalty: sqrt model — larger order relative to book depth costs more
-        participation = order.quantity / max(avail, 1.0)
-        market_impact_penalty = min(0.5, 0.1 * math.sqrt(participation))
-        liquidity = max(0.0, liquidity - market_impact_penalty)
+        # 6. Reliability: recent circuit-breaker failure count depresses score.
+        #    Each failure reduces by 15%, floor at 0.3 (venue still usable, just penalized).
+        cb = self.circuit_breakers.get(venue_name)
+        if cb:
+            stats    = cb.get_stats()
+            failures = stats.get("failure_count", 0)
+            reliability = max(0.3, 1.0 - failures * 0.15)
+        else:
+            reliability = 1.0
+
+        # Book staleness multiplier: penalize stale order book data (10s half-life).
+        # Fresh books (< 1s old) are negligibly penalized; a 30s-stale book scores ~0.05.
+        if book.last_update_ns > 0:
+            age_s = max(0.0, (time.perf_counter_ns() - book.last_update_ns) / 1e9)
+            staleness_mult = math.exp(-age_s / 10.0)
+        else:
+            staleness_mult = 0.8
 
         total = (
-            liquidity * cfg.liquidity_weight +
-            spread    * cfg.spread_weight    +
-            fee       * cfg.fee_weight       +
-            fx_cost   * cfg.fx_weight        +
-            latency   * cfg.latency_weight
-        )
+            liquidity   * cfg.liquidity_weight    +
+            spread      * cfg.spread_weight       +
+            fee         * cfg.fee_weight          +
+            fx_cost     * cfg.fx_weight           +
+            latency     * cfg.latency_weight      +
+            reliability * cfg.reliability_weight
+        ) * staleness_mult
 
         return VenueScore(
             venue=venue_name,
@@ -148,6 +182,7 @@ class SmartOrderRouter:
             fx_cost=fx_cost,
             latency=latency,
             available_qty=avail,
+            reliability=reliability,
         )
 
     def route(self, order: Order) -> RoutingDecision:
@@ -190,29 +225,50 @@ class SmartOrderRouter:
 
         scored.sort(key=lambda s: s.total, reverse=True)
 
+        # Proportional allocation: distribute quantity across top venues weighted by score * capacity.
+        # Single-venue orders go entirely to the best venue.
+        candidates = [s for s in scored[:order.max_splits] if s.available_qty >= order.min_split_qty or not scored[:scored.index(s)]]
+        if not candidates:
+            candidates = scored[:1]  # guarantee at least one leg
+
+        # Weight = score * min(available_qty, order.quantity) — score quality × capacity
+        weights = [s.total * min(s.available_qty, order.quantity) for s in candidates]
+        total_w = sum(weights) or 1.0
+
         legs: List[RoutingLeg] = []
         remaining = order.quantity
 
-        for score in scored[:order.max_splits]:
+        for idx, score in enumerate(candidates):
             if remaining <= 0:
                 break
-            # First leg always proceeds regardless of available_qty to guarantee a route;
-            # subsequent legs must meet min_split_qty to avoid tiny, inefficient fills.
-            if score.available_qty < order.min_split_qty and legs:
-                continue
 
-            alloc = min(remaining, score.available_qty) if score.available_qty > 0 else remaining
+            # First leg takes its proportional share; last leg takes all remaining
+            if idx == len(candidates) - 1:
+                alloc = remaining
+            else:
+                alloc = round(order.quantity * weights[idx] / total_w)
+
+            alloc = min(alloc, remaining)
+            # Skip legs that are below minimum except the first (which guarantees a route)
+            if alloc < order.min_split_qty and legs:
+                if remaining < order.min_split_qty:
+                    break
+                alloc = remaining  # fold remainder into this leg
+
             if alloc <= 0:
                 continue
-            if alloc < order.min_split_qty and legs:
-                break
 
             venue_cfg = self.venues[score.venue]
             book      = self.cache.get(score.venue, order.symbol)
             price     = order.price
             if price is None and book:
-                lvl   = book.best_ask if order.side == OrderSide.BUY else book.best_bid
-                price = lvl.price if lvl else None
+                # Use mid-price for market orders (more realistic than best ask/bid alone)
+                if book.best_ask and book.best_bid:
+                    mid   = (book.best_ask.price + book.best_bid.price) / 2
+                    price = round(mid * (1.0002 if order.side == OrderSide.BUY else 0.9998), 6)
+                else:
+                    lvl   = book.best_ask if order.side == OrderSide.BUY else book.best_bid
+                    price = lvl.price if lvl else None
 
             legs.append(RoutingLeg(
                 venue=score.venue,

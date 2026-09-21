@@ -24,10 +24,21 @@ from tools.risk_engine             import RiskEngine, RiskConfig
 from tools.position_tracker        import PositionTracker
 from tools.algo_engine             import AlgoEngine
 from tools.db                      import OrderDB
-from tools.venue_adapters.gse_adapter import GSEAdapter
-from tools.venue_adapters.jse_adapter import JSEAdapter
-from tools.venue_adapters.ngx_adapter import NGXAdapter
-from tools.venue_adapters.nse_adapter import NSEAdapter
+from tools.venue_adapters.gse_adapter  import GSEAdapter
+from tools.venue_adapters.jse_adapter  import JSEAdapter
+from tools.venue_adapters.ngx_adapter  import NGXAdapter
+from tools.venue_adapters.nse_adapter  import NSEAdapter
+from tools.venue_adapters.cse_adapter  import CSEAdapter
+from tools.venue_adapters.egx_adapter  import EGXAdapter
+from tools.venue_adapters.brvm_adapter import BRVMAdapter
+from tools.venue_adapters.bse_adapter  import BSEAdapter
+from tools.venue_adapters.nsx_adapter  import NSXAdapter
+from tools.venue_adapters.sem_adapter  import SEMAdapter
+from tools.venue_adapters.mse_adapter  import MSEAdapter
+from tools.venue_adapters.bvmt_adapter import BVMTAdapter
+from tools.venue_adapters.dse_adapter  import DSEAdapter
+from tools.venue_adapters.zse_adapter  import ZSEAdapter
+from tools.venue_adapters.luse_adapter import LUSEAdapter
 
 
 @dataclass
@@ -46,6 +57,17 @@ class AppState:
     jse:         JSEAdapter
     ngx:         NGXAdapter
     nse:         NSEAdapter
+    cse:         CSEAdapter
+    egx:         EGXAdapter
+    brvm:        BRVMAdapter
+    bse:         BSEAdapter
+    nsx:         NSXAdapter
+    sem:         SEMAdapter
+    mse:         MSEAdapter
+    bvmt:        BVMTAdapter
+    dse:         DSEAdapter
+    zse:         ZSEAdapter
+    luse:        LUSEAdapter
     halted:      bool = False
 
 
@@ -89,11 +111,12 @@ def _validated_sor_config(r: dict) -> SORConfig:
         fee_weight=float(r["fee_weight"]),
         fx_weight=float(r["fx_weight"]),
         latency_weight=float(r["latency_weight"]),
+        reliability_weight=float(r.get("reliability_weight", 0.0)),
         max_splits=int(r.get("max_order_splits", 5)),
         min_split_qty=float(r.get("min_split_quantity", 100.0)),
     )
     total = (cfg.liquidity_weight + cfg.spread_weight + cfg.fee_weight
-             + cfg.fx_weight + cfg.latency_weight)
+             + cfg.fx_weight + cfg.latency_weight + cfg.reliability_weight)
     if abs(total - 1.0) > 1e-6:
         raise RuntimeError(
             f"sor_config.yaml routing weights must sum to 1.0, got {total:.6f}"
@@ -188,8 +211,20 @@ def init_app_state(simulate: bool = None) -> AppState:
             update_interval=sor_cfg["update_interval"],
         )
 
-        _sender_ids = {"GSE": "BROKER_GH", "JSE": "BROKER_ZA", "NGX": "BROKER_NG", "NSE": "BROKER_KE"}
-        _target_ids = {"GSE": "GSE_TRADING", "JSE": "JSE_TRADING", "NGX": "NGX_TRADING", "NSE": "NSE_TRADING"}
+        _sender_ids = {
+            "GSE": "BROKER_GH", "JSE": "BROKER_ZA", "NGX": "BROKER_NG", "NSE": "BROKER_KE",
+            "CSE": "BROKER_MA", "EGX": "BROKER_EG", "BRVM": "BROKER_CI",
+            "BSE": "BROKER_BW", "NSX": "BROKER_NA", "SEM": "BROKER_MU",
+            "MSE": "BROKER_MW", "BVMT": "BROKER_TN", "DSE": "BROKER_TZ",
+            "ZSE": "BROKER_ZW", "LUSE": "BROKER_ZM",
+        }
+        _target_ids = {
+            "GSE": "GSE_TRADING", "JSE": "JSE_TRADING", "NGX": "NGX_TRADING", "NSE": "NSE_TRADING",
+            "CSE": "CSE_TRADING", "EGX": "EGX_TRADING", "BRVM": "BRVM_TRADING",
+            "BSE": "BSE_TRADING", "NSX": "NSX_TRADING", "SEM": "SEM_TRADING",
+            "MSE": "MSE_TRADING", "BVMT": "BVMT_TRADING", "DSE": "DSE_TRADING",
+            "ZSE": "ZSE_TRADING", "LUSE": "LUSE_TRADING",
+        }
         sessions = {
             name: FIXSession(
                 sender=_sender_ids.get(name, f"BROKER_{name}"),
@@ -213,21 +248,21 @@ def init_app_state(simulate: bool = None) -> AppState:
 
         adapters_connected = []
         try:
-            gse = GSEAdapter()
-            gse.connect()
-            adapters_connected.append(gse)
-
-            jse = JSEAdapter()
-            jse.connect()
-            adapters_connected.append(jse)
-
-            ngx = NGXAdapter()
-            ngx.connect()
-            adapters_connected.append(ngx)
-
-            nse = NSEAdapter()
-            nse.connect()
-            adapters_connected.append(nse)
+            gse = GSEAdapter();  gse.connect();  adapters_connected.append(gse)
+            jse = JSEAdapter();  jse.connect();  adapters_connected.append(jse)
+            ngx = NGXAdapter();  ngx.connect();  adapters_connected.append(ngx)
+            nse = NSEAdapter();  nse.connect();  adapters_connected.append(nse)
+            cse = CSEAdapter();  cse.connect();  adapters_connected.append(cse)
+            egx = EGXAdapter();  egx.connect();  adapters_connected.append(egx)
+            brvm = BRVMAdapter(); brvm.connect(); adapters_connected.append(brvm)
+            bse = BSEAdapter();  bse.connect();  adapters_connected.append(bse)
+            nsx = NSXAdapter();  nsx.connect();  adapters_connected.append(nsx)
+            sem = SEMAdapter();  sem.connect();  adapters_connected.append(sem)
+            mse = MSEAdapter();  mse.connect();  adapters_connected.append(mse)
+            bvmt = BVMTAdapter(); bvmt.connect(); adapters_connected.append(bvmt)
+            dse = DSEAdapter();  dse.connect();  adapters_connected.append(dse)
+            zse = ZSEAdapter();  zse.connect();  adapters_connected.append(zse)
+            luse = LUSEAdapter(); luse.connect(); adapters_connected.append(luse)
 
             pipeline.start()
         except Exception:
@@ -269,7 +304,8 @@ def init_app_state(simulate: bool = None) -> AppState:
                 venue_scores=[VenueScoreResponse(venue=s.venue, score=round(s.total,6),
                                liquidity=round(s.liquidity,6), spread=round(s.spread,6),
                                fee=round(s.fee,6), fx_cost=round(s.fx_cost,6),
-                               latency=round(s.latency,6), available_qty=s.available_qty)
+                               latency=round(s.latency,6), available_qty=s.available_qty,
+                               reliability=round(s.reliability,6))
                                for s in decision.venue_scores],
             )
             resp = OrderResponse(
@@ -315,6 +351,17 @@ def init_app_state(simulate: bool = None) -> AppState:
             jse=jse,
             ngx=ngx,
             nse=nse,
+            cse=cse,
+            egx=egx,
+            brvm=brvm,
+            bse=bse,
+            nsx=nsx,
+            sem=sem,
+            mse=mse,
+            bvmt=bvmt,
+            dse=dse,
+            zse=zse,
+            luse=luse,
         )
         return _state
 

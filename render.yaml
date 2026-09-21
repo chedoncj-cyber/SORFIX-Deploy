@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: pan-sorfix
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: LOG_LEVEL
+        value: INFO
+      # Add the following secrets in the Render dashboard (Environment tab):
+      # STRIPE_SECRET_KEY, COINBASE_COMMERCE_API_KEY
+      # Do NOT set APP_PORT here — Render assigns PORT automatically.

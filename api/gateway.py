@@ -2,7 +2,7 @@
 # Proprietary and confidential. Unauthorised copying, distribution,
 # or use of this file is strictly prohibited. See LICENSE for details.
 """
-FastAPI gateway for FIX_Aggregator_SOR_Complete APP.
+FastAPI gateway for Pan SORFIX.
 Provides REST endpoints + WebSocket streaming for live order book data.
 """
 import asyncio
@@ -25,6 +25,9 @@ from api.routes.health      import router as health_router
 from api.routes.admin       import router as admin_router
 from api.routes.positions   import router as positions_router
 from api.routes.algo        import router as algo_router
+from api.routes.payment        import router as payment_router
+from api.routes.stripe_payment import router as stripe_payment_router
+from api.routes.config         import router as config_router
 
 _log_level = getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), logging.INFO)
 logging.basicConfig(
@@ -38,7 +41,7 @@ logger = logging.getLogger("gateway")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from app_state import init_app_state
-    logger.info("FIX_Aggregator_SOR_Complete APP starting...")
+    logger.info("Pan SORFIX starting...")
     try:
         init_app_state()  # simulate flag driven by sor_config.yaml
     except RuntimeError as exc:
@@ -58,7 +61,13 @@ async def lifespan(app: FastAPI):
         except Exception as exc:
             logger.warning("DB close error: %s", exc)
         for fn in (state.gse.disconnect, state.jse.disconnect,
-                   state.ngx.disconnect, state.nse.disconnect):
+                   state.ngx.disconnect, state.nse.disconnect,
+                   state.cse.disconnect, state.egx.disconnect,
+                   state.brvm.disconnect, state.bse.disconnect,
+                   state.nsx.disconnect, state.sem.disconnect,
+                   state.mse.disconnect, state.bvmt.disconnect,
+                   state.dse.disconnect, state.zse.disconnect,
+                   state.luse.disconnect):
             try:
                 fn()
             except Exception as exc:
@@ -98,17 +107,17 @@ _rate_last_cleanup: float = 0.0  # epoch seconds of last purge
 
 
 app = FastAPI(
-    title="FIX_Aggregator_SOR_Complete APP",
+    title="Pan SORFIX",
     description=(
-        "Pan-African Low-Latency Smart Order Router.\n\n"
-        "Routes orders across GSE, JSE, NGX, NSE using real-time venue scoring "
-        "(liquidity 30%, spread 20%, fee 20%, FX 20%, latency 10%).\n\n"
-        "**Active exchanges:** GSE (Ghana) · JSE (South Africa) · NGX (Nigeria) · NSE (Kenya).\n"
-        "All four venues are fully wired with FIX 4.2 adapters and live order book data.\n\n"
-        "**New:** Pre-trade risk engine · Position tracking · TWAP/VWAP algo execution · "
-        "SQLite order persistence · Kill switch · Market impact scoring."
+        "Pan-African Low-Latency Smart Order Router — **Version 3.0**.\n\n"
+        "Routes orders across GSE, JSE, NGX, NSE using 6-factor venue scoring: "
+        "liquidity 28% · spread 18% · FX 18% · fee 16% · latency 10% · reliability 10%.\n\n"
+        "**Active exchanges:** GSE (Ghana · GHS) · JSE (South Africa · ZAR) · NGX (Nigeria · NGN) · NSE (Kenya · KES).\n"
+        "All four venues wired with FIX 4.2 adapters, GBM price simulation, and 10-level order books.\n\n"
+        "**v3 upgrades:** 6-factor SOR · GBM market data · 99.8% fill rate · per-pair PAPSS FX costs · "
+        "284 listed companies · proportional allocation · staleness multiplier · Live Roles portal tab."
     ),
-    version="2.0.0",
+    version="3.0.0",
     lifespan=lifespan,
 )
 
@@ -124,7 +133,10 @@ app.add_middleware(
 async def auth_and_rate_limit(request: Request, call_next):
     # Skip auth/rate-limit for health, docs, portal, root
     skip_paths = {"/", "/health", "/ready", "/portal", "/docs",
-                  "/openapi.json", "/redoc"}
+                  "/openapi.json", "/redoc",
+                  "/api/config",
+                  "/api/payment/create-charge",
+                  "/api/payment/create-payment-intent"}
     if request.url.path in skip_paths or request.url.path.startswith("/ws"):
         return await call_next(request)
 
@@ -165,12 +177,18 @@ app.include_router(market_data_router)
 app.include_router(admin_router)
 app.include_router(positions_router)
 app.include_router(algo_router)
+app.include_router(payment_router)
+app.include_router(stripe_payment_router)
+app.include_router(config_router)
 
 
 @app.get("/portal", include_in_schema=False)
 async def portal():
     from pathlib import Path
-    return FileResponse(Path(__file__).parent.parent / "portal" / "index.html")
+    resp = FileResponse(Path(__file__).parent.parent / "portal" / "index.html")
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
+    return resp
 
 # Serve portal static assets (jobs_data.js, etc.)
 from pathlib import Path as _Path
@@ -281,9 +299,9 @@ async def root(request: Request):
     base_url = str(request.base_url).rstrip("/")
     ws_base  = base_url.replace("http://", "ws://").replace("https://", "wss://")
     return {
-        "app":         "FIX_Aggregator_SOR_Complete APP",
-        "version":     "2.0.0",
-        "description": "Pan-African Smart Order Router",
+        "app":         "Pan SORFIX",
+        "version":     "3.0.0",
+        "description": "Pan SORFIX — Pan-African Smart Order Router",
         "docs":        "/docs",
         "portal":      "/portal",
         "health":      "/health",

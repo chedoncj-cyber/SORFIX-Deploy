@@ -25,6 +25,9 @@ data/*.db-wal
 # Logs
 *.log
 
+# Temporary processing files
+.tmp/
+
 # OS
 .DS_Store
 Thumbs.db

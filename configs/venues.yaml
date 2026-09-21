@@ -54,3 +54,157 @@ venues:
     settlement: T+3
     trading_hours_utc: "09:00-15:00"
     symbols: [SAFCOM, EABL, KCB, EQUITY, BAMBURI]
+
+  CSE:
+    name: Casablanca Stock Exchange
+    host: fix.casablanca-bourse.com
+    port: 9880
+    sender_comp_id: BROKER_MA
+    target_comp_id: CSE_TRADING
+    currency: MAD
+    taker_fee: 0.0010
+    latency_ms: 4.0
+    enabled: true
+    settlement: T+3
+    trading_hours_utc: "09:00-14:00"
+    symbols: [ATW, IAM, OCP, BCP, BMCE, CIH, WAFA, CIMAR, LAFM, HPS]
+
+  EGX:
+    name: Egyptian Exchange
+    host: fix.egx.com.eg
+    port: 9881
+    sender_comp_id: BROKER_EG
+    target_comp_id: EGX_TRADING
+    currency: EGP
+    taker_fee: 0.0015
+    latency_ms: 6.0
+    enabled: true
+    settlement: T+2
+    trading_hours_utc: "08:00-12:30"
+    symbols: [COMI, HRHO, TMGH, ESRS, SWDY, FWRY, OCDI, PHDC, ABUK, JUFO]
+
+  BRVM:
+    name: Bourse Regionale des Valeurs Mobilieres
+    host: fix.brvm.org
+    port: 9882
+    sender_comp_id: BROKER_CI
+    target_comp_id: BRVM_TRADING
+    currency: XOF
+    taker_fee: 0.0013
+    latency_ms: 10.0
+    enabled: true
+    settlement: T+3
+    trading_hours_utc: "09:00-15:30"
+    symbols: [SNTS, SGBCI, ORANGECI, SAPH, PALMCI, SIFCA, NSIABN, CORIS, ECOBANK, SOLIBRA]
+
+  BSE:
+    name: Botswana Stock Exchange
+    host: fix.bse.co.bw
+    port: 9883
+    sender_comp_id: BROKER_BW
+    target_comp_id: BSE_TRADING
+    currency: BWP
+    taker_fee: 0.0020
+    latency_ms: 12.0
+    enabled: true
+    settlement: T+3
+    trading_hours_utc: "07:00-14:00"
+    symbols: [FNBB, CHOBE, SEFALANA, SECHABA, LETLOLE, BIHL, STANBW, ABSA_BW, BTCL, WILDERNESS]
+
+  NSX:
+    name: Namibia Stock Exchange
+    host: fix.nsx.com.na
+    port: 9884
+    sender_comp_id: BROKER_NA
+    target_comp_id: NSX_TRADING
+    currency: NAD
+    taker_fee: 0.0020
+    latency_ms: 5.0
+    enabled: true
+    settlement: T+3
+    trading_hours_utc: "07:00-15:00"
+    symbols: [FNBN, CGP, LHN, TCO, ORYX, NAMCO, STANBK_NA, SCBN, BIDVNA, OLDMUT_NA]
+
+  SEM:
+    name: Stock Exchange of Mauritius
+    host: fix.stockexchangeofmauritius.com
+    port: 9885
+    sender_comp_id: BROKER_MU
+    target_comp_id: SEM_TRADING
+    currency: MUR
+    taker_fee: 0.0015
+    latency_ms: 8.0
+    enabled: true
+    settlement: T+3
+    trading_hours_utc: "05:30-09:30"
+    symbols: [MCB, SBM, ENL, CIEL, ROGERS, IBL, OMNICANE, ALTEO, TERRA, PHOENIX]
+
+  MSE:
+    name: Malawi Stock Exchange
+    host: fix.mse.co.mw
+    port: 9886
+    sender_comp_id: BROKER_MW
+    target_comp_id: MSE_TRADING
+    currency: MWK
+    taker_fee: 0.0020
+    latency_ms: 20.0
+    enabled: true
+    settlement: T+3
+    trading_hours_utc: "07:30-13:30"
+    symbols: [NBM, NICO, TNM, AIRTELMW, FMBCH, PCL, ILLOVO, STANBIC_MW, SUNBIRD, NBS_MW]
+
+  BVMT:
+    name: Bourse des Valeurs Mobilieres de Tunis
+    host: fix.bvmt.com.tn
+    port: 9887
+    sender_comp_id: BROKER_TN
+    target_comp_id: BVMT_TRADING
+    currency: TND
+    taker_fee: 0.0015
+    latency_ms: 5.0
+    enabled: true
+    settlement: T+3
+    trading_hours_utc: "08:00-13:15"
+    symbols: [ATTIJARITN, BIAT, AB, BT, BNA_TN, STB_TN, UIB, BHBANK, SFBT, POULINA]
+
+  DSE:
+    name: Dar es Salaam Stock Exchange
+    host: fix.dse.co.tz
+    port: 9888
+    sender_comp_id: BROKER_TZ
+    target_comp_id: DSE_TRADING
+    currency: TZS
+    taker_fee: 0.0030
+    latency_ms: 18.0
+    enabled: true
+    settlement: T+3
+    trading_hours_utc: "07:00-11:00"
+    symbols: [CRDB, NMB_TZ, TBL_TZ, TCCL, TPCC, TOL_TZ, DCB, VODA_TZ, JBLT_TZ, STANBIC_TZ]
+
+  ZSE:
+    name: Zimbabwe Stock Exchange
+    host: fix.zse.co.zw
+    port: 9889
+    sender_comp_id: BROKER_ZW
+    target_comp_id: ZSE_TRADING
+    currency: ZWG
+    taker_fee: 0.0020
+    latency_ms: 25.0
+    enabled: true
+    settlement: T+3
+    trading_hours_utc: "06:30-13:00"
+    symbols: [ECONET, DELTA_ZW, OLDMUT_ZW, CBZ, INNSCOR, DELTA2, FBC_ZW, NMB_ZW, SIMBISA, OK_ZW]
+
+  LUSE:
+    name: Lusaka Securities Exchange
+    host: fix.luse.co.zm
+    port: 9890
+    sender_comp_id: BROKER_ZM
+    target_comp_id: LUSE_TRADING
+    currency: ZMW
+    taker_fee: 0.0020
+    latency_ms: 20.0
+    enabled: true
+    settlement: T+3
+    trading_hours_utc: "07:30-11:00"
+    symbols: [ZAMBEEF, ZCCM_IH, ZANACO, CEC, ZAMBREW, STANDARD_ZM, STANBIC_ZM, AIRTELZM, CHILANGA, LAFARGE_ZM]
