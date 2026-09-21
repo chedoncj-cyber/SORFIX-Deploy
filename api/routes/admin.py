@@ -1,5 +1,6 @@
 """Admin endpoints — kill switch, risk config, system control."""
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from pathlib import Path
 
 from api.models import RiskConfigResponse, RiskStatsResponse, RiskConfigUpdate
 
@@ -94,3 +95,25 @@ async def reset_daily():
         raise HTTPException(status_code=503, detail=str(exc))
     state.risk.reset_daily()
     return {"ok": True, "message": "Daily notional counter reset"}
+
+
+@router.get("/reconcile", tags=["Admin"], summary="Run order reconciliation")
+async def reconcile(request: Request):
+    from app_state import get_app_state
+    from tools.reconciliation import run as run_recon
+    state = get_app_state()
+    db_path = str(Path(__file__).parent.parent.parent / "data" / "sorfix.db")
+    result = run_recon(state.order_store if hasattr(state, "order_store") else {}, db_path)
+    return result
+
+
+@router.get("/audit-log", tags=["Admin"], summary="Last 100 admin audit log entries")
+async def audit_log(limit: int = 100):
+    from tools.admin_audit_log import tail
+    return {"entries": tail(limit)}
+
+
+@router.post("/backup", tags=["Admin"], summary="Trigger immediate database backup")
+async def backup_now():
+    from tools.backup_db import run as run_backup
+    return run_backup()

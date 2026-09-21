@@ -156,6 +156,7 @@ async def submit_order(req: OrderRequest):
         timestamp=time.time(),
     )
     data = response.model_dump()
+    data["simulated"] = True
     state.order_store.save(decision.order_id, data)
     state.db.save(decision.order_id, data)
     # Update positions and risk counters after confirmed fill
@@ -163,7 +164,7 @@ async def submit_order(req: OrderRequest):
         state.positions.record_fill(req.symbol.upper(), order.side.value,
                                     result.total_filled, vwap)
         state.risk.record_fill(result.total_filled, vwap)
-    return response
+    return data
 
 
 @router.get("/{order_id}", response_model=OrderResponse, summary="Look up a submitted order by ID")

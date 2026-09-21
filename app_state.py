@@ -24,6 +24,8 @@ from tools.risk_engine             import RiskEngine, RiskConfig
 from tools.position_tracker        import PositionTracker
 from tools.algo_engine             import AlgoEngine
 from tools.db                      import OrderDB
+from tools.position_ledger         import PositionLedger
+import tools.admin_audit_log       as admin_audit_log
 from tools.venue_adapters.gse_adapter  import GSEAdapter
 from tools.venue_adapters.jse_adapter  import JSEAdapter
 from tools.venue_adapters.ngx_adapter  import NGXAdapter
@@ -68,7 +70,8 @@ class AppState:
     dse:         DSEAdapter
     zse:         ZSEAdapter
     luse:        LUSEAdapter
-    halted:      bool = False
+    halted:           bool = False
+    position_ledger:  PositionLedger = None
 
 
 _state: Optional[AppState] = None
@@ -363,6 +366,8 @@ def init_app_state(simulate: bool = None) -> AppState:
             zse=zse,
             luse=luse,
         )
+        _state.position_ledger = PositionLedger()
+        admin_audit_log.init()
         return _state
 
 
