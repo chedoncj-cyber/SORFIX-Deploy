@@ -24,6 +24,8 @@ from tools.risk_engine             import RiskEngine, RiskConfig
 from tools.position_tracker        import PositionTracker
 from tools.algo_engine             import AlgoEngine
 from tools.db                      import OrderDB
+from tools.position_ledger         import PositionLedger
+import tools.admin_audit_log       as admin_audit_log
 from tools.venue_adapters.nyse_adapter     import NYSEAdapter
 from tools.venue_adapters.lse_adapter      import LSEAdapter
 from tools.venue_adapters.hkex_adapter     import HKEXAdapter
@@ -55,8 +57,9 @@ class AppState:
     szse:        SZSEAdapter
     tadawul:     TADAWULAdapter
     nse_in:      NSEINAdapter
-    euronext:    EURONEXTAdapter
-    halted:      bool = False
+    euronext:         EURONEXTAdapter
+    halted:           bool = False
+    position_ledger:  PositionLedger = None
 
 
 _state: Optional[AppState] = None
@@ -347,6 +350,8 @@ def init_app_state(simulate: bool = None) -> AppState:
             nse_in=nse_in,
             euronext=euronext,
         )
+        _state.position_ledger = PositionLedger()
+        admin_audit_log.init()
         return _state
 
 
