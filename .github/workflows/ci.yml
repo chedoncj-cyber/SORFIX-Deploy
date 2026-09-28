@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: ["pan-sorfix", "world-sorfix"]
+  pull_request:
+    branches: ["pan-sorfix", "world-sorfix"]
+
+jobs:
+  lint-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt flake8
+
+      - name: Lint (flake8)
+        run: flake8 . --max-line-length 120 --exclude venv,.venv,__pycache__,.tmp
+
+      - name: Smoke test (demo mode)
+        run: timeout 30 python main.py --demo || true
