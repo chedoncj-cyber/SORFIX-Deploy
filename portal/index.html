@@ -921,7 +921,10 @@
           <div id="roles-panel-meta"  style="font-size:11px;color:var(--muted);margin-top:2px"></div>
         </div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <a id="roles-panel-website" href="#" target="_blank" rel="noopener noreferrer" style="display:none;padding:9px 16px;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:#60a5fa;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap">
+          🌐 Visit Website ↗
+        </a>
         <a id="roles-panel-link" href="#" target="_blank" rel="noopener noreferrer"
           style="padding:9px 20px;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#6366f1);color:#fff;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;box-shadow:0 3px 12px rgba(124,58,237,0.4)">
           Open Careers Page &#8599;
@@ -2474,7 +2477,7 @@ function buildRolesGrid() {
   venues.forEach(v => {
     (TOP_COMPANIES[v] || []).forEach(c => {
       if (search && !c.n.toLowerCase().includes(search) && !c.t.toLowerCase().includes(search)) return;
-      companies.push({ ticker: c.t, name: c.n, sector: c.s || '—', venue: v });
+      companies.push({ ticker: c.t, name: c.n, sector: c.s || '', venue: v, website: c.w || '' });
     });
   });
 
@@ -2494,14 +2497,15 @@ function buildRolesGrid() {
     const isSelected = c.ticker === _selectedRoleTicker;
     const hasCareer  = !!CAREERS[c.ticker];
     return `
-      <div class="role-card${isSelected ? ' selected' : ''}" onclick="openRolesPanel('${c.ticker}','${c.name.replace(/'/g,"\\'")}','${c.venue}','${c.sector}')">
+      <div class="role-card${isSelected ? ' selected' : ''}" onclick="openRolesPanel('${c.ticker}','${c.name.replace(/'/g,"\\'")}','${c.venue}','${c.sector}','${c.website.replace(/'/g,"\\'")}')">
         <div style="display:flex;align-items:center;gap:10px">
           <div class="role-initials" style="background:${vc.bg}">${initials}</div>
           <span class="role-exbadge role-exbadge-${c.venue}">${c.venue}</span>
         </div>
         <div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.3;min-height:36px">${c.name}</div>
         <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">${c.sector}</div>
-        <div class="role-view-btn">${hasCareer ? 'View Roles ↗' : 'Search Roles ↗'}</div>
+        ${c.website ? `<a href="${c.website}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="font-size:10px;color:#60a5fa;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:block;margin-top:2px" title="${c.website}">🌐 Visit Website ↗</a>` : ''}
+        <div class="role-view-btn" style="margin-top:6px">${hasCareer ? 'View Roles ↗' : 'Search Roles ↗'}</div>
       </div>`;
   }).join('');
 }
@@ -2518,7 +2522,7 @@ function filterRolesGrid() {
   buildRolesGrid();
 }
 
-function openRolesPanel(ticker, name, venue, sector) {
+function openRolesPanel(ticker, name, venue, sector, website) {
   _selectedRoleTicker = ticker;
   buildRolesGrid(); // re-render to mark selected card
 
@@ -2538,6 +2542,13 @@ function openRolesPanel(ticker, name, venue, sector) {
   document.getElementById('roles-panel-link').href = url;
   document.getElementById('roles-panel-link').title = label;
   document.getElementById('roles-iframe').src = url;
+
+  // Show or hide "Visit Website" button
+  const webBtn = document.getElementById('roles-panel-website');
+  if (webBtn) {
+    if (website) { webBtn.href = website; webBtn.style.display = ''; }
+    else { webBtn.style.display = 'none'; }
+  }
 
   const panel = document.getElementById('roles-panel');
   panel.style.display = '';
