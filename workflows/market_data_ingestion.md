@@ -65,6 +65,13 @@ Forces a price override — the SOR will route to a different venue if this crea
 - Each shard has its own RLock — minimizes contention at 50k+ updates/sec
 - Zero-allocation on read hot path (`cache.get()`)
 
+## Downstream Consumers
+The order book cache is read by multiple systems beyond the SOR:
+- **Dark Pool** — uses mid-price from cache as the crossing price when `POST /dark-pool/cross` is called
+- **Best Execution** — arrival price is snapped from top-of-book at time of order submission
+- **Basket Engine** — each leg's price is validated against the live book before SOR routing
+- **IOI Board** — price fields in IOI posts are compared against current book for reasonableness checks
+
 ## Tools Used
 - `tools/market_data_pipeline.py` — price simulation and cache population
 - `tools/order_book_cache.py` — sharded in-memory store
