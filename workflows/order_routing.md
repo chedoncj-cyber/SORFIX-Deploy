@@ -1,9 +1,11 @@
 # Order Routing Workflow
 
 ## Objective
-Route a client order to the optimal African exchange venue(s) and execute all legs in parallel.
+Route a client order to the optimal exchange venue(s) and execute all legs in parallel.
+Covers standard limit/market orders, algo strategies, and institutional order types
+(Iceberg, Basket, Block Trade, Dark Pool crossing).
 
-## Required Inputs
+## Required Inputs (standard order)
 - `symbol` — ticker (e.g. `GCB`, `MTNGH`)
 - `side` — `buy` or `sell`
 - `quantity` — number of shares
@@ -35,6 +37,10 @@ Response includes:
 - `total_filled` — shares actually filled
 - `success` — true if any quantity was filled
 
+After every successful submission, two hooks fire automatically:
+- **Drop Copy** — pushes `ORDER_SUBMITTED` event to all registered compliance endpoints (`tools/drop_copy.py`)
+- **Best Execution** — records a MiFID II audit report for the order (`tools/best_execution.py`)
+
 ### 4. Handle partial fills
 - If `total_filled < quantity`, retry with remaining quantity
 - Check circuit breaker state at `/health` before retrying
@@ -43,13 +49,14 @@ Response includes:
 ## Venue Scoring Logic
 Scores are normalized 0–1, weighted per the PDF spec:
 
-| Factor        | Weight | Higher is better when...               |
-|---------------|--------|----------------------------------------|
-| Liquidity     | 30%    | More shares available at top 3 levels  |
-| Spread        | 20%    | Bid/ask spread is tighter              |
-| Fee           | 20%    | Taker fee is lower                     |
-| FX cost       | 20%    | No currency conversion needed          |
-| Latency       | 10%    | Exchange round-trip is faster          |
+| Factor      | Weight | Higher is better when...              |
+|-------------|--------|---------------------------------------|
+| Liquidity   | 28%    | More shares available at top 3 levels |
+| Spread      | 18%    | Bid/ask spread is tighter             |
+| FX cost     | 18%    | No currency conversion needed         |
+| Fee         | 16%    | Taker fee is lower                    |
+| Latency     | 10%    | Exchange round-trip is faster         |
+| Reliability | 10%    | Circuit breaker success history       |
 
 Weights configurable in `configs/sor_config.yaml`.
 
@@ -59,8 +66,36 @@ Weights configurable in `configs/sor_config.yaml`.
 - **Market order**: Price derived from best ask (buy) or best bid (sell) at routing time
 - **Order too large**: Split across up to `max_splits` venues (default 5)
 
+## Institutional Order Types
+
+### Iceberg Orders
+Large orders sliced so only `display_qty` is visible to the market at any time.
+Each filled slice triggers a refill from the hidden remainder.
+See `tools/iceberg_manager.py` and `POST /iceberg/create`.
+
+### Basket / Portfolio Orders
+Multiple symbols submitted as one instruction; each leg is routed independently via SOR.
+Useful for index rebalancing or multi-stock strategies.
+See `tools/basket_engine.py` and `POST /basket/submit`.
+
+### Block Trades
+Large negotiated trades (>= 5,000 shares) between two named counterparties.
+Workflow: submit → respond → accept (optionally fires a SOR order for execution).
+See `tools/block_trade.py` and `POST /block-trade/submit`.
+
+### Dark Pool Crossing
+Orders are first attempted in the internal dark pool at the mid-price.
+Only the unmatched remainder routes to a lit exchange, minimising market impact.
+See `tools/dark_pool.py` and `POST /dark-pool/cross`.
+
 ## Tools Used
 - `tools/smart_order_router.py` — venue scoring and order splitting
 - `tools/execution_engine.py` — parallel FIX order submission
 - `tools/circuit_breaker.py` — venue health gating
 - `tools/fix_engine.py` — FIX message construction
+- `tools/drop_copy.py` — real-time compliance webhook push (fires on every submit)
+- `tools/best_execution.py` — MiFID II per-order audit trail (fires on every submit)
+- `tools/iceberg_manager.py` — display-slice management
+- `tools/basket_engine.py` — multi-leg portfolio execution
+- `tools/block_trade.py` — large-order negotiation workflow
+- `tools/dark_pool.py` — internal crossing engine

@@ -67,7 +67,14 @@ Look at `venues[].circuit_breaker_state`:
 | success_threshold  | 3       | Successes in half-open to close circuit      |
 | timeout_seconds    | 30      | Seconds before half-open probe attempt       |
 
+## Drop Copy (FIX Extension)
+Drop Copy is an optional real-time push of all order flow to compliance and OMS/EMS systems.
+It operates independently of FIX sessions — delivered over HTTP webhooks, not FIX.
+Register endpoints via `POST /drop-copy/register`; each `POST /orders/submit` triggers a push automatically.
+See `tools/drop_copy.py`.
+
 ## Tools Used
 - `tools/fix_engine.py` — `FIXSession`, `build_logon()`, `build_heartbeat()`
 - `tools/circuit_breaker.py` — exchange health gating
 - `tools/venue_adapters/gse_adapter.py` — GSE-specific TLS + tick-size logic
+- `tools/drop_copy.py` — compliance webhook push triggered on order submission
