@@ -164,6 +164,23 @@ async def submit_order(req: OrderRequest):
         state.positions.record_fill(req.symbol.upper(), order.side.value,
                                     result.total_filled, vwap)
         state.risk.record_fill(result.total_filled, vwap)
+    # Drop copy — send to all registered compliance endpoints
+    try:
+        state.drop_copy.send(data, event='ORDER_SUBMITTED')
+    except Exception:
+        pass
+    # Best execution report
+    try:
+        arrival = decision.legs[0].price if decision.legs else req.price
+        state.best_exec.record(
+            order_id=decision.order_id, symbol=req.symbol.upper(),
+            side=order.side.value, quantity=req.quantity,
+            limit_price=req.price,
+            routing_decision=response.routing.model_dump(),
+            execution_result=data, arrival_price=arrival,
+        )
+    except Exception:
+        pass
     return data
 
 
