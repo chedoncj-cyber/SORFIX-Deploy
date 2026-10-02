@@ -293,6 +293,44 @@
     Apply
   </button>
 
+
+  <div class="sb-label" style="margin-top:16px">Institutional</div>
+
+  <button class="nav-item tab-btn" onclick="showTab('ioi',this)">
+    <svg class="nsvg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    IOI Board
+  </button>
+
+  <button class="nav-item tab-btn" onclick="showTab('darkpool',this)">
+    <svg class="nsvg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/></svg>
+    Dark Pool
+  </button>
+
+  <button class="nav-item tab-btn" onclick="showTab('block',this)">
+    <svg class="nsvg" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    Block Trades
+  </button>
+
+  <button class="nav-item tab-btn" onclick="showTab('iceberg',this)">
+    <svg class="nsvg" viewBox="0 0 24 24"><polygon points="12 2 22 20 2 20"/><line x1="12" y1="8" x2="12" y2="14"/></svg>
+    Iceberg Orders
+  </button>
+
+  <button class="nav-item tab-btn" onclick="showTab('basket',this)">
+    <svg class="nsvg" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+    Basket Trading
+  </button>
+
+  <button class="nav-item tab-btn" onclick="showTab('bestexec',this)">
+    <svg class="nsvg" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    Best Execution
+  </button>
+
+  <button class="nav-item tab-btn" onclick="showTab('dropcopy',this)">
+    <svg class="nsvg" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+    Drop Copy
+  </button>
+
   <div class="sb-label" style="margin-top:16px">System</div>
 
   <button class="nav-item tab-btn" onclick="showTab('admin',this)">
@@ -1045,6 +1083,253 @@
 
   </div>
 </div>
+
+
+<!-- ═══ IOI BOARD ════════════════════════════════════════════════════════════ -->
+<section id="tab-ioi" class="tab-panel hidden">
+  <div class="panel-header"><h2>IOI Board <span style="font-size:12px;font-weight:400;color:var(--muted)">Indications of Interest</span></h2></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    <div class="card" style="padding:18px">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Post IOI</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input id="ioi-symbol" placeholder="Symbol e.g. AAPL" class="inp" style="grid-column:1/-1">
+        <select id="ioi-side" class="inp"><option value="buy">BUY</option><option value="sell">SELL</option></select>
+        <input id="ioi-qty" placeholder="Quantity" type="number" class="inp">
+        <input id="ioi-price" placeholder="Price (optional)" type="number" step="0.01" class="inp">
+        <input id="ioi-firm" placeholder="Firm name" class="inp">
+        <input id="ioi-contact" placeholder="Contact (optional)" class="inp">
+        <input id="ioi-notes" placeholder="Notes (optional)" class="inp" style="grid-column:1/-1">
+        <select id="ioi-ttl" class="inp" style="grid-column:1/-1">
+          <option value="1800">Expires in 30 min</option>
+          <option value="3600" selected>Expires in 1 hour</option>
+          <option value="7200">Expires in 2 hours</option>
+          <option value="28800">Expires in 8 hours</option>
+        </select>
+      </div>
+      <button onclick="postIOI()" class="btn" style="margin-top:10px;width:100%">Post IOI</button>
+    </div>
+    <div class="card" style="padding:18px">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Filter</div>
+      <input id="ioi-filter-symbol" placeholder="Filter by symbol" class="inp" style="margin-bottom:8px;width:100%">
+      <select id="ioi-filter-side" class="inp" style="width:100%;margin-bottom:8px">
+        <option value="">All sides</option><option value="buy">BUY only</option><option value="sell">SELL only</option>
+      </select>
+      <button onclick="loadIOIBoard()" class="btn" style="width:100%">Refresh Board</button>
+      <div id="ioi-stats" style="margin-top:12px;font-size:12px;color:var(--muted)"></div>
+    </div>
+  </div>
+  <div class="card" style="padding:18px">
+    <div id="ioi-board-table" style="font-size:13px;color:var(--muted)">Click Refresh Board to load IOIs.</div>
+  </div>
+</section>
+
+<!-- ═══ DARK POOL ════════════════════════════════════════════════════════════ -->
+<section id="tab-darkpool" class="tab-panel hidden">
+  <div class="panel-header"><h2>Dark Pool <span style="font-size:12px;font-weight:400;color:var(--muted)">Internal Crossing Engine</span></h2></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    <div class="card" style="padding:18px">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Add to Dark Pool</div>
+      <input id="dp-symbol" placeholder="Symbol" class="inp" style="width:100%;margin-bottom:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <select id="dp-side" class="inp"><option value="buy">BUY</option><option value="sell">SELL</option></select>
+        <input id="dp-qty" placeholder="Quantity" type="number" class="inp">
+        <input id="dp-price" placeholder="Price (optional)" type="number" step="0.01" class="inp">
+        <input id="dp-firm" placeholder="Firm name" class="inp">
+      </div>
+      <button onclick="addToDarkPool()" class="btn" style="margin-top:10px;width:100%">Add to Pool</button>
+    </div>
+    <div class="card" style="padding:18px">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Try Cross</div>
+      <input id="dp-cross-symbol" placeholder="Symbol" class="inp" style="width:100%;margin-bottom:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <select id="dp-cross-side" class="inp"><option value="buy">BUY</option><option value="sell">SELL</option></select>
+        <input id="dp-cross-qty" placeholder="Quantity" type="number" class="inp">
+        <input id="dp-cross-mid" placeholder="Midpoint price" type="number" step="0.01" class="inp" style="grid-column:1/-1">
+      </div>
+      <button onclick="tryCross()" class="btn" style="margin-top:10px;width:100%">Attempt Cross</button>
+      <div id="dp-cross-result" style="margin-top:10px;font-size:13px"></div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card" style="padding:18px">
+      <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Pool Snapshot</div>
+      <button onclick="loadDarkPool()" class="btn-sm" style="margin-bottom:10px">Refresh</button>
+      <div id="dp-pool-table" style="font-size:12px;color:var(--muted)">Loading...</div>
+    </div>
+    <div class="card" style="padding:18px">
+      <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Crossing Log</div>
+      <button onclick="loadCrossLog()" class="btn-sm" style="margin-bottom:10px">Refresh</button>
+      <div id="dp-cross-log" style="font-size:12px;color:var(--muted)">Loading...</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ BLOCK TRADES ══════════════════════════════════════════════════════════ -->
+<section id="tab-block" class="tab-panel hidden">
+  <div class="panel-header"><h2>Block Trades <span style="font-size:12px;font-weight:400;color:var(--muted)">Large Order Negotiation (min 5,000 shares)</span></h2></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    <div class="card" style="padding:18px">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Submit Block Trade</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input id="bt-symbol" placeholder="Symbol" class="inp" style="grid-column:1/-1">
+        <select id="bt-side" class="inp"><option value="buy">BUY</option><option value="sell">SELL</option></select>
+        <input id="bt-qty" placeholder="Quantity (min 5000)" type="number" class="inp">
+        <input id="bt-price" placeholder="Limit price (optional)" type="number" step="0.01" class="inp">
+        <input id="bt-firm" placeholder="Firm name" class="inp">
+        <input id="bt-contact" placeholder="Contact" class="inp">
+      </div>
+      <button onclick="submitBlock()" class="btn" style="margin-top:10px;width:100%">Submit Block Trade</button>
+    </div>
+    <div class="card" style="padding:18px">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Respond to Block</div>
+      <input id="bt-respond-id" placeholder="Block Trade ID" class="inp" style="width:100%;margin-bottom:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input id="bt-respond-firm" placeholder="Your firm" class="inp">
+        <input id="bt-respond-qty" placeholder="Quantity" type="number" class="inp">
+        <input id="bt-respond-price" placeholder="Counter price" type="number" step="0.01" class="inp">
+        <input id="bt-respond-notes" placeholder="Notes" class="inp">
+      </div>
+      <button onclick="respondBlock()" class="btn" style="margin-top:10px;width:100%">Submit Response</button>
+    </div>
+  </div>
+  <div class="card" style="padding:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Active Block Trades</div>
+      <button onclick="loadBlocks()" class="btn-sm">Refresh</button>
+    </div>
+    <div id="block-table" style="font-size:13px;color:var(--muted)">Click Refresh to load block trades.</div>
+  </div>
+</section>
+
+<!-- ═══ ICEBERG ORDERS ════════════════════════════════════════════════════════ -->
+<section id="tab-iceberg" class="tab-panel hidden">
+  <div class="panel-header"><h2>Iceberg Orders <span style="font-size:12px;font-weight:400;color:var(--muted)">Hidden Quantity — Show Only Display Slice</span></h2></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    <div class="card" style="padding:18px">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Create Iceberg Order</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input id="ice-symbol" placeholder="Symbol" class="inp" style="grid-column:1/-1">
+        <select id="ice-side" class="inp"><option value="buy">BUY</option><option value="sell">SELL</option></select>
+        <input id="ice-total" placeholder="Total qty (hidden)" type="number" class="inp">
+        <input id="ice-display" placeholder="Display qty (visible)" type="number" class="inp">
+        <input id="ice-price" placeholder="Limit price (optional)" type="number" step="0.01" class="inp">
+        <select id="ice-ccy" class="inp"><option>USD</option><option>GBP</option><option>EUR</option><option>GHS</option><option>ZAR</option><option>NGN</option><option>KES</option></select>
+      </div>
+      <button onclick="createIceberg()" class="btn" style="margin-top:10px;width:100%">Create Iceberg Order</button>
+    </div>
+    <div class="card" style="padding:18px">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Record Slice Fill</div>
+      <input id="ice-fill-id" placeholder="Iceberg Order ID" class="inp" style="width:100%;margin-bottom:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input id="ice-fill-qty" placeholder="Filled qty" type="number" class="inp">
+        <input id="ice-fill-price" placeholder="Avg price" type="number" step="0.01" class="inp">
+      </div>
+      <button onclick="recordIcebergFill()" class="btn" style="margin-top:10px;width:100%">Record Fill</button>
+      <div id="ice-fill-result" style="margin-top:10px;font-size:12px"></div>
+    </div>
+  </div>
+  <div class="card" style="padding:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Iceberg Orders</div>
+      <button onclick="loadIcebergs()" class="btn-sm">Refresh</button>
+    </div>
+    <div id="iceberg-table" style="font-size:13px;color:var(--muted)">Click Refresh to load iceberg orders.</div>
+  </div>
+</section>
+
+<!-- ═══ BASKET TRADING ════════════════════════════════════════════════════════ -->
+<section id="tab-basket" class="tab-panel hidden">
+  <div class="panel-header"><h2>Basket Trading <span style="font-size:12px;font-weight:400;color:var(--muted)">Execute Multiple Stocks as One Instruction</span></h2></div>
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:20px">
+    <div class="card" style="padding:18px">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Build Basket</div>
+      <input id="basket-name" placeholder="Basket name" class="inp" style="width:100%;margin-bottom:10px">
+      <div id="basket-legs" style="display:flex;flex-direction:column;gap:6px">
+        <div class="basket-leg-row" style="display:grid;grid-template-columns:2fr 80px 1fr 1fr 32px;gap:6px">
+          <input placeholder="Symbol" class="inp bl-symbol">
+          <select class="inp bl-side"><option value="buy">BUY</option><option value="sell">SELL</option></select>
+          <input placeholder="Qty" type="number" class="inp bl-qty">
+          <input placeholder="Price" type="number" step="0.01" class="inp bl-price">
+          <button onclick="removeBasketLeg(this)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;border-radius:6px;cursor:pointer;font-size:14px">x</button>
+        </div>
+      </div>
+      <button onclick="addBasketLeg()" class="btn-sm" style="margin-top:8px">+ Add Leg</button>
+      <button onclick="submitBasket()" class="btn" style="margin-top:12px;width:100%">Execute Basket</button>
+    </div>
+    <div class="card" style="padding:18px">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Last Result</div>
+      <div id="basket-result" style="font-size:12px;color:var(--muted)">Submit a basket to see results here.</div>
+    </div>
+  </div>
+  <div class="card" style="padding:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Basket History</div>
+      <button onclick="loadBaskets()" class="btn-sm">Refresh</button>
+    </div>
+    <div id="basket-table" style="font-size:13px;color:var(--muted)">Click Refresh to load basket history.</div>
+  </div>
+</section>
+
+<!-- ═══ BEST EXECUTION ════════════════════════════════════════════════════════ -->
+<section id="tab-bestexec" class="tab-panel hidden">
+  <div class="panel-header"><h2>Best Execution <span style="font-size:12px;font-weight:400;color:var(--muted)">MiFID II Audit Trail — Per-Order Routing Justification</span></h2></div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+    <div class="card" style="padding:16px;text-align:center">
+      <div style="font-size:22px;font-weight:700;color:var(--accent)" id="bex-total">—</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Total Reports</div>
+    </div>
+    <div class="card" style="padding:16px;text-align:center">
+      <div style="font-size:22px;font-weight:700;color:var(--green)" id="bex-fill">—</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Avg Fill Ratio</div>
+    </div>
+    <div class="card" style="padding:16px;text-align:center">
+      <div style="font-size:22px;font-weight:700;color:var(--amber,#f59e0b)" id="bex-slip">—</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Avg Slippage (bps)</div>
+    </div>
+    <div class="card" style="padding:16px;text-align:center">
+      <div style="font-size:22px;font-weight:700;color:var(--accent2)" id="bex-split">—</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Split Order %</div>
+    </div>
+  </div>
+  <div class="card" style="padding:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Reports</div>
+      <div style="display:flex;gap:8px">
+        <input id="bex-filter" placeholder="Filter by symbol" class="inp" style="width:140px">
+        <button onclick="loadBestExec()" class="btn-sm">Refresh</button>
+      </div>
+    </div>
+    <div id="bestexec-table" style="font-size:13px;color:var(--muted)">Click Refresh to load best execution reports.</div>
+  </div>
+</section>
+
+<!-- ═══ DROP COPY ═════════════════════════════════════════════════════════════ -->
+<section id="tab-dropcopy" class="tab-panel hidden">
+  <div class="panel-header"><h2>Drop Copy <span style="font-size:12px;font-weight:400;color:var(--muted)">FIX Compliance Stream — Real-Time Order Flow Copy</span></h2></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    <div class="card" style="padding:18px">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Register Endpoint</div>
+      <input id="dc-url" placeholder="https://compliance.example.com/orders" class="inp" style="width:100%;margin-bottom:8px">
+      <input id="dc-label" placeholder="Label (e.g. OMS, Surveillance)" class="inp" style="width:100%;margin-bottom:8px">
+      <div style="display:flex;gap:8px">
+        <button onclick="registerEndpoint()" class="btn" style="flex:1">Register</button>
+        <button onclick="removeEndpoint()" class="btn" style="flex:1;background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.3);color:#f87171">Remove</button>
+      </div>
+    </div>
+    <div class="card" style="padding:18px">
+      <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Registered Endpoints</div>
+      <button onclick="loadEndpoints()" class="btn-sm" style="margin-bottom:10px">Refresh</button>
+      <div id="dc-endpoints" style="font-size:12px;color:var(--muted)">Loading...</div>
+    </div>
+  </div>
+  <div class="card" style="padding:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Drop Copy Audit Log</div>
+      <button onclick="loadDropLog()" class="btn-sm">Refresh</button>
+    </div>
+    <div id="dc-log-table" style="font-size:13px;color:var(--muted)">Click Refresh to load drop copy log.</div>
+  </div>
+</section>
 
 </main>
 
@@ -2644,6 +2929,396 @@ function onApplyCompanyChange() {
     if (!document.getElementById('tab-admin').classList.contains('hidden'))     { loadRiskStats(); loadHaltStatus(); }
   }, 5000);
 })();
+
+// ═══════════════════════════════════════════════════════════
+// IOI BOARD
+// ═══════════════════════════════════════════════════════════
+async function postIOI() {
+  const symbol = document.getElementById('ioi-symbol').value.trim();
+  const side   = document.getElementById('ioi-side').value;
+  const qty    = parseFloat(document.getElementById('ioi-qty').value);
+  const price  = parseFloat(document.getElementById('ioi-price').value) || null;
+  const firm   = document.getElementById('ioi-firm').value.trim();
+  const contact= document.getElementById('ioi-contact').value.trim();
+  const notes  = document.getElementById('ioi-notes').value.trim();
+  const ttl    = parseInt(document.getElementById('ioi-ttl').value);
+  if (!symbol || !qty || !firm) { alert('Symbol, quantity, and firm name are required'); return; }
+  try {
+    const r = await fetch('/ioi/', {method:'POST',headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({symbol,side,quantity:qty,price,firm_name:firm,contact,notes,ttl_seconds:ttl})});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail||JSON.stringify(d));
+    alert('IOI posted: ' + d.id);
+    loadIOIBoard();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+async function loadIOIBoard() {
+  const sym  = document.getElementById('ioi-filter-symbol').value.trim();
+  const side = document.getElementById('ioi-filter-side').value;
+  let url = '/ioi/?';
+  if (sym)  url += 'symbol=' + encodeURIComponent(sym) + '&';
+  if (side) url += 'side=' + side + '&';
+  try {
+    const r = await fetch(url); const d = await r.json();
+    const stats = d.stats || {};
+    document.getElementById('ioi-stats').textContent =
+      `Active: ${stats.active||0}  Matched: ${stats.matched||0}  Expired: ${stats.expired||0}`;
+    const iois = d.iois || [];
+    if (!iois.length) { document.getElementById('ioi-board-table').innerHTML='<div style="color:var(--muted);padding:20px;text-align:center">No active IOIs</div>'; return; }
+    let html = '<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:var(--muted);border-bottom:1px solid var(--border)">' +
+      '<th style="text-align:left;padding:6px">ID</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th><th>Firm</th><th>Status</th><th>Expires</th></tr>';
+    for (const i of iois) {
+      const side_color = i.side==='buy'?'#4ade80':'#f87171';
+      const exp = new Date(i.expires_at*1000).toLocaleTimeString();
+      html += `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:6px;font-family:monospace">${i.id}</td>
+        <td style="padding:6px;font-weight:700">${i.symbol}</td>
+        <td style="padding:6px;color:${side_color};font-weight:700">${i.side.toUpperCase()}</td>
+        <td style="padding:6px">${i.quantity.toLocaleString()}</td>
+        <td style="padding:6px">${i.price ? i.price.toFixed(2) : 'Neg.'}</td>
+        <td style="padding:6px">${i.firm_name}</td>
+        <td style="padding:6px;color:${i.status==='active'?'#4ade80':'var(--muted)'}">${i.status}</td>
+        <td style="padding:6px;color:var(--muted)">${exp}</td></tr>`;
+    }
+    html += '</table>';
+    document.getElementById('ioi-board-table').innerHTML = html;
+  } catch(e) { document.getElementById('ioi-board-table').textContent = 'Error: ' + e.message; }
+}
+
+// ═══════════════════════════════════════════════════════════
+// DARK POOL
+// ═══════════════════════════════════════════════════════════
+async function addToDarkPool() {
+  const body = { symbol: document.getElementById('dp-symbol').value.trim(),
+    side: document.getElementById('dp-side').value,
+    quantity: parseFloat(document.getElementById('dp-qty').value),
+    price: parseFloat(document.getElementById('dp-price').value)||null,
+    firm_name: document.getElementById('dp-firm').value.trim()||'SORFIX' };
+  if (!body.symbol||!body.quantity){alert('Symbol and quantity required');return;}
+  try {
+    const r = await fetch('/dark-pool/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail);
+    alert('Added to dark pool: ' + d.id); loadDarkPool();
+  } catch(e){alert('Error: '+e.message);}
+}
+async function tryCross() {
+  const body = { symbol: document.getElementById('dp-cross-symbol').value.trim(),
+    side: document.getElementById('dp-cross-side').value,
+    quantity: parseFloat(document.getElementById('dp-cross-qty').value),
+    midpoint: parseFloat(document.getElementById('dp-cross-mid').value)||null };
+  if (!body.symbol||!body.quantity){alert('Symbol and quantity required');return;}
+  try {
+    const r = await fetch('/dark-pool/cross',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d = await r.json();
+    const res = document.getElementById('dp-cross-result');
+    if (d.crossed) {
+      res.innerHTML = `<span style="color:#4ade80;font-weight:700">CROSSED</span> ${d.cross_qty.toLocaleString()} shares @ ${d.cross_price.toFixed(2)} | Lit residual: ${d.lit_qty.toLocaleString()} | ID: ${d.cross_id}`;
+    } else {
+      res.innerHTML = `<span style="color:var(--muted)">No cross — full ${d.lit_qty.toLocaleString()} shares routed to lit market</span>`;
+    }
+    loadCrossLog();
+  } catch(e){document.getElementById('dp-cross-result').textContent='Error: '+e.message;}
+}
+async function loadDarkPool() {
+  try {
+    const r = await fetch('/dark-pool/pool'); const d = await r.json();
+    const orders = d.orders||[];
+    if (!orders.length){document.getElementById('dp-pool-table').textContent='Pool is empty';return;}
+    let html='<table style="width:100%;font-size:11px;border-collapse:collapse">';
+    for(const o of orders) {
+      const c=o.side==='buy'?'#4ade80':'#f87171';
+      html+=`<tr><td style="padding:4px;font-family:monospace">${o.id}</td><td style="color:${c}">${o.side.toUpperCase()}</td><td>${o.symbol}</td><td>${o.remaining.toLocaleString()} rem</td></tr>`;
+    }
+    document.getElementById('dp-pool-table').innerHTML=html+'</table>';
+  } catch(e){document.getElementById('dp-pool-table').textContent='Error: '+e.message;}
+}
+async function loadCrossLog() {
+  try {
+    const r = await fetch('/dark-pool/crosses?limit=20'); const d = await r.json();
+    const crosses = d.crosses||[];
+    if(!crosses.length){document.getElementById('dp-cross-log').textContent='No crosses yet';return;}
+    let html='<table style="width:100%;font-size:11px;border-collapse:collapse">';
+    for(const c of crosses) {
+      html+=`<tr><td style="padding:4px;font-family:monospace">${c.cross_id}</td><td>${c.symbol}</td><td>${c.cross_qty.toLocaleString()}</td><td style="color:var(--muted)">@ ${c.cross_price.toFixed(2)}</td></tr>`;
+    }
+    document.getElementById('dp-cross-log').innerHTML=html+'</table>';
+  } catch(e){document.getElementById('dp-cross-log').textContent='Error: '+e.message;}
+}
+
+// ═══════════════════════════════════════════════════════════
+// BLOCK TRADES
+// ═══════════════════════════════════════════════════════════
+async function submitBlock() {
+  const qty = parseFloat(document.getElementById('bt-qty').value);
+  if (qty < 5000){alert('Block trades require minimum 5,000 shares');return;}
+  const body = {
+    symbol: document.getElementById('bt-symbol').value.trim(),
+    side: document.getElementById('bt-side').value,
+    quantity: qty,
+    limit_price: parseFloat(document.getElementById('bt-price').value)||null,
+    firm_name: document.getElementById('bt-firm').value.trim(),
+    contact: document.getElementById('bt-contact').value.trim() };
+  if(!body.symbol||!body.firm_name){alert('Symbol and firm name required');return;}
+  try {
+    const r = await fetch('/block-trade/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.detail);
+    alert('Block trade submitted: ' + d.id); loadBlocks();
+  } catch(e){alert('Error: '+e.message);}
+}
+async function respondBlock() {
+  const id = document.getElementById('bt-respond-id').value.trim();
+  const body = {
+    firm_name: document.getElementById('bt-respond-firm').value.trim(),
+    quantity: parseFloat(document.getElementById('bt-respond-qty').value),
+    counter_price: parseFloat(document.getElementById('bt-respond-price').value),
+    notes: document.getElementById('bt-respond-notes').value.trim() };
+  if(!id||!body.firm_name||!body.quantity||!body.counter_price){alert('All fields required');return;}
+  try {
+    const r = await fetch(`/block-trade/${id}/respond`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.detail);
+    alert('Response submitted: ' + d.id);
+  } catch(e){alert('Error: '+e.message);}
+}
+async function loadBlocks() {
+  try {
+    const r = await fetch('/block-trade/'); const d = await r.json();
+    const blocks = d.blocks||[];
+    if(!blocks.length){document.getElementById('block-table').innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">No block trades</div>';return;}
+    let html='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:var(--muted);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:6px">ID</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Limit</th><th>Firm</th><th>Status</th><th>Responses</th></tr>';
+    for(const b of blocks){
+      const sc=b.status==='open'?'#4ade80':b.status==='matched'?'#f59e0b':b.status==='executed'?'#3b82f6':'var(--muted)';
+      const side_c=b.side==='buy'?'#4ade80':'#f87171';
+      html+=`<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:6px;font-family:monospace">${b.id}</td>
+        <td style="padding:6px;font-weight:700">${b.symbol}</td>
+        <td style="padding:6px;color:${side_c}">${b.side.toUpperCase()}</td>
+        <td style="padding:6px">${b.quantity.toLocaleString()}</td>
+        <td style="padding:6px">${b.limit_price?b.limit_price.toFixed(2):'MKT'}</td>
+        <td style="padding:6px">${b.firm_name}</td>
+        <td style="padding:6px;color:${sc}">${b.status}</td>
+        <td style="padding:6px">${b.response_count}</td></tr>`;
+    }
+    document.getElementById('block-table').innerHTML=html+'</table>';
+  } catch(e){document.getElementById('block-table').textContent='Error: '+e.message;}
+}
+
+// ═══════════════════════════════════════════════════════════
+// ICEBERG ORDERS
+// ═══════════════════════════════════════════════════════════
+async function createIceberg() {
+  const total   = parseFloat(document.getElementById('ice-total').value);
+  const display = parseFloat(document.getElementById('ice-display').value);
+  if (display >= total){alert('Display quantity must be less than total quantity');return;}
+  const body = {
+    symbol: document.getElementById('ice-symbol').value.trim(),
+    side: document.getElementById('ice-side').value,
+    total_qty: total, display_qty: display,
+    price: parseFloat(document.getElementById('ice-price').value)||null,
+    base_currency: document.getElementById('ice-ccy').value };
+  if(!body.symbol){alert('Symbol required');return;}
+  try {
+    const r = await fetch('/iceberg/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.detail);
+    alert('Iceberg created: ' + d.id + ' | First slice: ' + d.next_slice_qty + ' shares');
+    loadIcebergs();
+  } catch(e){alert('Error: '+e.message);}
+}
+async function recordIcebergFill() {
+  const id = document.getElementById('ice-fill-id').value.trim();
+  const qty = parseFloat(document.getElementById('ice-fill-qty').value);
+  const price = parseFloat(document.getElementById('ice-fill-price').value);
+  if(!id||!qty||!price){alert('All fields required');return;}
+  try {
+    const r = await fetch(`/iceberg/${id}/fill`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filled_qty:qty,avg_price:price})});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.detail);
+    const res = document.getElementById('ice-fill-result');
+    res.innerHTML = `<span style="color:#4ade80">Fill recorded.</span> Remaining: ${d.remaining_qty.toLocaleString()} | VWAP: ${d.vwap?d.vwap.toFixed(4):'N/A'} | Status: ${d.status}`;
+    loadIcebergs();
+  } catch(e){document.getElementById('ice-fill-result').textContent='Error: '+e.message;}
+}
+async function loadIcebergs() {
+  try {
+    const r = await fetch('/iceberg/'); const d = await r.json();
+    const orders = d.orders||[];
+    if(!orders.length){document.getElementById('iceberg-table').innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">No iceberg orders</div>';return;}
+    let html='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:var(--muted);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:6px">ID</th><th>Symbol</th><th>Side</th><th>Total</th><th>Display</th><th>Filled</th><th>VWAP</th><th>Status</th><th>Slices</th></tr>';
+    for(const o of orders){
+      const sc=o.status==='active'?'#4ade80':o.status==='completed'?'#3b82f6':'var(--muted)';
+      const side_c=o.side==='buy'?'#4ade80':'#f87171';
+      const pct=Math.round(o.fill_ratio*100);
+      html+=`<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:6px;font-family:monospace">${o.id}</td>
+        <td style="padding:6px;font-weight:700">${o.symbol}</td>
+        <td style="padding:6px;color:${side_c}">${o.side.toUpperCase()}</td>
+        <td style="padding:6px">${o.total_qty.toLocaleString()}</td>
+        <td style="padding:6px">${o.display_qty.toLocaleString()}</td>
+        <td style="padding:6px">${o.filled_qty.toLocaleString()} <span style="color:var(--muted)">(${pct}%)</span></td>
+        <td style="padding:6px">${o.vwap?o.vwap.toFixed(4):'—'}</td>
+        <td style="padding:6px;color:${sc}">${o.status}</td>
+        <td style="padding:6px">${o.slice_count}</td></tr>`;
+    }
+    document.getElementById('iceberg-table').innerHTML=html+'</table>';
+  } catch(e){document.getElementById('iceberg-table').textContent='Error: '+e.message;}
+}
+
+// ═══════════════════════════════════════════════════════════
+// BASKET TRADING
+// ═══════════════════════════════════════════════════════════
+function addBasketLeg() {
+  const row = document.createElement('div');
+  row.className = 'basket-leg-row';
+  row.style.cssText = 'display:grid;grid-template-columns:2fr 80px 1fr 1fr 32px;gap:6px';
+  row.innerHTML = `<input placeholder="Symbol" class="inp bl-symbol">
+    <select class="inp bl-side"><option value="buy">BUY</option><option value="sell">SELL</option></select>
+    <input placeholder="Qty" type="number" class="inp bl-qty">
+    <input placeholder="Price" type="number" step="0.01" class="inp bl-price">
+    <button onclick="removeBasketLeg(this)" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;border-radius:6px;cursor:pointer;font-size:14px">x</button>`;
+  document.getElementById('basket-legs').appendChild(row);
+}
+function removeBasketLeg(btn) {
+  const rows = document.querySelectorAll('#basket-legs .basket-leg-row');
+  if (rows.length > 1) btn.closest('.basket-leg-row').remove();
+}
+async function submitBasket() {
+  const rows = document.querySelectorAll('#basket-legs .basket-leg-row');
+  const legs = [];
+  for (const row of rows) {
+    const sym = row.querySelector('.bl-symbol').value.trim();
+    const qty = parseFloat(row.querySelector('.bl-qty').value);
+    if (!sym || !qty) { alert('All legs need a symbol and quantity'); return; }
+    legs.push({ symbol: sym, side: row.querySelector('.bl-side').value,
+                quantity: qty, price: parseFloat(row.querySelector('.bl-price').value)||null });
+  }
+  if (legs.length < 2) { alert('A basket needs at least 2 legs'); return; }
+  const body = { name: document.getElementById('basket-name').value||'My Basket', legs };
+  try {
+    const r = await fetch('/basket/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.detail);
+    const filled = d.filled_legs; const total = d.total_legs;
+    const res = document.getElementById('basket-result');
+    const sc = d.status==='completed'?'#4ade80':d.status==='partial'?'#f59e0b':'#f87171';
+    res.innerHTML = `<div style="color:${sc};font-weight:700;margin-bottom:8px">${d.status.toUpperCase()} — ${filled}/${total} legs filled</div>` +
+      d.legs.map(l=>`<div style="margin:2px 0">${l.symbol}: ${l.status} ${l.filled_qty.toLocaleString()} @ ${l.vwap?l.vwap.toFixed(4):'N/A'}</div>`).join('');
+    loadBaskets();
+  } catch(e){alert('Error: '+e.message);}
+}
+async function loadBaskets() {
+  try {
+    const r = await fetch('/basket/'); const d = await r.json();
+    const baskets = d.baskets||[];
+    if(!baskets.length){document.getElementById('basket-table').innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">No baskets yet</div>';return;}
+    let html='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:var(--muted);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:6px">ID</th><th>Name</th><th>Status</th><th>Legs</th><th>Filled</th><th>Failed</th></tr>';
+    for(const b of baskets){
+      const sc=b.status==='completed'?'#4ade80':b.status==='partial'?'#f59e0b':'var(--muted)';
+      html+=`<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:6px;font-family:monospace">${b.id}</td>
+        <td style="padding:6px">${b.name}</td>
+        <td style="padding:6px;color:${sc}">${b.status}</td>
+        <td style="padding:6px">${b.total_legs}</td>
+        <td style="padding:6px;color:#4ade80">${b.filled_legs}</td>
+        <td style="padding:6px;color:${b.failed_legs>0?'#f87171':'var(--muted)'}">${b.failed_legs}</td></tr>`;
+    }
+    document.getElementById('basket-table').innerHTML=html+'</table>';
+  } catch(e){document.getElementById('basket-table').textContent='Error: '+e.message;}
+}
+
+// ═══════════════════════════════════════════════════════════
+// BEST EXECUTION
+// ═══════════════════════════════════════════════════════════
+async function loadBestExec() {
+  const sym = document.getElementById('bex-filter').value.trim();
+  let url = '/best-execution/?limit=50';
+  if (sym) url += '&symbol=' + encodeURIComponent(sym);
+  try {
+    const r = await fetch(url); const d = await r.json();
+    const reports = d.reports||[]; const summary = d.summary||{};
+    document.getElementById('bex-total').textContent = summary.total || 0;
+    document.getElementById('bex-fill').textContent  = summary.avg_fill_ratio ? (summary.avg_fill_ratio*100).toFixed(1)+'%' : '—';
+    document.getElementById('bex-slip').textContent  = summary.avg_slippage_bps != null ? summary.avg_slippage_bps : '—';
+    document.getElementById('bex-split').textContent = summary.split_pct != null ? summary.split_pct+'%' : '—';
+    if(!reports.length){document.getElementById('bestexec-table').innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">No reports yet. Submit orders to generate best execution reports.</div>';return;}
+    let html='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:var(--muted);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:6px">Order ID</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Venue</th><th>VWAP</th><th>Slippage</th><th>Fill%</th><th>Latency</th><th>Split</th></tr>';
+    for(const rpt of reports){
+      const sc=rpt.side==='buy'?'#4ade80':'#f87171';
+      const slip_c=rpt.slippage_bps!=null?(rpt.slippage_bps<0?'#4ade80':rpt.slippage_bps>5?'#f87171':'#f59e0b'):'var(--muted)';
+      html+=`<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:6px;font-family:monospace;font-size:11px">${rpt.order_id}</td>
+        <td style="padding:6px;font-weight:700">${rpt.symbol}</td>
+        <td style="padding:6px;color:${sc}">${rpt.side.toUpperCase()}</td>
+        <td style="padding:6px">${(rpt.quantity||0).toLocaleString()}</td>
+        <td style="padding:6px">${rpt.primary_venue||'—'}</td>
+        <td style="padding:6px">${rpt.achieved_vwap?rpt.achieved_vwap.toFixed(4):'—'}</td>
+        <td style="padding:6px;color:${slip_c}">${rpt.slippage_bps!=null?rpt.slippage_bps+' bps':'—'}</td>
+        <td style="padding:6px">${rpt.fill_ratio!=null?(rpt.fill_ratio*100).toFixed(1)+'%':'—'}</td>
+        <td style="padding:6px">${rpt.routing_latency_ms?rpt.routing_latency_ms.toFixed(2)+'ms':'—'}</td>
+        <td style="padding:6px">${rpt.is_split?'Yes':'No'}</td></tr>`;
+    }
+    document.getElementById('bestexec-table').innerHTML=html+'</table>';
+  } catch(e){document.getElementById('bestexec-table').textContent='Error: '+e.message;}
+}
+
+// ═══════════════════════════════════════════════════════════
+// DROP COPY
+// ═══════════════════════════════════════════════════════════
+async function registerEndpoint() {
+  const url   = document.getElementById('dc-url').value.trim();
+  const label = document.getElementById('dc-label').value.trim();
+  if(!url){alert('URL required');return;}
+  try {
+    const r = await fetch('/drop-copy/endpoints',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,label,enabled:true})});
+    if(!r.ok) throw new Error((await r.json()).detail);
+    alert('Endpoint registered'); loadEndpoints();
+  } catch(e){alert('Error: '+e.message);}
+}
+async function removeEndpoint() {
+  const url = document.getElementById('dc-url').value.trim();
+  if(!url){alert('Enter URL to remove');return;}
+  try {
+    const r = await fetch('/drop-copy/endpoints?url='+encodeURIComponent(url),{method:'DELETE'});
+    if(!r.ok) throw new Error((await r.json()).detail);
+    alert('Endpoint removed'); loadEndpoints();
+  } catch(e){alert('Error: '+e.message);}
+}
+async function loadEndpoints() {
+  try {
+    const r = await fetch('/drop-copy/endpoints'); const d = await r.json();
+    const eps = d.endpoints||[]; const stats = d.stats||{};
+    let html = `<div style="margin-bottom:8px;color:var(--muted)">Registered: ${stats.endpoints||0} | Active: ${stats.enabled||0} | Copies sent: ${stats.copies_sent||0}</div>`;
+    if (!eps.length) { html += '<div style="color:var(--muted)">No endpoints registered</div>'; }
+    for(const ep of eps) {
+      html += `<div style="background:var(--bg2);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px">
+        <span style="color:${ep.enabled?'#4ade80':'#f87171'}">${ep.enabled?'ACTIVE':'DISABLED'}</span>
+        <span style="margin-left:8px">${ep.label||'(no label)'}</span>
+        <span style="color:var(--muted);margin-left:8px;font-size:11px">${ep.url}</span></div>`;
+    }
+    document.getElementById('dc-endpoints').innerHTML = html;
+  } catch(e){document.getElementById('dc-endpoints').textContent='Error: '+e.message;}
+}
+async function loadDropLog() {
+  try {
+    const r = await fetch('/drop-copy/log?limit=50'); const d = await r.json();
+    const log = d.log||[];
+    if(!log.length){document.getElementById('dc-log-table').innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">No copies sent yet. Submit an order to trigger drop copy.</div>';return;}
+    let html='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:var(--muted);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:6px">Order ID</th><th>Symbol</th><th>Side</th><th>Event</th><th>Endpoints</th><th>Time</th></tr>';
+    for(const entry of log){
+      const t=new Date(entry.timestamp*1000).toLocaleTimeString();
+      html+=`<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:6px;font-family:monospace;font-size:11px">${entry.order_id||'—'}</td>
+        <td style="padding:6px">${entry.symbol||'—'}</td>
+        <td style="padding:6px">${entry.side||'—'}</td>
+        <td style="padding:6px;color:#60a5fa">${entry.event}</td>
+        <td style="padding:6px">${entry.endpoints_notified}</td>
+        <td style="padding:6px;color:var(--muted)">${t}</td></tr>`;
+    }
+    document.getElementById('dc-log-table').innerHTML=html+'</table>';
+  } catch(e){document.getElementById('dc-log-table').textContent='Error: '+e.message;}
+}
 </script>
 </body>
 </html>

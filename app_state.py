@@ -26,6 +26,13 @@ from tools.algo_engine             import AlgoEngine
 from tools.db                      import OrderDB
 from tools.position_ledger         import PositionLedger
 import tools.admin_audit_log       as admin_audit_log
+from tools.ioi_store       import IOIStore
+from tools.dark_pool       import DarkPoolEngine
+from tools.iceberg_manager import IcebergManager
+from tools.basket_engine   import BasketEngine
+from tools.drop_copy       import DropCopyEngine
+from tools.best_execution  import BestExecutionStore
+from tools.block_trade     import BlockTradeEngine
 from tools.venue_adapters.gse_adapter  import GSEAdapter
 from tools.venue_adapters.jse_adapter  import JSEAdapter
 from tools.venue_adapters.ngx_adapter  import NGXAdapter
@@ -72,6 +79,13 @@ class AppState:
     luse:        LUSEAdapter
     halted:           bool = False
     position_ledger:  PositionLedger = None
+    ioi_store:        IOIStore = None
+    dark_pool:        DarkPoolEngine = None
+    iceberg_manager:  IcebergManager = None
+    basket_engine:    BasketEngine = None
+    drop_copy:        DropCopyEngine = None
+    best_exec:        BestExecutionStore = None
+    block_trade:      BlockTradeEngine = None
 
 
 _state: Optional[AppState] = None
@@ -368,6 +382,13 @@ def init_app_state(simulate: bool = None) -> AppState:
         )
         _state.position_ledger = PositionLedger()
         admin_audit_log.init()
+        _state.ioi_store        = IOIStore()
+        _state.dark_pool        = DarkPoolEngine()
+        _state.iceberg_manager  = IcebergManager()
+        _state.basket_engine    = BasketEngine()
+        _state.drop_copy        = DropCopyEngine()
+        _state.best_exec        = BestExecutionStore()
+        _state.block_trade      = BlockTradeEngine()
         return _state
 
 
