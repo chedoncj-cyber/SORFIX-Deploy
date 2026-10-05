@@ -8,7 +8,7 @@ import math
 import threading
 import time
 import random
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Optional
 
 from tools.order_book_cache import ShardedOrderBookCache, PriceLevel, OrderBook
 from tools.monitoring import metrics
