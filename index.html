@@ -1,0 +1,2088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SORFIX — Intelligent Order Routing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js">
+/* ── FLASH ANIMATIONS JS ── */
+
+/* 3D tilt on cards */
+(function() {
+  const TILT = ['.product-card','.price-card','.cta-card','.feat'];
+  TILT.forEach(sel => {
+    document.querySelectorAll(sel).forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const r = card.getBoundingClientRect();
+        const x = ((e.clientX - r.left) / r.width  - 0.5) * 10;
+        const y = ((e.clientY - r.top)  / r.height - 0.5) * -10;
+        card.style.transform = `perspective(700px) rotateX(${y}deg) rotateY(${x}deg) translateY(-4px)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = '';
+      });
+    });
+  });
+})();
+
+/* Stat flash on count-up done */
+(function(){
+  const orig = window.animateCountOrig;
+  document.querySelectorAll('[data-count]').forEach(el => {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if(e.isIntersecting){
+          obs.unobserve(e.target);
+          setTimeout(() => { e.target.classList.add('stat-flash'); }, 1400);
+        }
+      });
+    }, {threshold:0.4});
+    obs.observe(el);
+  });
+})();
+
+/* Route visualisation animation */
+(function(){
+  const nodes   = ['rv-order','rv-risk','rv-sor','rv-pan','rv-world','rv-fill'];
+  const lineMap = {'rv-order':'rv-l1','rv-risk':'rv-l2','rv-sor':'rv-l3','rv-pan':'rv-lg1','rv-world':'rv-lw1','rv-fill':'rv-l4'};
+  const colorMap= {'rv-order':'lit-blue','rv-risk':'lit-blue','rv-sor':'lit-blue',
+                   'rv-pan':'lit-green','rv-world':'lit-indigo','rv-fill':'lit-green'};
+  const latencies = ['0.41ms','0.38ms','0.52ms','0.44ms','0.37ms','0.49ms'];
+  let step = 0;
+  const latEl = document.getElementById('rv-latency');
+
+  function tick() {
+    // dim all
+    nodes.forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.className = 'rv-icon';
+    });
+    // light current
+    const cur = nodes[step];
+    const el = document.getElementById(cur);
+    if(el) el.className = 'rv-icon ' + colorMap[cur];
+    if(latEl && step === nodes.length - 1) {
+      latEl.textContent = latencies[Math.floor(Math.random()*latencies.length)];
+    }
+    step = (step + 1) % nodes.length;
+  }
+  setInterval(tick, 600);
+  tick();
+})();
+
+/* Ticker flash on price items */
+(function(){
+  const items = document.querySelectorAll('.ticker-item');
+  function flashRandom() {
+    if(!items.length) return;
+    const el = items[Math.floor(Math.random()*items.length)];
+    const cls = Math.random() > 0.3 ? 't-flash-up' : 't-flash-dn';
+    el.classList.remove('t-flash-up','t-flash-dn');
+    void el.offsetWidth; // reflow
+    el.classList.add(cls);
+    el.addEventListener('animationend', () => el.classList.remove(cls), {once:true});
+    setTimeout(flashRandom, 600 + Math.random()*800);
+  }
+  flashRandom();
+})();
+
+</script>
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#020617; --bg2:#080f1e; --bg3:#0d1627; --card:#0a1120; --card2:#10192e;
+      --border:#1a2740; --text:#f1f5f9; --muted:#8b9dc3; --accent:#3b82f6; --accent2:#60a5fa;
+      --green:#22c55e; --gold:#f59e0b; --pan-color:#10b981; --world-color:#6366f1;
+      --glow-pan:0 0 48px rgba(16,185,129,0.22); --glow-world:0 0 48px rgba(99,102,241,0.22);
+      --font-mono:'JetBrains Mono',ui-monospace,monospace;
+      --font-display:'Playfair Display',Georgia,serif;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); line-height:1.6; overflow-x:hidden; }
+
+    /* NAV */
+    nav {
+      position:fixed; top:0; left:0; right:0; z-index:200;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 48px; height:64px;
+      background:rgba(2,6,23,0.94); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+      border-bottom:1px solid var(--border);
+    }
+    .nav-logo { font-size:22px; font-weight:800; letter-spacing:-0.5px;
+      background:linear-gradient(135deg,#60a5fa,#a78bfa);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .nav-links { display:flex; gap:32px; }
+    .nav-links a { color:var(--muted); text-decoration:none; font-size:14px; font-weight:500; transition:color 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color:var(--accent2); }
+    .nav-cta { display:flex; gap:10px; align-items:center; }
+    .live-status { display:flex; gap:14px; align-items:center; margin-right:8px; }
+    .ls-item { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--muted); }
+    .ls-dot { width:7px; height:7px; border-radius:50%; background:#555; transition:background 0.3s,box-shadow 0.3s; }
+    .ls-item.online .ls-dot { background:var(--green); box-shadow:0 0 8px rgba(34,197,94,0.8); }
+    .ls-item.offline .ls-dot { background:#ef4444; }
+    @media(max-width:900px){ nav{padding:0 20px;} .nav-links,.live-status{display:none;} }
+
+    /* BUTTONS */
+    .btn {
+      padding:8px 20px; border-radius:8px; font-size:13px; font-weight:600;
+      cursor:pointer; transition:all 0.2s; text-decoration:none;
+      display:inline-flex; align-items:center; gap:6px; border:none;
+    }
+    .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
+    .btn-outline:hover { border-color:var(--accent); color:var(--accent2); }
+    .btn-primary { background:linear-gradient(135deg,#3b82f6,#6366f1); color:#fff; }
+    .btn-primary:hover { opacity:0.9; transform:translateY(-1px); }
+    .btn-pan { background:linear-gradient(135deg,#059669,#10b981); color:#fff; }
+    .btn-pan:hover { opacity:0.9; transform:translateY(-1px); }
+    .btn-world { background:linear-gradient(135deg,#4f46e5,#6366f1); color:#fff; }
+    .btn-world:hover { opacity:0.9; transform:translateY(-1px); }
+    .btn-ghost { background:transparent; border:1px solid var(--border); color:var(--muted); }
+    .btn-ghost:hover { border-color:var(--accent); color:var(--text); }
+    /* Shimmer CTA */
+    .btn-shimmer {
+      position:relative; overflow:hidden; isolation:isolate;
+      background:linear-gradient(135deg,#16a34a,#22c55e,#4ade80);
+      color:#fff; box-shadow:0 0 24px rgba(34,197,94,0.3);
+    }
+    .btn-shimmer::before {
+      content:''; position:absolute; inset:0; z-index:1;
+      background:linear-gradient(110deg,transparent 20%,rgba(255,255,255,0.25) 50%,transparent 80%);
+      background-size:250% 100%; animation:shimmer 2.2s linear infinite;
+    }
+    .btn-shimmer:hover { opacity:1; transform:translateY(-2px); box-shadow:0 0 40px rgba(34,197,94,0.55); }
+    .btn-shimmer > span { position:relative; z-index:2; }
+    @keyframes shimmer { from{background-position:200% 0} to{background-position:-200% 0} }
+    @media(prefers-reduced-motion:reduce){.btn-shimmer::before{animation:none}}
+    /* SVG icon wrappers */
+    .feat-icon-svg { width:48px; height:48px; border-radius:14px; margin-bottom:16px;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .feat-icon-svg svg { width:22px; height:22px; stroke-width:1.75; }
+    .step-icon-svg { width:48px; height:48px; border-radius:14px; margin:0 auto 14px;
+      display:flex; align-items:center; justify-content:center; }
+    .step-icon-svg svg { width:22px; height:22px; stroke-width:1.75; }
+    .product-icon svg { width:28px; height:28px; stroke-width:1.6; }
+    .cta-card-icon { margin-bottom:16px; display:flex; justify-content:center; }
+    .cta-card-icon svg { width:52px; height:52px; }
+    /* cursor + focus */
+    .btn, .adhoc-btn, .crypto-opt, .pay-tab { cursor:pointer; }
+    .btn:focus-visible, .adhoc-btn:focus-visible, .modal-close:focus-visible,
+    .pay-tab:focus-visible, .crypto-opt:focus-visible {
+      outline:2px solid var(--accent2); outline-offset:2px; border-radius:8px;
+    }
+    .btn-gold { background:linear-gradient(135deg,#d97706,#f59e0b); color:#1a0800; font-weight:700; text-shadow:0 1px 0 rgba(255,200,100,0.3); }
+    .btn-gold:hover { opacity:0.9; transform:translateY(-1px); }
+    .btn-lg { padding:14px 28px; font-size:15px; border-radius:10px; }
+
+    /* TICKER */
+    .ticker-bar { background:var(--bg3); border-bottom:1px solid var(--border); overflow:hidden; height:36px; display:flex; align-items:center; margin-top:64px; }
+    .ticker-track { display:flex; animation:ticker 30s linear infinite; white-space:nowrap; }
+    @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+    .ticker-item { display:inline-flex; align-items:center; gap:8px; padding:0 28px; font-size:12px; font-weight:600; border-right:1px solid var(--border); }
+    .ticker-item .sym { color:var(--muted); }
+    .ticker-item .up { color:var(--green); }
+    .ticker-item .dn { color:#ef4444; }
+
+    /* HERO */
+    .hero { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding:60px 24px 80px; position:relative; overflow:hidden; }
+    .hero-bg {
+      position:absolute; inset:0; z-index:0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%,rgba(59,130,246,0.12) 0%,transparent 70%),
+        radial-gradient(ellipse 60% 40% at 20% 80%,rgba(16,185,129,0.08) 0%,transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%,rgba(99,102,241,0.08) 0%,transparent 60%);
+    }
+    .hero-grid {
+      position:absolute; inset:0; z-index:0; opacity:0.04;
+      background-image:linear-gradient(rgba(255,255,255,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.5) 1px,transparent 1px);
+      background-size:60px 60px;
+    }
+    #globeCanvas { position:absolute; right:-80px; top:50%; transform:translateY(-50%); z-index:0; opacity:0.55; pointer-events:none; }
+    .hero-content { position:relative; z-index:1; max-width:760px; }
+    .hero-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.25);
+      border-radius:20px; padding:5px 14px; font-size:12px; font-weight:600;
+      color:var(--accent2); margin-bottom:24px; letter-spacing:0.5px;
+    }
+    .hero-badge .dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
+    h1 { font-size:clamp(44px,7vw,84px); font-weight:900; line-height:1.05; letter-spacing:-2px; margin-bottom:24px; font-family:var(--font-display); }
+    h1 .grad { background:linear-gradient(135deg,#fff 0%,#60a5fa 50%,#a78bfa 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .hero-sub { font-size:clamp(16px,2.5vw,20px); color:var(--muted); max-width:580px; margin:0 auto 40px; line-height:1.7; }
+    .hero-ctas { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+    canvas#particles { position:absolute; inset:0; z-index:0; }
+
+    /* STATS BAR */
+    .stats-bar {
+      background:var(--bg2); border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+      padding:28px 48px; display:flex; align-items:center; justify-content:center; gap:0; flex-wrap:wrap;
+    }
+    .stat-item { text-align:center; padding:0 40px; border-right:1px solid var(--border); }
+    .stat-item:last-child { border-right:none; }
+    .stat-num { font-size:32px; font-weight:700; letter-spacing:0; font-family:var(--font-mono); }
+    .stat-label { font-size:12px; color:var(--muted); font-weight:500; margin-top:2px; }
+    .c-blue{color:#60a5fa} .c-green{color:var(--green)} .c-purple{color:#a78bfa} .c-gold{color:var(--gold)}
+
+    /* SECTION */
+    section { padding:100px 48px; }
+    .section-label { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:12px; }
+    .section-title { font-size:clamp(32px,4vw,48px); font-weight:800; letter-spacing:-1px; line-height:1.1; margin-bottom:16px; font-family:var(--font-display); }
+    .section-sub { color:var(--muted); font-size:18px; max-width:560px; line-height:1.7; }
+    .center { text-align:center; }
+    .center .section-sub { margin:0 auto; }
+
+    /* PRODUCTS */
+    .products { display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:1200px; margin:0 auto; }
+    .product-card {
+      border-radius:20px; overflow:hidden; border:1px solid var(--border);
+      position:relative; transition:transform 0.3s,box-shadow 0.3s;
+    }
+    .product-card:hover { transform:translateY(-4px); }
+    .product-card.pan { box-shadow:var(--glow-pan); border-color:rgba(16,185,129,0.3); }
+    .product-card.pan:hover { box-shadow:0 0 60px rgba(16,185,129,0.25); }
+    .product-card.world { box-shadow:var(--glow-world); border-color:rgba(99,102,241,0.3); }
+    .product-card.world:hover { box-shadow:0 0 60px rgba(99,102,241,0.25); }
+    .product-card::after {
+      content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+      background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,0.08),transparent 55%);
+      opacity:0; transition:opacity 0.25s; z-index:2;
+    }
+    .product-card:hover::after { opacity:1; }
+    .product-header { padding:32px 32px 0; display:flex; align-items:flex-start; gap:16px; }
+    .product-icon { width:56px; height:56px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0; }
+    .pan .product-icon { background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); }
+    .world .product-icon { background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); }
+    .product-name { font-size:26px; font-weight:800; letter-spacing:0; margin-bottom:4px; font-family:var(--font-display); }
+    .pan .product-name { color:#10b981; } .world .product-name { color:#818cf8; }
+    .product-tagline { color:var(--muted); font-size:14px; }
+    .product-body { padding:24px 32px; }
+    .product-desc { color:var(--muted); font-size:15px; line-height:1.7; margin-bottom:24px; }
+    .exchange-pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:24px; }
+    .pill { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; }
+    .pill-pan { background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.25); color:#34d399; }
+    .pill-world { background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.25); color:#a5b4fc; }
+    .product-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border-radius:12px; overflow:hidden; margin-bottom:24px; }
+    .ps-item { background:var(--card2); padding:14px 16px; text-align:center; }
+    .ps-num { font-size:20px; font-weight:600; letter-spacing:0; font-family:var(--font-mono); }
+    .ps-label { font-size:11px; color:var(--muted); font-weight:500; margin-top:2px; }
+    .pan .ps-num { color:#10b981; } .world .ps-num { color:#818cf8; }
+    .product-footer { padding:0 32px 32px; display:flex; gap:10px; }
+
+    /* HOW IT WORKS */
+    .how-section { background:var(--bg2); }
+    .steps { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; max-width:1100px; margin:60px auto 0; }
+    .step { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:28px 24px; position:relative; text-align:center; }
+    .step-num { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#3b82f6,#6366f1); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; margin:0 auto 16px; }
+    .step-icon { font-size:28px; margin-bottom:12px; }
+    .step h3 { font-size:15px; font-weight:700; margin-bottom:8px; }
+    .step p { font-size:13px; color:var(--muted); line-height:1.6; }
+    .step-connector { position:absolute; top:50%; right:-13px; transform:translateY(-50%); width:26px; height:2px; background:var(--border); z-index:1; }
+    .step:last-child .step-connector { display:none; }
+    .step-tooltip { position:absolute; bottom:calc(100% + 14px); left:50%; transform:translateX(-50%) translateY(6px); width:260px; background:#1a1f2e; border:1px solid var(--accent); border-radius:12px; padding:14px 16px; font-size:12px; line-height:1.65; color:var(--text); text-align:left; opacity:0; pointer-events:none; transition:opacity 0.22s,transform 0.22s; z-index:200; box-shadow:0 8px 32px rgba(0,0,0,0.55); }
+    .step:hover .step-tooltip { opacity:1; pointer-events:auto; transform:translateX(-50%) translateY(0); }
+    .step-tooltip::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:7px solid transparent; border-top-color:var(--accent); }
+    .step-tooltip-title { font-weight:700; color:var(--accent2); margin-bottom:6px; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; }
+    .feat-tooltip { position:absolute; bottom:calc(100% + 14px); left:50%; transform:translateX(-50%) translateY(6px); width:270px; background:#1a1f2e; border:1px solid var(--accent); border-radius:12px; padding:14px 16px; font-size:12px; line-height:1.65; color:var(--text); text-align:left; opacity:0; pointer-events:none; transition:opacity 0.22s,transform 0.22s; z-index:200; box-shadow:0 8px 32px rgba(0,0,0,0.55); }
+    .feat:hover .feat-tooltip { opacity:1; pointer-events:auto; transform:translateX(-50%) translateY(0); }
+    .feat-tooltip::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:7px solid transparent; border-top-color:var(--accent); }
+    .feat-hint { display:inline-block; width:17px; height:17px; border-radius:50%; background:var(--accent); color:#fff; font-size:10px; font-weight:700; line-height:17px; text-align:center; margin-left:6px; cursor:default; vertical-align:middle; }
+    .feat-tooltip-title { font-weight:700; color:var(--accent2); margin-bottom:6px; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; }
+    .step-hint { display:inline-block; width:17px; height:17px; border-radius:50%; background:var(--accent); color:#fff; font-size:10px; font-weight:700; line-height:17px; text-align:center; margin-left:6px; cursor:default; vertical-align:middle; }
+
+    /* FEATURES */
+    .features-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; max-width:1100px; margin:60px auto 0; overflow:visible; }
+    .feat { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:28px 24px; transition:transform 0.2s,border-color 0.2s; position:relative; overflow:visible; }
+    .feat:hover { transform:translateY(-2px); border-color:var(--accent); }
+    .feat-icon { font-size:28px; margin-bottom:14px; }
+    .feat h3 { font-size:16px; font-weight:700; margin-bottom:8px; }
+    .feat p { font-size:13px; color:var(--muted); line-height:1.6; }
+
+    /* COMPARE */
+    .compare-table { max-width:900px; margin:60px auto 0; border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+    .ct-header { display:grid; grid-template-columns:2fr 1fr 1fr; background:var(--card2); border-bottom:1px solid var(--border); }
+    .ct-header > div { padding:16px 24px; font-size:13px; font-weight:700; }
+    .ct-header .pan-h { color:#10b981; text-align:center; } .ct-header .world-h { color:#818cf8; text-align:center; }
+    .ct-row { display:grid; grid-template-columns:2fr 1fr 1fr; border-bottom:1px solid var(--border); }
+    .ct-row:last-child { border-bottom:none; }
+    .ct-row:nth-child(even) { background:rgba(255,255,255,0.02); }
+    .ct-row > div { padding:14px 24px; font-size:14px; }
+    .ct-row > div:first-child { color:var(--muted); }
+    .ct-row > div:not(:first-child) { text-align:center; font-weight:600; }
+    .ck { color:var(--green); } .cx { color:var(--muted); }
+
+    /* ── PRICING SECTION ── */
+    #pricing { background:var(--bg); }
+    .pricing-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; max-width:1100px; margin:60px auto 0; }
+    .price-card {
+      background:var(--card); border:1px solid var(--border); border-radius:20px;
+      padding:36px 32px; position:relative; transition:transform 0.3s,box-shadow 0.3s;
+      display:flex; flex-direction:column;
+    }
+    .price-card:hover { transform:translateY(-6px); }
+    .price-card.featured {
+      border-color:var(--gold); box-shadow:0 0 40px rgba(245,158,11,0.15);
+      background:linear-gradient(160deg,#1a1f2e 0%,#1f2030 100%);
+    }
+    .price-card.featured::before {
+      content:"MOST POPULAR"; position:absolute; top:-12px; left:50%; transform:translateX(-50%);
+      background:linear-gradient(135deg,#d97706,#f59e0b); color:#1a0800; font-size:10px;
+      font-weight:800; letter-spacing:1.5px; padding:4px 14px; border-radius:20px;
+    }
+    .price-badge { font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:16px; }
+    .price-badge.pan { color:#10b981; } .price-badge.world { color:#818cf8; } .price-badge.bundle { color:var(--gold); }
+    .price-name { font-size:22px; font-weight:800; margin-bottom:8px; }
+    .price-desc { font-size:14px; color:var(--muted); margin-bottom:28px; line-height:1.6; }
+    .price-amount { margin-bottom:28px; }
+    .price-currency { font-size:18px; font-weight:700; vertical-align:top; margin-top:6px; display:inline-block; color:var(--muted); }
+    .price-value { font-size:52px; font-weight:700; letter-spacing:0; line-height:1; font-family:var(--font-mono); }
+    .price-period { font-size:14px; color:var(--muted); font-weight:500; }
+    .price-features { list-style:none; margin-bottom:32px; flex:1; }
+    .price-features li { display:flex; align-items:flex-start; gap:10px; font-size:14px; margin-bottom:12px; color:var(--muted); }
+    .price-features li .pf-check { color:var(--green); font-size:16px; margin-top:1px; flex-shrink:0; }
+    .price-features li strong { color:var(--text); }
+    .price-card .btn { width:100%; justify-content:center; padding:14px; font-size:15px; }
+    .price-divider { text-align:center; font-size:12px; color:var(--muted); margin:16px 0; }
+    .adhoc-options { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+    .adhoc-btn {
+      flex:1; min-width:80px; padding:10px 8px; border-radius:8px; border:1px solid var(--border);
+      background:transparent; color:var(--text); font-size:13px; font-weight:600;
+      cursor:pointer; transition:all 0.2s; text-align:center;
+    }
+    .adhoc-btn:hover,.adhoc-btn.selected { background:rgba(245,158,11,0.1); border-color:var(--gold); color:var(--gold); }
+
+    /* ── PAYMENT MODAL ── */
+    .modal-overlay {
+      position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.8);
+      backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center;
+      padding:20px;
+    }
+    .modal-overlay.open { display:flex; }
+    .modal {
+      background:var(--card); border:1px solid var(--border); border-radius:24px;
+      padding:48px; max-width:520px; width:100%; position:relative;
+      animation:modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes modalIn { from{opacity:0;transform:scale(0.92) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    .modal-close {
+      position:absolute; top:20px; right:20px; background:var(--card2); border:1px solid var(--border);
+      border-radius:50%; width:32px; height:32px; display:flex; align-items:center;
+      justify-content:center; cursor:pointer; color:var(--muted); font-size:16px;
+      transition:all 0.2s;
+    }
+    .modal-close:hover { color:var(--text); border-color:var(--accent); }
+    .modal-logo { font-size:32px; margin-bottom:8px; }
+    .modal-title { font-size:24px; font-weight:800; margin-bottom:6px; }
+    .modal-sub { font-size:14px; color:var(--muted); margin-bottom:32px; }
+    .modal-product-summary {
+      background:var(--bg2); border:1px solid var(--border); border-radius:12px;
+      padding:20px 24px; margin-bottom:24px;
+    }
+    .mps-label { font-size:11px; color:var(--muted); font-weight:600; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
+    .mps-name { font-size:18px; font-weight:700; margin-bottom:4px; }
+    .mps-price { font-size:28px; font-weight:900; }
+    .mps-desc { font-size:13px; color:var(--muted); margin-top:4px; }
+    .crypto-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:24px; }
+    .crypto-opt {
+      border:1px solid var(--border); border-radius:10px; padding:12px 8px;
+      text-align:center; cursor:pointer; transition:all 0.2s;
+    }
+    .crypto-opt:hover,.crypto-opt.selected { border-color:var(--gold); background:rgba(245,158,11,0.08); }
+    .crypto-opt .co-icon { font-size:22px; margin-bottom:4px; }
+    .crypto-opt .co-name { font-size:11px; font-weight:700; color:var(--muted); }
+    .crypto-opt.selected .co-name { color:var(--gold); }
+    .modal-btn-pay { width:100%; padding:16px; border-radius:12px; font-size:16px; font-weight:700;
+      background:linear-gradient(135deg,#d97706,#f59e0b); color:#1a0800; border:none;
+      cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:8px;
+    }
+    .modal-btn-pay:hover { opacity:0.9; transform:translateY(-1px); box-shadow:0 8px 24px rgba(245,158,11,0.3); }
+    .modal-btn-pay:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+    .modal-note { font-size:12px; color:var(--muted); text-align:center; margin-top:14px; line-height:1.6; }
+    .modal-error { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:10px;
+      padding:12px 16px; font-size:13px; color:#fca5a5; margin-bottom:16px; display:none; }
+    .modal-loading { display:none; flex-direction:column; align-items:center; gap:16px; padding:20px 0; }
+    .spinner { width:48px; height:48px; border:3px solid var(--border); border-top-color:var(--gold);
+      border-radius:50%; animation:spin 0.8s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    /* CTA */
+    .cta-section { text-align:center; padding:100px 48px; background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%); }
+    .cta-cards { display:flex; gap:24px; justify-content:center; flex-wrap:wrap; margin-top:48px; }
+    .cta-card {
+      background:var(--card); border:1px solid var(--border); border-radius:20px;
+      padding:40px 40px 32px; text-align:center; width:320px;
+      transition:transform 0.2s,box-shadow 0.2s; position:relative; overflow:hidden;
+    }
+    .cta-card:hover { transform:translateY(-4px); }
+    .cta-card.pan-card { border-color:rgba(16,185,129,0.3); box-shadow:var(--glow-pan); }
+    .cta-card.world-card { border-color:rgba(99,102,241,0.3); box-shadow:var(--glow-world); }
+    .cta-card::after {
+      content:""; position:absolute; inset:0; pointer-events:none;
+      background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,0.08),transparent 55%);
+      opacity:0; transition:opacity 0.25s;
+    }
+    .cta-card:hover::after { opacity:1; }
+    .cta-card-icon { font-size:40px; margin-bottom:16px; }
+    .cta-card h3 { font-size:22px; font-weight:800; margin-bottom:8px; }
+    .cta-card.pan-card h3 { color:#10b981; } .cta-card.world-card h3 { color:#818cf8; }
+    .cta-card p { color:var(--muted); font-size:14px; margin-bottom:24px; line-height:1.6; }
+    .cta-card .btn { width:100%; justify-content:center; padding:12px; font-size:14px; }
+
+    /* FOOTER */
+    footer { background:var(--bg2); border-top:1px solid var(--border); padding:48px; text-align:center; }
+    .footer-logo { font-size:18px; font-weight:800;
+      background:linear-gradient(135deg,#60a5fa,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      margin-bottom:12px; }
+    footer p { color:var(--muted); font-size:13px; }
+    .footer-links { display:flex; gap:24px; justify-content:center; margin:16px 0; flex-wrap:wrap; }
+    .footer-links a { color:var(--muted); font-size:13px; text-decoration:none; }
+    .footer-links a:hover { color:var(--text); }
+
+    /* SCROLL REVEAL */
+    .reveal { opacity:0; transform:translateY(28px); transition:opacity 0.6s ease,transform 0.6s ease; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+    @media(prefers-reduced-motion:reduce){ .reveal{transition:none;opacity:1;transform:none;} }
+
+    @media(max-width:900px){
+      section{padding:60px 20px;}
+      .products,.pricing-grid{grid-template-columns:1fr;}
+      .steps{grid-template-columns:1fr 1fr;}
+      .features-grid{grid-template-columns:1fr 1fr;}
+      .stats-bar{padding:20px;}
+      .stat-item{padding:12px 20px;}
+    }
+    @media(max-width:600px){
+      .steps,.features-grid{grid-template-columns:1fr;}
+      h1{letter-spacing:-2px;}
+      .cta-cards{flex-direction:column;align-items:center;}
+      .modal{padding:28px 20px;}
+      .crypto-grid{grid-template-columns:repeat(3,1fr);}
+    }
+    /* ── PAYMENT TABS ── */
+    .pay-tabs { display:flex; gap:0; margin-bottom:24px; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+    .pay-tab {
+      flex:1; padding:11px 0; text-align:center; font-size:13px; font-weight:700;
+      cursor:pointer; transition:all 0.2s; color:var(--muted); background:transparent; border:none;
+      display:flex; align-items:center; justify-content:center; gap:6px;
+    }
+    .pay-tab.active { background:var(--card2); color:var(--text); }
+    .pay-tab:first-child { border-right:1px solid var(--border); }
+    .pay-panel { display:none; }
+    .pay-panel.active { display:block; }
+
+    /* ── STRIPE CARD ELEMENT ── */
+    .card-field-wrap { margin-bottom:16px; }
+    .card-field-label { font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; display:block; }
+    #card-element {
+      background:var(--bg2); border:1px solid var(--border); border-radius:10px;
+      padding:14px 16px; transition:border-color 0.2s;
+    }
+    #card-element.focused { border-color:var(--accent); }
+    #card-errors { color:#fca5a5; font-size:13px; margin-bottom:12px; min-height:20px; }
+    .card-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+    .card-input {
+      background:var(--bg2); border:1px solid var(--border); border-radius:10px;
+      padding:13px 14px; font-size:14px; color:var(--text); font-family:inherit;
+      transition:border-color 0.2s; outline:none; width:100%;
+    }
+    .card-input:focus { border-color:var(--accent); }
+    .card-input::placeholder { color:var(--muted); }
+    .modal-btn-card {
+      width:100%; padding:16px; border-radius:12px; font-size:16px; font-weight:700;
+      background:linear-gradient(135deg,#2563eb,#4f46e5); color:#fff; border:none;
+      cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:8px;
+    }
+    .modal-btn-card:hover { opacity:0.9; transform:translateY(-1px); box-shadow:0 8px 24px rgba(79,70,229,0.3); }
+    .modal-btn-card:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+    .card-brand-icons { display:flex; gap:8px; margin-bottom:16px; align-items:center; }
+    .card-brand { background:var(--card2); border:1px solid var(--border); border-radius:6px; padding:4px 10px; font-size:11px; font-weight:700; color:var(--muted); letter-spacing:0.5px; }
+    .secure-badge { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); margin-top:12px; justify-content:center; }
+  
+    /* ═══ FLASH GRAPHICS & ANIMATIONS ═══ */
+
+    /* Aurora hero bg */
+    @keyframes aurora {
+      0%   { background-position:0% 50%,100% 50%,50% 0%; }
+      33%  { background-position:100% 0%,0% 100%,100% 50%; }
+      66%  { background-position:50% 100%,50% 0%,0% 100%; }
+      100% { background-position:0% 50%,100% 50%,50% 0%; }
+    }
+    .hero-bg {
+      background-size:200% 200%;
+      animation:aurora 14s ease-in-out infinite;
+    }
+
+    /* Hero headline glow sweep */
+    h1 .grad {
+      animation:hero-glow 5s ease-in-out infinite alternate;
+    }
+    @keyframes hero-glow {
+      from { filter:drop-shadow(0 0 10px rgba(96,165,250,0.25)); }
+      to   { filter:drop-shadow(0 0 30px rgba(167,139,250,0.55)); }
+    }
+
+    /* Hero grid breathe */
+    .hero-grid { animation:grid-breathe 9s ease-in-out infinite alternate; }
+    @keyframes grid-breathe {
+      from { opacity:0.025; }
+      to   { opacity:0.065; }
+    }
+
+    /* Live badge ping */
+    .hero-badge .dot {
+      animation:live-ping 1.6s ease-out infinite;
+    }
+    @keyframes live-ping {
+      0%   { box-shadow:0 0 0 0 rgba(34,197,94,0.7); transform:scale(1); }
+      70%  { box-shadow:0 0 0 9px rgba(34,197,94,0); transform:scale(1.3); }
+      100% { box-shadow:0 0 0 0 rgba(34,197,94,0); transform:scale(1); }
+    }
+
+    /* Nav status dot glow */
+    .ls-item.online .ls-dot {
+      animation:status-pulse 2.2s ease-in-out infinite;
+      box-shadow:0 0 6px rgba(34,197,94,0.7);
+    }
+    @keyframes status-pulse {
+      0%,100%{ box-shadow:0 0 4px rgba(34,197,94,0.5); }
+      50%    { box-shadow:0 0 14px rgba(34,197,94,1),0 0 24px rgba(34,197,94,0.4); }
+    }
+
+    /* Animated step connector flow-dot */
+    .step-connector {
+      background:linear-gradient(90deg,var(--border) 60%,transparent);
+      overflow:visible; position:absolute;
+    }
+    .step-connector::after {
+      content:''; position:absolute; top:50%; transform:translateY(-50%);
+      width:8px; height:8px; border-radius:50%;
+      background:var(--accent2);
+      box-shadow:0 0 8px var(--accent2),0 0 18px rgba(96,165,250,0.5);
+      animation:flow-dot 2s linear infinite;
+    }
+    .step:nth-child(2) .step-connector::after { animation-delay:.5s; }
+    .step:nth-child(3) .step-connector::after { animation-delay:1s; }
+    @keyframes flow-dot {
+      from { left:-8px; opacity:0; }
+      10%  { opacity:1; }
+      90%  { opacity:1; }
+      to   { left:calc(100% + 8px); opacity:0; }
+    }
+
+    /* Product card glow pulse */
+    .product-card.pan:hover {
+      box-shadow:0 0 0 1px rgba(16,185,129,0.6),0 0 50px rgba(16,185,129,0.35),0 0 100px rgba(16,185,129,0.12) !important;
+    }
+    .product-card.world:hover {
+      box-shadow:0 0 0 1px rgba(99,102,241,0.6),0 0 50px rgba(99,102,241,0.35),0 0 100px rgba(99,102,241,0.12) !important;
+    }
+
+    /* Featured price card pulse */
+    .price-card.featured {
+      animation:gold-pulse 3.5s ease-in-out infinite;
+    }
+    @keyframes gold-pulse {
+      0%,100%{ box-shadow:0 0 40px rgba(245,158,11,0.15); }
+      50%    { box-shadow:0 0 70px rgba(245,158,11,0.4),0 0 130px rgba(245,158,11,0.1); }
+    }
+
+    /* Section label breathe */
+    .section-label { animation:label-breathe 4s ease-in-out infinite; }
+    @keyframes label-breathe {
+      0%,100%{ opacity:.85; letter-spacing:2px; }
+      50%    { opacity:1; letter-spacing:2.6px; }
+    }
+
+    /* Feature icon float on hover */
+    .feat-icon-svg { transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease; }
+    .feat:hover .feat-icon-svg {
+      transform:translateY(-5px) scale(1.1);
+    }
+
+    /* Stat number flash on count-up completion */
+    @keyframes stat-flash {
+      0%  { text-shadow:0 0 0 transparent; }
+      25% { text-shadow:0 0 24px currentColor,0 0 48px currentColor; }
+      100%{ text-shadow:0 0 6px currentColor; }
+    }
+    .stat-flash { animation:stat-flash .9s ease-out forwards; }
+
+    /* ── ROUTE VISUALISATION ── */
+    .route-viz {
+      max-width:1000px; margin:56px auto 0; position:relative; overflow:hidden;
+      background:var(--card); border:1px solid var(--border); border-radius:20px;
+      padding:32px 36px 28px;
+    }
+    .route-viz::before {
+      content:''; position:absolute; inset:0; pointer-events:none;
+      background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(59,130,246,0.07) 0%,transparent 70%);
+    }
+    .rv-title {
+      text-align:center; font-size:11px; font-weight:700; letter-spacing:2px;
+      text-transform:uppercase; color:var(--accent); margin-bottom:28px;
+    }
+    .rv-row { display:flex; align-items:center; justify-content:center; gap:0; flex-wrap:nowrap; }
+    .rv-node {
+      display:flex; flex-direction:column; align-items:center; gap:7px;
+      flex-shrink:0; cursor:default; transition:transform .25s ease;
+    }
+    .rv-node:hover { transform:scale(1.06); }
+    .rv-icon {
+      width:50px; height:50px; border-radius:13px;
+      display:flex; align-items:center; justify-content:center;
+      background:var(--card2); border:1px solid var(--border);
+      transition:all .35s ease; position:relative;
+    }
+    .rv-icon svg { width:22px; height:22px; stroke-width:1.6; }
+    .rv-icon.lit-blue  { border-color:var(--accent2); box-shadow:0 0 18px rgba(96,165,250,.45),inset 0 0 12px rgba(96,165,250,.08); }
+    .rv-icon.lit-green { border-color:#10b981; box-shadow:0 0 18px rgba(16,185,129,.45),inset 0 0 12px rgba(16,185,129,.08); }
+    .rv-icon.lit-indigo{ border-color:#818cf8; box-shadow:0 0 18px rgba(129,140,248,.45),inset 0 0 12px rgba(129,140,248,.08); }
+    .rv-label { font-size:11px; font-weight:600; color:var(--muted); white-space:nowrap; }
+    .rv-sublabel { font-size:10px; color:var(--muted); opacity:.65; white-space:nowrap; }
+    .rv-line {
+      flex:1; min-width:18px; max-width:60px; height:2px;
+      background:var(--border); position:relative; overflow:hidden;
+      border-radius:1px;
+    }
+    .rv-line::after {
+      content:''; position:absolute; top:0; left:-100%; width:100%; height:100%;
+      background:linear-gradient(90deg,transparent,var(--accent2),transparent);
+      animation:rv-flow 2s ease-in-out infinite;
+    }
+    .rv-line.green::after {
+      background:linear-gradient(90deg,transparent,#10b981,transparent);
+      animation-delay:.35s;
+    }
+    .rv-line.indigo::after {
+      background:linear-gradient(90deg,transparent,#818cf8,transparent);
+      animation-delay:.7s;
+    }
+    @keyframes rv-flow { from{left:-100%} to{left:100%} }
+
+    .rv-fork {
+      display:flex; flex-direction:column; align-items:flex-start; gap:10px;
+    }
+    .rv-fork-row { display:flex; align-items:center; gap:0; }
+
+    /* ticker flash */
+    @keyframes tick-up { 0%{background:rgba(34,197,94,.18)} 100%{background:transparent} }
+    @keyframes tick-dn { 0%{background:rgba(239,68,68,.14)} 100%{background:transparent} }
+    .ticker-item.t-flash-up { animation:tick-up .5s ease-out; }
+    .ticker-item.t-flash-dn { animation:tick-dn .5s ease-out; }
+
+    /* 3-D card tilt polish */
+    .product-card, .price-card, .feat, .cta-card { will-change:transform; }
+
+    @media(prefers-reduced-motion:reduce){
+      .hero-bg,.hero-grid,h1 .grad,.step-connector::after,
+      .price-card.featured,.section-label,.rv-line::after,
+      .hero-badge .dot,.ls-item.online .ls-dot,
+      .stat-flash { animation:none !important; }
+    }
+
+    /* product feature tags */
+    .prod-features { display:flex; flex-wrap:wrap; gap:6px; margin:14px 0 0; }
+    .pf-tag {
+      display:inline-flex; align-items:center; gap:5px;
+      font-size:11px; font-weight:600; padding:4px 10px;
+      border-radius:20px; background:rgba(255,255,255,0.04);
+      border:1px solid var(--border); color:var(--muted);
+      transition:all .2s ease;
+    }
+    .pf-tag:hover { color:var(--fg); border-color:rgba(255,255,255,0.2); }
+    .pf-tag svg { flex-shrink:0; }
+    .pf-tag.new-feat {
+      background:rgba(34,197,94,0.07);
+      border-color:rgba(34,197,94,0.3);
+      color:#4ade80;
+    }
+
+    /* ═══ UNIQUE TYPOGRAPHY UPGRADE ═══ */
+
+    /* text rendering */
+    body {
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* gradient h1 */
+    h1 {
+      background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 25%, #a5f3fc 50%, #c4b5fd 80%, #e879f9 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 32px rgba(165,243,252,0.2));
+    }
+    /* fallback for browsers without background-clip:text */
+    @supports not (-webkit-background-clip: text) {
+      h1 { color: var(--text); background: none; filter: none; }
+    }
+
+    /* gradient section-title */
+    .section-title {
+      background: linear-gradient(120deg, #f1f5f9 0%, #cbd5e1 40%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+    }
+    @supports not (-webkit-background-clip: text) {
+      .section-title { color: var(--text); background: none; }
+    }
+
+    /* feature card h3 — bright white with cyan tint */
+    .feat h3 {
+      color: #e2eeff;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    /* product description body text */
+    .product-desc {
+      color: #94adc7;
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    /* CTA section headings */
+    .cta-card h3 {
+      font-size: 18px;
+      letter-spacing: -0.01em;
+    }
+
+    /* Stat numbers — enhanced glow per brand */
+    .pan .ps-num {
+      text-shadow: 0 0 20px rgba(16,185,129,0.55);
+    }
+    .world .ps-num {
+      text-shadow: 0 0 20px rgba(129,140,248,0.55);
+    }
+
+    /* Nav links */
+    .nav-links a {
+      color: #8b9dc3;
+      font-weight: 500;
+      font-size: 13.5px;
+      letter-spacing: 0.01em;
+      transition: color .2s ease;
+      position: relative;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px; left: 0; right: 100%;
+      height: 1px;
+      background: var(--accent2);
+      transition: right .25s ease;
+    }
+    .nav-links a:hover::after,
+    .nav-links a.active::after { right: 0; }
+    .nav-links a:hover,
+    .nav-links a.active { color: #e2e8f0; }
+
+    /* footer / meta text */
+    footer p, footer a, .rv-label, .rv-sublabel {
+      color: #6b80a8;
+    }
+
+    /* price card feature list text */
+    .price-feat {
+      color: #8b9dc3;
+      font-size: 13px;
+    }
+
+    /* Step titles */
+    .step-title { color: #e2eeff; font-weight: 700; }
+
+    /* Step descriptions */
+    .step-desc { color: #8b9dc3; line-height: 1.65; }
+
+    /* Table/compare cells */
+    .ct-row td { color: #8b9dc3; }
+
+    /* Route viz labels */
+    .rv-label { color: #94a3b8; font-weight: 600; }
+    .rv-sublabel { color: #64748b; }
+
+    /* Section sub-description text */
+    .section-sub { color: #8b9dc3 !important; }
+
+    /* Feature tooltip text */
+    .feat-tooltip { color: #94a3b8; }
+    .feat-tooltip-title { color: #e2e8f0; }
+
+    /* Pillar grid body text */
+    .pf-tag { color: #8b9dc3; }
+
+    /* Price value glow */
+    .price-value {
+      filter: drop-shadow(0 0 12px rgba(241,245,249,0.15));
+    }
+
+    /* Product tagline */
+    .product-tagline {
+      color: #6b80a8;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    /* Live status text */
+    .ls-label { color: #8b9dc3; }
+
+    /* Section label (already has accent color, add glow) */
+    .section-label {
+      color: var(--accent2);
+      text-shadow: 0 0 20px rgba(96,165,250,0.4);
+    }
+
+    @media(prefers-reduced-motion:reduce){
+      h1, .section-title { filter: none; }
+    }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">SORFIX</div>
+  <div class="nav-links">
+    <a href="#products">Products</a>
+    <a href="#how">How It Works</a>
+    <a href="#features">Features</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#compare">Compare</a><a href="#connectivity">Connectivity</a>
+  </div>
+  <div class="live-status" id="liveStatus">
+    <span class="ls-item" id="lsPan"><i class="ls-dot"></i>Pan</span>
+    <span class="ls-item" id="lsWorld"><i class="ls-dot"></i>World</span>
+  </div>
+  <div class="nav-cta">
+    <button class="btn btn-outline" onclick="openPayModal('pan','day')">Get Access</button>
+    <a href="#pricing" class="btn btn-primary">View Plans</a>
+  </div>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <canvas id="particles"></canvas>
+  <canvas id="globeCanvas" width="520" height="520"></canvas>
+  <div class="hero-content">
+    <div class="hero-badge"><span class="dot"></span> LIVE &mdash; FIX 5.0 SP2 / FIXT.1.1 &middot; Real-Time Order Routing</div>
+    <h1><span class="grad">Intelligent Order Routing<br>for Every Market</span></h1>
+    <p class="hero-sub">
+      Two powerful Smart Order Routers. Pan-African markets and global exchanges.
+      Route orders across 8 venues in milliseconds using 6-factor AI-driven venue scoring.
+    </p>
+    <div class="hero-ctas">
+      <button class="btn btn-shimmer btn-lg" onclick="openPayModal('bundle','day')"><span>Get Started →</span></button>
+      <a href="#how" class="btn btn-outline btn-lg">How It Works</a>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item reveal"><div class="stat-num c-blue" data-count="530" data-suffix="+">0</div><div class="stat-label">Listed Companies</div></div>
+  <div class="stat-item reveal"><div class="stat-num c-green" data-count="99.8" data-decimals="1" data-suffix="%">0</div><div class="stat-label">Fill Rate</div></div>
+  <div class="stat-item reveal"><div class="stat-num c-purple" data-prefix="< " data-count="1" data-suffix="ms">0</div><div class="stat-label">Routing Latency</div></div>
+  <div class="stat-item reveal"><div class="stat-num c-gold" data-count="8">0</div><div class="stat-label">Live Exchanges</div></div>
+  <div class="stat-item reveal"><div class="stat-num c-blue" data-count="6">0</div><div class="stat-label">Scoring Factors</div></div>
+  <div class="stat-item reveal"><div class="stat-num c-green">FIX 4.2</div><div class="stat-label">Protocol</div></div>
+</div>
+
+<!-- PRODUCTS -->
+<section id="products" style="background:var(--bg);">
+  <div class="reveal center" style="margin-bottom:60px;">
+    <div class="section-label">Our Products</div>
+    <div class="section-title">Two Platforms. Every Market Covered.</div>
+  </div>
+  <div class="products">
+    <div class="product-card pan reveal">
+      <div class="product-header">
+        <div class="product-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+        <div>
+          <div class="product-name">Pan SORFIX</div>
+          <div class="product-tagline">Pan-African Smart Order Router · v3.0 · Institutional Suite</div>
+        </div>
+      </div>
+      <div class="product-body">
+        <p class="product-desc">Built for African equity markets. Routes orders intelligently across Ghana, South Africa, Nigeria and Kenya using real-time venue scoring, GBM price simulation, and PAPSS FX cost optimisation.</p>
+        <div class="prod-features">
+          <span class="pf-tag"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>6-Factor SOR</span>
+          <span class="pf-tag"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>TWAP/VWAP</span>
+          <span class="pf-tag"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Pre-Trade Risk</span>
+          <span class="pf-tag"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>TCA Analytics</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>IOI Board</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>Dark Pool</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Block Trades</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 19 21 12 17 5 21 12 2"/></svg>Iceberg Orders</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg>Basket Trading</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Best Execution</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>FIX Drop Copy</span>
+        </div>
+        <div class="exchange-pills" style="margin-top:12px;">
+          <span class="pill pill-pan">🇬🇭 GSE · GHS</span>
+          <span class="pill pill-pan">🇿🇦 JSE · ZAR</span>
+          <span class="pill pill-pan">🇳🇬 NGX · NGN</span>
+          <span class="pill pill-pan">🇰🇪 NSE · KES</span>
+        </div>
+        <div class="product-stats">
+          <div class="ps-item"><div class="ps-num" data-count="284">0</div><div class="ps-label">Companies</div></div>
+          <div class="ps-item"><div class="ps-num" data-count="99.8" data-decimals="1" data-suffix="%">0</div><div class="ps-label">Fill Rate</div></div>
+          <div class="ps-item"><div class="ps-num" data-count="6.1" data-decimals="1" data-suffix="ms">0</div><div class="ps-label">Avg Latency</div></div>
+        </div>
+      </div>
+      <div class="product-footer">
+        <a href="http://localhost:9090/portal" target="_blank" class="btn btn-pan">Open Portal →</a>
+        <button class="btn btn-ghost" onclick="openPayModal('pan','day')">Buy Access</button>
+      </div>
+    </div>
+    <div class="product-card world reveal">
+      <div class="product-header">
+        <div class="product-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+        <div>
+          <div class="product-name">World SORFIX</div>
+          <div class="product-tagline">Global Smart Order Router · v1.0 · Institutional Suite</div>
+        </div>
+      </div>
+      <div class="product-body">
+        <p class="product-desc">Built for global markets. Routes orders across the USA, UK, Hong Kong and Japan with sub-millisecond venue selection, global FX cost modelling, and real-time order book depth.</p>
+        <div class="prod-features">
+          <span class="pf-tag"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>6-Factor SOR</span>
+          <span class="pf-tag"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>TWAP/VWAP</span>
+          <span class="pf-tag"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Pre-Trade Risk</span>
+          <span class="pf-tag"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>TCA Analytics</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>IOI Board</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>Dark Pool</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Block Trades</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 19 21 12 17 5 21 12 2"/></svg>Iceberg Orders</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg>Basket Trading</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Best Execution</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>FIX Drop Copy</span>
+        </div>
+        <div class="exchange-pills" style="margin-top:12px;">
+          <span class="pill pill-world">🇺🇸 NYSE · USD</span>
+          <span class="pill pill-world">🇬🇧 LSE · GBP</span>
+          <span class="pill pill-world">🇭🇰 HKEX · HKD</span>
+          <span class="pill pill-world">🇯🇵 TSE · JPY</span>
+        </div>
+        <div class="product-stats">
+          <div class="ps-item"><div class="ps-num" data-count="246">0</div><div class="ps-label">Companies</div></div>
+          <div class="ps-item"><div class="ps-num" data-count="99.8" data-decimals="1" data-suffix="%">0</div><div class="ps-label">Fill Rate</div></div>
+          <div class="ps-item"><div class="ps-num" data-prefix="~" data-count="1" data-suffix="ms">0</div><div class="ps-label">Avg Latency</div></div>
+        </div>
+      </div>
+      <div class="product-footer">
+        <a href="http://localhost:9091/portal" target="_blank" class="btn btn-world">Open Portal →</a>
+        <button class="btn btn-ghost" onclick="openPayModal('world','day')">Buy Access</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="how-section">
+  <div class="center reveal">
+    <div class="section-label">How It Works</div>
+    <div class="section-title">Order Lifecycle in 4 Steps</div>
+    <p class="section-sub">From order submission to fill confirmation — all in under 10 milliseconds.</p>
+  </div>
+  <div class="steps">
+    <div class="step reveal"><div class="step-connector"></div><div class="step-num">1</div><div class="step-icon-svg" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25)"><svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><h3>Order Received <span class="step-hint">?</span></h3><p>REST API validates the order via Pydantic v2, pre-trade risk checks fire, and the order enters the routing engine.</p><div class="step-tooltip"><div class="step-tooltip-title">📋 Summary</div>Think of clicking "Buy" on a stock. The system instantly checks: Is the order valid? Do you have the funds? Is the quantity within safe limits? If every check passes, the order moves into the queue. If anything fails, it's rejected right away with a clear reason — nothing moves forward until everything is verified.</div></div>
+    <div class="step reveal"><div class="step-connector"></div><div class="step-num">2</div><div class="step-icon-svg" style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25)"><svg viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><h3>Venue Scored <span class="step-hint">?</span></h3><p>6-factor scoring evaluates liquidity, spread, FX cost, fee, latency and reliability across all enabled venues.</p><div class="step-tooltip"><div class="step-tooltip-title">🧠 Summary</div>Before buying, the system scouts every available stock exchange — like comparing prices across multiple shops. Each exchange gets graded on 6 things: how much stock is available, how tight the price gap is, currency conversion cost, trading fees, how fast it responds, and how reliable it is. The highest-scoring exchanges go to the top of the list.</div></div>
+    <div class="step reveal"><div class="step-connector"></div><div class="step-num">3</div><div class="step-icon-svg" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25)"><svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 8 13 13 13 8 21"/></svg></div><h3>Smart Routing <span class="step-hint">?</span></h3><p>Proportional allocation splits the order across top-scoring venues. All legs execute in parallel via FIX 4.2.</p><div class="step-tooltip"><div class="step-tooltip-title">⚡ Summary</div>Instead of buying all your shares from one exchange, the system splits your order across the top-ranked exchanges — like buying in bulk from multiple suppliers to get the best overall deal. All the pieces execute at the same time, so it's fast. The results are then combined into one clean purchase summary for you.</div></div>
+    <div class="step reveal"><div class="step-num">4</div><div class="step-icon-svg" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25)"><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><h3>Fill Confirmed <span class="step-hint">?</span></h3><p>Execution reports arrive, positions update, TCA data is stored. Fill ratio, VWAP and slippage are returned.</p><div class="step-tooltip"><div class="step-tooltip-title">✅ Summary</div>Your purchase is done. The system collects confirmation receipts from every exchange used, calculates the average price you paid across all the splits, checks how close it got to the ideal price, and hands back a full report: how many shares were bought, at what average price, and exactly how long the whole thing took — start to finish.</div></div>
+  <!-- ROUTE VISUALISATION -->
+  <div class="route-viz reveal">
+    <div class="rv-title">Live Order Routing Flow</div>
+    <div class="rv-row">
+
+      <!-- ORDER -->
+      <div class="rv-node">
+        <div class="rv-icon" id="rv-order">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+        </div>
+        <div class="rv-label">Order</div>
+        <div class="rv-sublabel">REST API</div>
+      </div>
+
+      <div class="rv-line" id="rv-l1"></div>
+
+      <!-- RISK ENGINE -->
+      <div class="rv-node">
+        <div class="rv-icon" id="rv-risk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fca5a5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div class="rv-label">Risk Check</div>
+        <div class="rv-sublabel">Pre-trade</div>
+      </div>
+
+      <div class="rv-line" id="rv-l2"></div>
+
+      <!-- SOR ENGINE -->
+      <div class="rv-node">
+        <div class="rv-icon" id="rv-sor">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </div>
+        <div class="rv-label">SOR Engine</div>
+        <div class="rv-sublabel">6-factor score</div>
+      </div>
+
+      <div class="rv-line" id="rv-l3"></div>
+
+      <!-- FORK to exchanges -->
+      <div class="rv-fork">
+        <!-- African exchanges -->
+        <div class="rv-fork-row">
+          <div class="rv-line green" style="max-width:30px" id="rv-lg1"></div>
+          <div class="rv-node">
+            <div class="rv-icon" id="rv-pan">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+            </div>
+            <div class="rv-label" style="color:#34d399">Pan SORFIX</div>
+            <div class="rv-sublabel">GSE · JSE · NGX · NSE</div>
+          </div>
+        </div>
+        <!-- Global exchanges -->
+        <div class="rv-fork-row">
+          <div class="rv-line indigo" style="max-width:30px" id="rv-lw1"></div>
+          <div class="rv-node">
+            <div class="rv-icon" id="rv-world">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+            </div>
+            <div class="rv-label" style="color:#a5b4fc">World SORFIX</div>
+            <div class="rv-sublabel">NYSE · LSE · HKEX · TSE</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rv-line" id="rv-l4" style="max-width:40px"></div>
+
+      <!-- FILL CONFIRM -->
+      <div class="rv-node">
+        <div class="rv-icon" id="rv-fill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <div class="rv-label">Fill + TCA</div>
+        <div class="rv-sublabel">VWAP · Slippage</div>
+      </div>
+
+    </div><!-- /.rv-row -->
+
+    <!-- live latency badge -->
+    <div style="text-align:center;margin-top:20px;">
+      <span style="font-size:11px;font-weight:600;color:var(--muted);">End-to-end:</span>
+      <span id="rv-latency" style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--green);margin-left:6px">—</span>
+    </div>
+  </div>
+
+</section>
+
+<!-- FEATURES -->
+<section id="features" style="background:var(--bg);">
+  <div class="center reveal">
+    <div class="section-label">Full Trading Suite</div>
+    <div class="section-title">Core Infrastructure &amp; Institutional Grade Tools</div>
+    <p class="section-sub" style="max-width:640px;margin:12px auto 0;color:var(--muted);font-size:15px;line-height:1.6;">From direct exchange routing to dark pool crossing — every capability an institutional desk requires, built into one system.</p>
+  </div>
+  <div style="text-align:center;margin:32px 0 12px;">
+    <span style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);">Core Infrastructure</span>
+  </div>
+  <div class="features-grid">
+    <div class="feat reveal"><div class="feat-icon-svg" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2)"><svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div><h3>6-Factor Venue Scoring <span class="feat-hint">?</span></h3><p>Liquidity 28% · Spread 18% · FX 18% · Fee 16% · Latency 10% · Reliability 10%. Weights validated at startup.</p><div class="feat-tooltip"><div class="feat-tooltip-title">🎯 Summary</div>The system grades every exchange on 6 criteria before deciding where to send your order: how much stock is available (28%), how tight the buy/sell price gap is (18%), currency conversion cost (18%), trading fees (16%), response speed (10%), and uptime reliability (10%). The exchange with the highest combined score gets the most of your order.</div></div>
+    <div class="feat reveal"><div class="feat-icon-svg" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2)"><svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><h3>GBM Market Data <span class="feat-hint">?</span></h3><p>Geometric Brownian Motion price simulation with 10-level order books, exponential depth decay, and 0.5bps ticks.</p><div class="feat-tooltip"><div class="feat-tooltip-title">📊 Summary</div>The system generates realistic market prices using a mathematical model (GBM) — the same one used by major banks. It creates a full picture of what buyers and sellers are currently offering at each price level, with 10 layers of depth, so routing decisions are based on accurate simulated market conditions.</div></div>
+    <div class="feat reveal"><div class="feat-icon-svg" style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2)"><svg viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg></div><h3>Proportional SOR Allocation <span class="feat-hint">?</span></h3><p>Orders split proportionally by score × capacity. Last leg takes the remainder. Up to 5-way splits supported.</p><div class="feat-tooltip"><div class="feat-tooltip-title">🔀 Summary</div>Your order is divided across multiple exchanges based on how well each one scored. If Exchange A scored twice as high as Exchange B, it gets twice the shares. The final leftover always goes to the top-ranked venue. This means you automatically buy from the best places — without doing the maths yourself.</div></div>
+    <div class="feat reveal"><div class="feat-icon-svg" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2)"><svg viewBox="0 0 24 24" fill="none" stroke="#fca5a5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Pre-Trade Risk Engine <span class="feat-hint">?</span></h3><p>Max order qty, notional, price band, daily notional limit, and position limits checked before every order.</p><div class="feat-tooltip"><div class="feat-tooltip-title">🛡️ Summary</div>Before any order is sent, the system runs a safety checklist: Is the order size within safe limits? Is the total value within your daily cap? Is the price within a reasonable range? If any check fails, the order is blocked immediately — preventing costly mistakes before they reach the market.</div></div>
+    <div class="feat reveal"><div class="feat-icon-svg" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2)"><svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></div><h3>TWAP / VWAP Algos <span class="feat-hint">?</span></h3><p>Time-Weighted and Volume-Weighted execution algorithms with configurable duration, slices, and participation rates.</p><div class="feat-tooltip"><div class="feat-tooltip-title">⚙️ Summary</div>For large orders, buying everything at once can push the price against you. These algorithms break your order into smaller slices spread over time (TWAP) or timed to match the busiest trading periods (VWAP). The result is a better average price — like buying a large amount gradually instead of all at once.</div></div>
+    <div class="feat reveal"><div class="feat-icon-svg" style="background:rgba(148,163,184,0.1);border:1px solid rgba(148,163,184,0.2)"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div><h3>FIX 5.0 / FIXT.1.1 <span class="feat-hint">?</span></h3><p>Full FIXT.1.1 adapter per exchange. NewOrderSingle, ExecutionReport, IOI, NewOrderList, TradeCaptureReport — all FIX 5.0 SP2 message types.</p><div class="feat-tooltip"><div class="feat-tooltip-title">🔌 Summary</div>FIX 5.0 SP2 (transport: FIXT.1.1) is the current institutional standard for exchange connectivity. Every message carries ApplVerID (tag 1128=9) identifying it as FIX50SP2 — enabling complex multi-leg orders, iceberg display quantity, basket NewOrderList, and IOI messages that FIX 4.2 could not express cleanly.</div></div>
+    <div class="feat reveal"><div class="feat-icon-svg" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2)"><svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div><h3>WebSocket Live Books <span class="feat-hint">?</span></h3><p>Stream live order book snapshots at ws://host/ws/book/{venue}/{symbol} — updated every 100ms.</p><div class="feat-tooltip"><div class="feat-tooltip-title">📡 Summary</div>You can connect and watch a live stream of every buy and sell offer sitting on an exchange — like a scoreboard that refreshes 10 times per second. This shows you exactly who wants to buy or sell, at what price, and in what quantity — giving you a real-time window into the market.</div></div>
+    <div class="feat reveal"><div class="feat-icon-svg" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2)"><svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></div><h3>Circuit Breaker <span class="feat-hint">?</span></h3><p>CLOSED/OPEN/HALF_OPEN state machine per venue. Feeds directly into reliability scoring and allocation decisions.</p><div class="feat-tooltip"><div class="feat-tooltip-title">🔁 Summary</div>Like a household circuit breaker that cuts power to protect your appliances, this automatically stops sending orders to an exchange if it starts behaving erratically. Once the exchange stabilises, orders are gradually allowed through again. It prevents bad fills caused by a struggling exchange — protecting you without you having to do anything.</div></div>
+    <div class="feat reveal"><div class="feat-icon-svg" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2)"><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><h3>TCA Analytics <span class="feat-hint">?</span></h3><p>Transaction Cost Analysis endpoint with VWAP, slippage, fill ratio, and routing latency for every order.</p><div class="feat-tooltip"><div class="feat-tooltip-title">📈 Summary</div>After every trade, the system produces a report card. It tells you: Did you get a good price compared to when you placed the order? How much did it cost in fees and price movement? How fast was it executed? This information helps you measure performance and continuously improve your trading strategy over time.</div></div>
+  </div>
+
+  <!-- INSTITUTIONAL SUITE -->
+  <div style="text-align:center;margin:48px 0 12px;">
+    <span style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);">Institutional Trading Suite</span>
+    <div style="font-size:13px;color:var(--muted);opacity:.7;margin-top:4px;">Capabilities that close the gap with institutional networks like LSEG Autex</div>
+  </div>
+  <div class="features-grid">
+
+    <!-- IOI Board -->
+    <div class="feat reveal">
+      <div class="feat-icon-svg" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </div>
+      <h3>IOI Board <span class="feat-hint">?</span></h3>
+      <p>Indications of Interest board — brokers advertise block intent without fully committing. Buyers respond privately. Transforms routing into a trading network.</p>
+      <div class="feat-tooltip"><div class="feat-tooltip-title">Institutional Network</div>Sellers post interest to buy or sell a large block; buyers respond privately. This is the founding product of Autex Trade Route — and now a core SORFIX capability. It creates a liquidity discovery layer above exchange routing.</div>
+    </div>
+
+    <!-- Dark Pool -->
+    <div class="feat reveal">
+      <div class="feat-icon-svg" style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v4l3 3"/>
+          <path d="M5 3L3 5"/>
+          <path d="M19 3l2 2"/>
+        </svg>
+      </div>
+      <h3>Dark Pool Crossing <span class="feat-hint">?</span></h3>
+      <p>Internal crossing before lit exchange exposure. Midpoint price-time priority matching. Zero market impact, no exchange fees on crossed volume.</p>
+      <div class="feat-tooltip"><div class="feat-tooltip-title">Zero Market Impact</div>Before sending an order to a public exchange, SORFIX checks if it can match your order against another user's opposite order internally. No exchange sees it, no price is moved. The result: better fills, lower costs, and no signal leaked to the market.</div>
+    </div>
+
+    <!-- Block Trades -->
+    <div class="feat reveal">
+      <div class="feat-icon-svg" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+      </div>
+      <h3>Block Trade Workflow <span class="feat-hint">?</span></h3>
+      <p>Large order negotiation — submit size, find a counterparty, agree on price before execution. Eliminates market slippage on thinly-traded names.</p>
+      <div class="feat-tooltip"><div class="feat-tooltip-title">Negotiated Execution</div>For orders large enough to visibly move a price, SORFIX finds a willing counterparty and negotiates a price before touching the exchange. Both sides confirm before execution — preventing the price from running away during the trade.</div>
+    </div>
+
+    <!-- Iceberg Orders -->
+    <div class="feat reveal">
+      <div class="feat-icon-svg" style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75">
+          <polygon points="12 2 19 21 12 17 5 21 12 2"/>
+        </svg>
+      </div>
+      <h3>Iceberg / Reserve Orders <span class="feat-hint">?</span></h3>
+      <p>Display qty visible to market; hidden reserve auto-replenishes on each fill. Prevent large orders from revealing intent and moving the price.</p>
+      <div class="feat-tooltip"><div class="feat-tooltip-title">Hidden Depth</div>Like an iceberg where only the tip shows above water, only a small visible slice of your order appears on the exchange. As each slice fills, the next is automatically revealed. Other traders can't see your full order size — preventing them from front-running your position.</div>
+    </div>
+
+    <!-- Basket Trading -->
+    <div class="feat reveal">
+      <div class="feat-icon-svg" style="background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+      </div>
+      <h3>Basket / Portfolio Trading <span class="feat-hint">?</span></h3>
+      <p>Submit 50+ stocks with target notional weights. Each leg executes via TWAP or VWAP independently. Essential for fund rebalancing without single-name market impact.</p>
+      <div class="feat-tooltip"><div class="feat-tooltip-title">Portfolio Rebalancing</div>Fund managers enter a list of stocks and target weights (e.g. "10% Apple, 8% Safaricom, 5% MTN"). SORFIX executes every leg simultaneously using smart algorithms — so the whole portfolio moves together without any one stock telegraphing the trade.</div>
+    </div>
+
+    <!-- Best Execution -->
+    <div class="feat reveal">
+      <div class="feat-icon-svg" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <h3>Best Execution Reporting <span class="feat-hint">?</span></h3>
+      <p>Per-order audit trail: venues considered, selection rationale, benchmark price vs achieved price. MiFID II aligned. Required by institutional desks.</p>
+      <div class="feat-tooltip"><div class="feat-tooltip-title">Regulatory Audit Trail</div>For every order, SORFIX generates a complete record: which exchanges were evaluated, why the chosen ones were selected, what the reference price was, and what you actually achieved. This is the compliance report that institutional clients and regulators require — now automatic on every trade.</div>
+    </div>
+
+    <!-- FIX Drop Copy -->
+    <div class="feat reveal">
+      <div class="feat-icon-svg" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
+      <h3>FIX Drop Copy <span class="feat-hint">?</span></h3>
+      <p>Real-time copies of all order flow streamed to configurable compliance endpoints. Surveillance, audit, and regulatory reporting — zero integration overhead.</p>
+      <div class="feat-tooltip"><div class="feat-tooltip-title">Compliance Stream</div>Every order event — submission, acknowledgement, fill, rejection — is simultaneously copied to your compliance system in real time via FIX. Your surveillance team sees every trade as it happens, without connecting directly to the exchange or writing custom integrations.</div>
+    </div>
+
+  </div><!-- /.features-grid institutional -->
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="center reveal">
+    <div class="section-label">Pricing</div>
+    <div class="section-title">Simple, Transparent Access</div>
+    <p class="section-sub">Ad-hoc access or monthly plans. Pay with crypto via Coinbase Commerce.</p>
+  </div>
+  <div class="pricing-grid">
+
+    <!-- PAN SORFIX -->
+    <div class="price-card reveal">
+      <div class="price-badge pan">Pan SORFIX</div>
+      <div class="price-name">Pan African SOR</div>
+      <div class="price-desc">Access the Pan-African Smart Order Router — GSE, JSE, NGX, NSE.</div>
+      <div class="price-amount">
+        <span class="price-currency">$</span><span class="price-value">49</span><span class="price-period">/month</span>
+      </div>
+      <ul class="price-features">
+        <li><span class="pf-check">✓</span><span><strong>4 African exchanges</strong> — GSE, JSE, NGX, NSE</span></li>
+        <li><span class="pf-check">✓</span><span><strong>284 listed companies</strong></span></li>
+        <li><span class="pf-check">✓</span><span>REST API + WebSocket live books</span></li>
+        <li><span class="pf-check">✓</span><span>TWAP / VWAP algorithms</span></li>
+        <li><span class="pf-check">✓</span><span>Pre-trade risk engine</span></li>
+        <li><span class="pf-check">✓</span><span>TCA analytics endpoint</span></li>
+        <li><span class="pf-check">✓</span><span>API docs access (/docs)</span></li>
+      </ul>
+      <button class="btn btn-pan" onclick="openPayModal('pan','month')">Subscribe — $49/mo</button>
+      <div class="price-divider">— or buy ad-hoc access —</div>
+      <div class="adhoc-options">
+        <button class="adhoc-btn" onclick="openPayModal('pan','day')" title="1-Day Pass">1 Day<br><strong>$9</strong></button>
+        <button class="adhoc-btn" onclick="openPayModal('pan','week')" title="7-Day Pass">7 Days<br><strong>$19</strong></button>
+        <button class="adhoc-btn" onclick="openPayModal('pan','api')" title="API Credits">API Credits<br><strong>$25</strong></button>
+      </div>
+    </div>
+
+    <!-- BUNDLE -->
+    <div class="price-card featured reveal">
+      <div class="price-badge bundle">Bundle</div>
+      <div class="price-name">Full SORFIX Suite</div>
+      <div class="price-desc">Both platforms, full access — Pan-African + Global markets combined.</div>
+      <div class="price-amount">
+        <span class="price-currency">$</span><span class="price-value">99</span><span class="price-period">/month</span>
+      </div>
+      <ul class="price-features">
+        <li><span class="pf-check">✓</span><span><strong>All 8 exchanges</strong> — 4 African + 4 Global</span></li>
+        <li><span class="pf-check">✓</span><span><strong>530+ listed companies</strong></span></li>
+        <li><span class="pf-check">✓</span><span>Pan SORFIX v3.0 full access</span></li>
+        <li><span class="pf-check">✓</span><span>World SORFIX v1.0 full access</span></li>
+        <li><span class="pf-check">✓</span><span>Priority API rate limits</span></li>
+        <li><span class="pf-check">✓</span><span>Cross-platform TCA reports</span></li>
+        <li><span class="pf-check">✓</span><span>Email support</span></li>
+      </ul>
+      <button class="btn btn-gold" onclick="openPayModal('bundle','month')">Get Bundle — $99/mo</button>
+      <div class="price-divider">— or buy ad-hoc access —</div>
+      <div class="adhoc-options">
+        <button class="adhoc-btn" onclick="openPayModal('bundle','day')">1 Day<br><strong>$15</strong></button>
+        <button class="adhoc-btn" onclick="openPayModal('bundle','week')">7 Days<br><strong>$35</strong></button>
+        <button class="adhoc-btn" onclick="openPayModal('bundle','api')">API Credits<br><strong>$45</strong></button>
+      </div>
+    </div>
+
+    <!-- WORLD SORFIX -->
+    <div class="price-card reveal">
+      <div class="price-badge world">World SORFIX</div>
+      <div class="price-name">Global SOR</div>
+      <div class="price-desc">Access the Global Smart Order Router — NYSE, LSE, HKEX, TSE.</div>
+      <div class="price-amount">
+        <span class="price-currency">$</span><span class="price-value">59</span><span class="price-period">/month</span>
+      </div>
+      <ul class="price-features">
+        <li><span class="pf-check">✓</span><span><strong>4 global exchanges</strong> — NYSE, LSE, HKEX, TSE</span></li>
+        <li><span class="pf-check">✓</span><span><strong>246 listed companies</strong></span></li>
+        <li><span class="pf-check">✓</span><span>REST API + WebSocket live books</span></li>
+        <li><span class="pf-check">✓</span><span>Sub-millisecond NYSE routing</span></li>
+        <li><span class="pf-check">✓</span><span>T+1 settlement (NYSE)</span></li>
+        <li><span class="pf-check">✓</span><span>Multi-currency FX modelling</span></li>
+        <li><span class="pf-check">✓</span><span>API docs access (/docs)</span></li>
+      </ul>
+      <button class="btn btn-world" onclick="openPayModal('world','month')">Subscribe — $59/mo</button>
+      <div class="price-divider">— or buy ad-hoc access —</div>
+      <div class="adhoc-options">
+        <button class="adhoc-btn" onclick="openPayModal('world','day')">1 Day<br><strong>$12</strong></button>
+        <button class="adhoc-btn" onclick="openPayModal('world','week')">7 Days<br><strong>$25</strong></button>
+        <button class="adhoc-btn" onclick="openPayModal('world','api')">API Credits<br><strong>$30</strong></button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- COMPARE -->
+<section id="compare" style="background:var(--bg2);">
+  <div class="center reveal">
+    <div class="section-label">Comparison</div>
+    <div class="section-title">Pan SORFIX vs World SORFIX</div>
+  </div>
+  <div class="compare-table reveal">
+    <div class="ct-header"><div>Feature</div><div class="pan-h">🌍 Pan SORFIX</div><div class="world-h">🌐 World SORFIX</div></div>
+    <div class="ct-row"><div>Target Market</div><div>Africa (GSE·JSE·NGX·NSE)</div><div>Global (NYSE·LSE·HKEX·TSE)</div></div>
+    <div class="ct-row"><div>Listed Companies</div><div class="ck">284</div><div class="ck">246</div></div>
+    <div class="ct-row"><div>6-Factor SOR Engine</div><div class="ck">✓</div><div class="ck">✓</div></div>
+    <div class="ct-row"><div>GBM Price Simulation</div><div class="ck">✓</div><div class="ck">✓</div></div>
+    <div class="ct-row"><div>FIX 4.2 Adapters</div><div class="ck">✓ (GSE·JSE·NGX·NSE)</div><div class="ck">✓ (NYSE·LSE·HKEX·TSE)</div></div>
+    <div class="ct-row"><div>FX Cost Model</div><div class="ck">PAPSS (8–20 bps)</div><div>Global (USD/GBP/HKD/JPY)</div></div>
+    <div class="ct-row"><div>Settlement Cycle</div><div>T+3 (African standard)</div><div>T+1 NYSE · T+2 LSE·HKEX·TSE</div></div>
+    <div class="ct-row"><div>Avg Routing Latency</div><div class="ck">~6ms</div><div class="ck">&lt;1ms (NYSE)</div></div>
+    <div class="ct-row"><div>Fill Rate</div><div class="ck">99.8%</div><div class="ck">99.8%</div></div>
+    <div class="ct-row"><div>TWAP / VWAP Algos</div><div class="ck">✓</div><div class="ck">✓</div></div>
+    <div class="ct-row"><div>Pre-Trade Risk Engine</div><div class="ck">✓</div><div class="ck">✓</div></div>
+    <div class="ct-row"><div>Crypto Payments</div><div class="ck">✓ Coinbase Commerce</div><div class="ck">✓ Coinbase Commerce</div></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="section-label center">Get Started</div>
+  <div class="section-title">Launch Your SORFIX Platform</div>
+  <p class="section-sub center" style="margin:12px auto 0;">Open either portal or purchase access below. Pay with BTC, ETH, USDC and more.</p>
+  <div class="cta-cards">
+    <div class="cta-card pan-card reveal">
+      <div class="cta-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+      <h3>Pan SORFIX</h3>
+      <p>African equity markets — GSE, JSE, NGX, NSE. 284 companies. Port 9090.</p>
+      <button class="btn btn-pan" onclick="openPayModal('pan','day')">Buy Access →</button>
+    </div>
+    <div class="cta-card reveal" style="border-color:rgba(245,158,11,0.35);box-shadow:0 0 40px rgba(245,158,11,0.12);">
+      <div class="cta-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+      <h3 style="color:var(--gold);">Bundle Deal</h3>
+      <p>Both platforms at once. Best value for traders active across all markets.</p>
+      <button class="btn btn-gold" onclick="openPayModal('bundle','month')">Get Bundle →</button>
+    </div>
+    <div class="cta-card world-card reveal">
+      <div class="cta-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+      <h3>World SORFIX</h3>
+      <p>Global markets — NYSE, LSE, HKEX, TSE. 246 companies. Port 9091.</p>
+      <button class="btn btn-world" onclick="openPayModal('world','day')">Buy Access →</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">SORFIX</div>
+  <div class="footer-links">
+    <a href="#products">Products</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#compare">Compare</a>
+    <a href="http://localhost:9090/docs" target="_blank">Pan API Docs</a>
+    <a href="http://localhost:9091/docs" target="_blank">World API Docs</a>
+  </div>
+  <p>Pan SORFIX v3.0 · World SORFIX v1.0 · FIX 4.2 Protocol · Powered by Coinbase Commerce</p>
+  <p style="margin-top:8px;font-size:11px;">© 2026 SORFIX. All Rights Reserved. Proprietary and confidential.</p>
+</footer>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-overlay" id="payModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closePayModal()">✕</button>
+
+    <div id="modalMain">
+      <div class="modal-logo" id="modalLogo">⚡</div>
+      <div class="modal-title" id="modalTitle">Purchase Access</div>
+      <div class="modal-sub">Secure checkout. Pay by card or crypto.</div>
+
+      <div class="modal-product-summary">
+        <div class="mps-label">You are purchasing</div>
+        <div class="mps-name" id="mpsName">—</div>
+        <div class="mps-price" id="mpsPrice">—</div>
+        <div class="mps-desc" id="mpsDesc">—</div>
+      </div>
+
+      <!-- Payment method tabs -->
+      <div class="pay-tabs">
+        <button class="pay-tab active" id="tabCard" onclick="switchTab('card')">💳 Credit / Debit Card</button>
+        <button class="pay-tab" id="tabCrypto" onclick="switchTab('crypto')">₿ Cryptocurrency</button>
+      </div>
+
+      <div class="modal-error" id="modalError"></div>
+
+      <!-- CARD PANEL -->
+      <div class="pay-panel active" id="panelCard">
+        <div class="card-brand-icons">
+          <span class="card-brand">VISA</span>
+          <span class="card-brand">MC</span>
+          <span class="card-brand">AMEX</span>
+          <span class="card-brand">DISCOVER</span>
+          <span style="font-size:11px;color:var(--muted);margin-left:4px;">& more</span>
+        </div>
+        <div class="card-field-wrap">
+          <label class="card-field-label">Name on card</label>
+          <input class="card-input" id="cardName" type="text" placeholder="Charles Bawuah-Oppong" autocomplete="cc-name">
+        </div>
+        <div class="card-field-wrap">
+          <label class="card-field-label">Email address</label>
+          <input class="card-input" id="cardEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="card-field-wrap">
+          <label class="card-field-label">Card details</label>
+          <div id="card-element"></div>
+          <div id="card-errors"></div>
+        </div>
+        <button class="modal-btn-card" id="cardPayBtn" onclick="submitCardPayment()">
+          <span>🔒</span><span id="cardPayBtnText">Pay with Card</span>
+        </button>
+        <div class="secure-badge">🔒 Powered by <strong style="color:var(--text);margin:0 3px;">Stripe</strong> — 256-bit SSL encrypted</div>
+      </div>
+
+      <!-- CRYPTO PANEL -->
+      <div class="pay-panel" id="panelCrypto">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;">Choose cryptocurrency</div>
+        <div class="crypto-grid">
+          <div class="crypto-opt selected" data-crypto="BTC" onclick="selectCrypto(this)"><div class="co-icon">₿</div><div class="co-name">Bitcoin</div></div>
+          <div class="crypto-opt" data-crypto="ETH" onclick="selectCrypto(this)"><div class="co-icon">Ξ</div><div class="co-name">Ethereum</div></div>
+          <div class="crypto-opt" data-crypto="USDC" onclick="selectCrypto(this)"><div class="co-icon">💵</div><div class="co-name">USDC</div></div>
+          <div class="crypto-opt" data-crypto="LTC" onclick="selectCrypto(this)"><div class="co-icon">Ł</div><div class="co-name">Litecoin</div></div>
+          <div class="crypto-opt" data-crypto="BCH" onclick="selectCrypto(this)"><div class="co-icon">₿</div><div class="co-name">Bitcoin Cash</div></div>
+          <div class="crypto-opt" data-crypto="DOGE" onclick="selectCrypto(this)"><div class="co-icon">Ð</div><div class="co-name">Dogecoin</div></div>
+        </div>
+        <button class="modal-btn-pay" id="cryptoPayBtn" onclick="submitCryptoPayment()">
+          <span>🔒</span><span id="cryptoPayBtnText">Pay with Coinbase</span>
+        </button>
+        <div class="modal-note">
+          Powered by <strong>Coinbase Commerce</strong>. You will be redirected to a hosted
+          checkout to complete payment. Access credentials delivered to your email after confirmation.
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div class="modal-loading" id="modalLoading">
+      <div class="spinner"></div>
+      <div style="font-size:15px;font-weight:600;" id="loadingTitle">Processing payment…</div>
+      <div style="font-size:13px;color:var(--muted);" id="loadingSubtitle">Please wait</div>
+    </div>
+
+    <!-- Success overlay -->
+    <div class="modal-loading" id="modalSuccess" style="display:none;">
+      <div style="font-size:52px;margin-bottom:8px;">✅</div>
+      <div style="font-size:18px;font-weight:700;color:var(--green);">Payment Successful!</div>
+      <div style="font-size:13px;color:var(--muted);text-align:center;line-height:1.6;">Your access credentials will be sent to your email shortly.</div>
+      <button class="btn btn-primary" style="margin-top:20px;" onclick="closePayModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── CONFIG — loaded dynamically from the backend ── */
+let STRIPE_PUBLISHABLE_KEY = '';
+let PAYMENTS_CONFIG = { stripe_enabled: false, coinbase_enabled: false };
+
+async function loadPaymentsConfig() {
+  try {
+    const res = await fetch(`${BASE_API}/api/config`, { cache: 'no-store' });
+    if (!res.ok) return;
+    const cfg = await res.json();
+    PAYMENTS_CONFIG = cfg;
+    STRIPE_PUBLISHABLE_KEY = cfg.stripe_publishable_key || '';
+  } catch (_) { /* backend not reachable — payment tabs will show helpful message */ }
+}
+loadPaymentsConfig();
+
+/* ── PRODUCT & PRICING CATALOGUE ── */
+const PRODUCTS = {
+  pan: {
+    name: 'Pan SORFIX',
+    icon: '🌍',
+    color: '#10b981',
+    tiers: {
+      day:   { label: '1-Day Pass',      price: 9,   desc: 'Full API access for 24 hours — GSE, JSE, NGX, NSE' },
+      week:  { label: '7-Day Pass',      price: 19,  desc: 'Full API access for 7 days — GSE, JSE, NGX, NSE' },
+      month: { label: 'Monthly Access',  price: 49,  desc: 'Monthly subscription — Pan SORFIX full access' },
+      api:   { label: 'API Credits',     price: 25,  desc: '2,500 API call credits — no expiry' },
+    }
+  },
+  world: {
+    name: 'World SORFIX',
+    icon: '🌐',
+    color: '#818cf8',
+    tiers: {
+      day:   { label: '1-Day Pass',      price: 12,  desc: 'Full API access for 24 hours — NYSE, LSE, HKEX, TSE' },
+      week:  { label: '7-Day Pass',      price: 25,  desc: 'Full API access for 7 days — NYSE, LSE, HKEX, TSE' },
+      month: { label: 'Monthly Access',  price: 59,  desc: 'Monthly subscription — World SORFIX full access' },
+      api:   { label: 'API Credits',     price: 30,  desc: '3,000 API call credits — no expiry' },
+    }
+  },
+  bundle: {
+    name: 'SORFIX Bundle',
+    icon: '⚡',
+    color: '#f59e0b',
+    tiers: {
+      day:   { label: 'Bundle Day Pass', price: 15,  desc: 'Both platforms for 24 hours — all 8 exchanges' },
+      week:  { label: 'Bundle 7-Day',    price: 35,  desc: 'Both platforms for 7 days — all 8 exchanges' },
+      month: { label: 'Bundle Monthly',  price: 99,  desc: 'Monthly subscription — Pan + World SORFIX' },
+      api:   { label: 'Bundle Credits',  price: 45,  desc: '5,000 API call credits across both platforms' },
+    }
+  }
+};
+
+let currentProduct = 'bundle', currentTier = 'day', selectedCrypto = 'BTC';
+let activeTab = 'card';
+let stripe = null, cardElement = null;
+
+const BASE_API = window.location.hostname === 'localhost'
+  ? 'http://localhost:9090'
+  : '';
+
+/* ── STRIPE SETUP ── */
+function initStripe() {
+  if (stripe || !window.Stripe || !STRIPE_PUBLISHABLE_KEY) return;
+  stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+  const elements = stripe.elements({
+    appearance: {
+      theme: 'night',
+      variables: {
+        colorPrimary: '#3b82f6',
+        colorBackground: '#0f1220',
+        colorText: '#e8eaf0',
+        colorDanger: '#fca5a5',
+        fontFamily: 'Inter, sans-serif',
+        borderRadius: '10px',
+      }
+    }
+  });
+  cardElement = elements.create('card', {
+    style: {
+      base: { color:'#e8eaf0', fontFamily:'Inter,sans-serif', fontSize:'15px', '::placeholder':{color:'#7a85a0'} },
+      invalid: { color:'#fca5a5' }
+    },
+    hidePostalCode: false,
+  });
+  cardElement.mount('#card-element');
+  cardElement.on('focus', () => document.getElementById('card-element').classList.add('focused'));
+  cardElement.on('blur',  () => document.getElementById('card-element').classList.remove('focused'));
+  cardElement.on('change', e => {
+    document.getElementById('card-errors').textContent = e.error ? e.error.message : '';
+  });
+}
+
+/* ── MODAL OPEN / CLOSE ── */
+function openPayModal(product, tier) {
+  currentProduct = product; currentTier = tier;
+  const p = PRODUCTS[product]; const t = p.tiers[tier];
+  document.getElementById('modalLogo').textContent = p.icon;
+  document.getElementById('modalTitle').textContent = `Purchase ${p.name}`;
+  document.getElementById('mpsName').textContent = `${p.name} — ${t.label}`;
+  document.getElementById('mpsPrice').style.color = p.color;
+  document.getElementById('mpsPrice').textContent = `$${t.price}.00 USD`;
+  document.getElementById('mpsDesc').textContent = t.desc;
+  document.getElementById('cardPayBtnText').textContent = `Pay $${t.price} by Card`;
+  document.getElementById('cryptoPayBtnText').textContent = `Pay $${t.price} with Coinbase`;
+  document.getElementById('modalError').style.display = 'none';
+  document.getElementById('card-errors').textContent = '';
+  showPanel('modalMain'); hidePanel('modalLoading'); hidePanel('modalSuccess');
+  document.getElementById('payModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  switchTab('card');
+  setTimeout(initStripe, 100);
+}
+function closePayModal() {
+  document.getElementById('payModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.getElementById('payModal').addEventListener('click', function(e) {
+  if (e.target === this) closePayModal();
+});
+
+function showPanel(id) { const el = document.getElementById(id); if (el) { el.style.display = 'block'; } }
+function hidePanel(id) { const el = document.getElementById(id); if (el) { el.style.display = 'none'; } }
+function showLoading(title, sub) {
+  hidePanel('modalMain'); hidePanel('modalSuccess');
+  document.getElementById('loadingTitle').textContent = title || 'Processing…';
+  document.getElementById('loadingSubtitle').textContent = sub || 'Please wait';
+  document.getElementById('modalLoading').style.display = 'flex';
+}
+function showSuccess() {
+  hidePanel('modalMain'); hidePanel('modalLoading');
+  document.getElementById('modalSuccess').style.display = 'flex';
+}
+function showError(msg) {
+  showPanel('modalMain'); hidePanel('modalLoading');
+  const el = document.getElementById('modalError');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+/* ── TAB SWITCHER ── */
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tabCard').classList.toggle('active', tab === 'card');
+  document.getElementById('tabCrypto').classList.toggle('active', tab === 'crypto');
+  document.getElementById('panelCard').classList.toggle('active', tab === 'card');
+  document.getElementById('panelCrypto').classList.toggle('active', tab === 'crypto');
+  document.getElementById('modalError').style.display = 'none';
+}
+
+/* ── CRYPTO SELECTION ── */
+function selectCrypto(el) {
+  document.querySelectorAll('.crypto-opt').forEach(x => x.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedCrypto = el.dataset.crypto;
+}
+
+/* ── STRIPE CARD PAYMENT ── */
+async function submitCardPayment() {
+  if (!PAYMENTS_CONFIG.stripe_enabled) {
+    showError('Card payments are not yet activated. Add STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY to your .env file and restart the server.');
+    return;
+  }
+  if (!stripe || !cardElement) {
+    showError('Stripe is initialising — please wait a moment and try again.');
+    return;
+  }
+  const name  = document.getElementById('cardName').value.trim();
+  const email = document.getElementById('cardEmail').value.trim();
+  if (!name)  { showError('Please enter the name on your card.'); return; }
+  if (!email || !email.includes('@')) { showError('Please enter a valid email address.'); return; }
+
+  const p = PRODUCTS[currentProduct]; const t = p.tiers[currentTier];
+  document.getElementById('cardPayBtn').disabled = true;
+  document.getElementById('modalError').style.display = 'none';
+  showLoading('Creating secure checkout…', 'Connecting to Stripe');
+
+  try {
+    const res = await fetch(`${BASE_API}/api/payment/create-payment-intent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        product: currentProduct, tier: currentTier,
+        name: `${p.name} — ${t.label}`, description: t.desc,
+        amount: t.price, currency: 'USD', email
+      })
+    });
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    const { client_secret } = await res.json();
+    if (!client_secret) throw new Error('No client secret returned from server');
+
+    document.getElementById('loadingSubtitle').textContent = 'Confirming payment…';
+    const result = await stripe.confirmCardPayment(client_secret, {
+      payment_method: {
+        card: cardElement,
+        billing_details: { name, email }
+      }
+    });
+    if (result.error) throw new Error(result.error.message);
+    showSuccess();
+  } catch (err) {
+    showError(`Payment failed: ${err.message}`);
+  } finally {
+    document.getElementById('cardPayBtn').disabled = false;
+  }
+}
+
+/* ── COINBASE CRYPTO PAYMENT ── */
+async function submitCryptoPayment() {
+  if (!PAYMENTS_CONFIG.coinbase_enabled) {
+    showError('Crypto payments are not yet activated. Add COINBASE_COMMERCE_API_KEY to your .env file and restart the server.');
+    return;
+  }
+  const p = PRODUCTS[currentProduct]; const t = p.tiers[currentTier];
+  const btn = document.getElementById('cryptoPayBtn');
+  document.getElementById('modalError').style.display = 'none';
+  showLoading('Creating crypto checkout…', 'Connecting to Coinbase Commerce');
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${BASE_API}/api/payment/create-charge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        product: currentProduct, tier: currentTier, crypto: selectedCrypto,
+        name: `${p.name} — ${t.label}`, description: t.desc,
+        amount: t.price, currency: 'USD'
+      })
+    });
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    const data = await res.json();
+    if (!data.hosted_url) throw new Error(data.error || 'No checkout URL returned');
+    window.open(data.hosted_url, '_blank');
+    closePayModal();
+  } catch (err) {
+    showError(`Payment error: ${err.message}. Please try again or contact support.`);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ── TICKER ── */
+(function() {
+  const items = [
+    {sym:'AAPL', val:'$189.50', chg:'+1.2%', up:true},{sym:'NVDA', val:'$875.60', chg:'+3.4%', up:true},
+    {sym:'GCB', val:'GHS 5.80', chg:'+0.8%', up:true},{sym:'TENCENT', val:'HKD 358.40', chg:'-0.5%', up:false},
+    {sym:'SHEL', val:'£27.82', chg:'+1.1%', up:true},{sym:'TOYOTA', val:'¥3,420', chg:'+0.6%', up:true},
+    {sym:'MTN', val:'ZAR 148.50', chg:'-0.3%', up:false},{sym:'DANGCEM', val:'NGN 680', chg:'+2.1%', up:true},
+    {sym:'MSFT', val:'$415.20', chg:'+0.9%', up:true},{sym:'AZN', val:'£124.50', chg:'+1.5%', up:true},
+    {sym:'SAFCOM', val:'KES 40.50', chg:'+0.4%', up:true},{sym:'ALIBABA', val:'HKD 82.60', chg:'-1.2%', up:false},
+    {sym:'JPM', val:'$198.70', chg:'+0.5%', up:true},{sym:'GTCO', val:'NGN 45.20', chg:'+1.8%', up:true},
+    {sym:'SONY', val:'¥12,450', chg:'-0.7%', up:false},{sym:'HSBA', val:'£7.24', chg:'+0.3%', up:true},
+  ];
+  const track = document.getElementById('tickerTrack');
+  const doubled = [...items, ...items];
+  track.innerHTML = doubled.map(i =>
+    `<div class="ticker-item"><span class="sym">${i.sym}</span><span style="color:var(--text)">${i.val}</span><span class="${i.up?'up':'dn'}">${i.chg}</span></div>`
+  ).join('');
+})();
+
+/* ── PARTICLE NETWORK ── */
+(function() {
+  const canvas = document.getElementById('particles');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const hero = canvas.parentElement;
+  const reduce = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  let w, h, pts;
+  function resize() {
+    w = canvas.width = hero.offsetWidth;
+    h = canvas.height = hero.offsetHeight;
+  }
+  function init() {
+    const n = Math.min(70, Math.floor(w / 18));
+    pts = Array.from({length:n}, () => ({
+      x:Math.random()*w, y:Math.random()*h,
+      vx:(Math.random()-0.5)*0.28, vy:(Math.random()-0.5)*0.28,
+    }));
+  }
+  function frame() {
+    ctx.clearRect(0,0,w,h);
+    pts.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if(p.x<0||p.x>w) p.vx*=-1;
+      if(p.y<0||p.y>h) p.vy*=-1;
+    });
+    for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++) {
+      const a=pts[i],b=pts[j], dx=a.x-b.x, dy=a.y-b.y, d=Math.sqrt(dx*dx+dy*dy);
+      if(d<130){ ctx.strokeStyle=`rgba(99,140,246,${0.15*(1-d/130)})`; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
+    }
+    pts.forEach(p => { ctx.fillStyle='rgba(148,178,255,0.6)'; ctx.beginPath(); ctx.arc(p.x,p.y,1.5,0,Math.PI*2); ctx.fill(); });
+    if(!reduce) requestAnimationFrame(frame);
+  }
+  resize(); init(); window.addEventListener('resize',()=>{resize();init();});
+  if(!reduce) requestAnimationFrame(frame); else frame();
+})();
+
+/* ── THREE.JS GLOBE ── */
+(function() {
+  if (typeof THREE === 'undefined') return;
+  const canvas = document.getElementById('globeCanvas');
+  if (!canvas) return;
+  const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setSize(520,520);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.z = 2.8;
+
+  // Globe
+  const geo = new THREE.SphereGeometry(1, 64, 64);
+  const mat = new THREE.MeshPhongMaterial({
+    color:0x0a1628, transparent:true, opacity:0.95,
+    wireframe:false,
+  });
+  const globe = new THREE.Mesh(geo, mat);
+  scene.add(globe);
+
+  // Wireframe overlay
+  const wfMat = new THREE.MeshBasicMaterial({color:0x1a3060, wireframe:true, transparent:true, opacity:0.18});
+  const wfGeo = new THREE.SphereGeometry(1.002, 24, 24);
+  scene.add(new THREE.Mesh(wfGeo, wfMat));
+
+  // Glow halo
+  const haloGeo = new THREE.SphereGeometry(1.08, 32, 32);
+  const haloMat = new THREE.MeshBasicMaterial({
+    color:0x3b82f6, transparent:true, opacity:0.08, side:THREE.BackSide
+  });
+  scene.add(new THREE.Mesh(haloGeo, haloMat));
+
+  // Equator ring
+  const ringGeo = new THREE.TorusGeometry(1.15, 0.004, 8, 120);
+  const ringMat = new THREE.MeshBasicMaterial({color:0x3b82f6, transparent:true, opacity:0.35});
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  scene.add(ring);
+
+  // Light
+  scene.add(new THREE.AmbientLight(0x223366, 1.5));
+  const dl = new THREE.DirectionalLight(0x6699ff, 1.2);
+  dl.position.set(2, 2, 2); scene.add(dl);
+  const dl2 = new THREE.DirectionalLight(0x10b981, 0.5);
+  dl2.position.set(-2, -1, 1); scene.add(dl2);
+
+  // Exchange marker dots
+  const venues = [
+    {lat:5.6,  lng:-0.2,  color:0x10b981, label:'GSE'},   // Ghana
+    {lat:-26.2,lng:28.0,  color:0x10b981, label:'JSE'},   // Joburg
+    {lat:6.5,  lng:3.4,   color:0x10b981, label:'NGX'},   // Lagos
+    {lat:-1.3, lng:36.8,  color:0x10b981, label:'NSE'},   // Nairobi
+    {lat:40.7, lng:-74.0, color:0x818cf8, label:'NYSE'},  // New York
+    {lat:51.5, lng:-0.1,  color:0x818cf8, label:'LSE'},   // London
+    {lat:22.3, lng:114.2, color:0x818cf8, label:'HKEX'}, // Hong Kong
+    {lat:35.7, lng:139.7, color:0x818cf8, label:'TSE'},  // Tokyo
+  ];
+  const dotGeo = new THREE.SphereGeometry(0.030, 8, 8);
+  const pulseGeo = new THREE.SphereGeometry(0.055, 8, 8);
+  const pulseMeshes = [];
+
+  venues.forEach(v => {
+    const phi   = (90 - v.lat)  * Math.PI / 180;
+    const theta = (v.lng + 180) * Math.PI / 180;
+    const x = Math.sin(phi)*Math.cos(theta);
+    const y = Math.cos(phi);
+    const z = Math.sin(phi)*Math.sin(theta);
+
+    const dot = new THREE.Mesh(dotGeo, new THREE.MeshBasicMaterial({color:v.color}));
+    dot.position.set(x,y,z); scene.add(dot);
+
+    const pulse = new THREE.Mesh(pulseGeo, new THREE.MeshBasicMaterial({color:v.color, transparent:true, opacity:0.5, wireframe:true}));
+    pulse.position.set(x,y,z); scene.add(pulse);
+    pulseMeshes.push({mesh:pulse, phase:Math.random()*Math.PI*2});
+  });
+
+  let t=0;
+  function animate() {
+    requestAnimationFrame(animate);
+    t += 0.006;
+    globe.rotation.y = t*0.18;
+    wfMat.opacity = 0.18;
+    ring.rotation.z = t*0.05;
+    pulseMeshes.forEach(({mesh,phase}) => {
+      const s = 1 + 0.4*Math.sin(t*2+phase);
+      mesh.scale.setScalar(s);
+      mesh.material.opacity = 0.5*(1-Math.sin(t*2+phase)*0.5);
+    });
+    renderer.render(scene, camera);
+  }
+  animate();
+  window.addEventListener('resize', () => {
+    const sz = Math.min(window.innerWidth*0.38, 520);
+    renderer.setSize(sz,sz);
+    canvas.style.width = sz+'px'; canvas.style.height = sz+'px';
+  });
+})();
+
+/* ── SCROLL REVEAL ── */
+(function() {
+  const els = document.querySelectorAll('.reveal');
+  const map = new Map();
+  els.forEach(el => {
+    const p = el.parentElement;
+    const i = map.get(p)||0; map.set(p, i+1);
+    el.style.transitionDelay = Math.min(i*70,420)+'ms';
+  });
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, {threshold:0.12, rootMargin:'0px 0px -40px 0px'});
+  els.forEach(el => obs.observe(el));
+})();
+
+/* ── COUNT-UP ── */
+(function() {
+  const reduce = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function animateCount(el) {
+    const to = parseFloat(el.dataset.count); if(isNaN(to)) return;
+    const dec = parseInt(el.dataset.decimals||'0');
+    const pre = el.dataset.prefix||'', suf = el.dataset.suffix||'';
+    if(reduce){ el.textContent=pre+to.toFixed(dec)+suf; return; }
+    const dur=1400, start=performance.now();
+    (function tick(now){
+      const p=Math.min((now-start)/dur,1), e=1-Math.pow(1-p,3);
+      el.textContent=pre+(to*e).toFixed(dec)+suf;
+      if(p<1) requestAnimationFrame(tick);
+    })(start);
+  }
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting){ animateCount(e.target); obs.unobserve(e.target); } });
+  }, {threshold:0.4});
+  document.querySelectorAll('[data-count]').forEach(el => obs.observe(el));
+})();
+
+/* ── CARD SPOTLIGHT ── */
+document.querySelectorAll('.product-card,.cta-card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', ((e.clientX-r.left)/r.width)*100+'%');
+    card.style.setProperty('--my', ((e.clientY-r.top)/r.height)*100+'%');
+  });
+});
+
+/* ── LIVE STATUS PING ── */
+async function pingHealth(url, el) {
+  try { const r=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(3000)}); if(!r.ok) throw 0; el.classList.add('online'); el.classList.remove('offline'); }
+  catch { el.classList.add('offline'); el.classList.remove('online'); }
+}
+function pollStatus() {
+  pingHealth('http://localhost:9090/health', document.getElementById('lsPan'));
+  pingHealth('http://localhost:9091/health', document.getElementById('lsWorld'));
+}
+pollStatus(); setInterval(pollStatus, 10000);
+
+/* ── NAV SCROLL SPY ── */
+(function() {
+  const links = document.querySelectorAll('.nav-links a');
+  const ids = ['products','how','features','pricing','compare','connectivity'];
+  window.addEventListener('scroll', () => {
+    let cur = null;
+    ids.forEach(id => {
+      const s = document.getElementById(id);
+      if(s){ const r=s.getBoundingClientRect(); if(r.top<=120&&r.bottom>120) cur=id; }
+    });
+    links.forEach(a => a.classList.toggle('active', a.getAttribute('href')==='#'+cur));
+  }, {passive:true});
+})();
+</script>
+
+<!-- ═══ BROKER CONNECTIVITY & TRADE ROUTING ═══ -->
+<section id="connectivity" style="background:var(--bg2);padding:80px 0;">
+  <div class="center reveal">
+    <div class="section-label">Trade Routing Architecture</div>
+    <div class="section-title">Direct. Intelligent. No Broker Middleman.</div>
+    <p class="section-sub" style="max-width:660px;margin:14px auto 0;color:var(--muted);font-size:15px;line-height:1.65;">
+      Traditional networks like LSEG Autex Trade Route send your order through a broker layer before it reaches an exchange — adding latency, cost, and opacity at every step. SORFIX connects directly.
+    </p>
+  </div>
+
+  <!-- COMPARISON STRIP -->
+  <div style="max-width:900px;margin:52px auto 0;display:grid;grid-template-columns:1fr auto 1fr;gap:0;border-radius:18px;overflow:hidden;border:1px solid var(--border);">
+
+    <!-- TRADITIONAL (LSEG / Autex style) -->
+    <div style="padding:32px 28px;background:var(--card);">
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#94a3b8;margin-bottom:20px;">Broker-Based Networks</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:2px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span style="font-size:14px;color:var(--muted);line-height:1.5;">Order travels: Client → Broker → Clearing → Exchange</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:2px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span style="font-size:14px;color:var(--muted);line-height:1.5;">Broker markup on every fill — opaque fee layers</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:2px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span style="font-size:14px;color:var(--muted);line-height:1.5;">Pan-African markets (GSE, NGX, NSE, JSE) underserved</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:2px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span style="font-size:14px;color:var(--muted);line-height:1.5;">Multi-hop latency — 3–5 hops before exchange touch</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:2px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span style="font-size:14px;color:var(--muted);line-height:1.5;">Single-currency TCA — cross-border FX costs invisible</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIVIDER -->
+    <div style="width:1px;background:var(--border);position:relative;display:flex;align-items:center;justify-content:center;">
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;position:absolute;z-index:2;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="1.75" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </div>
+    </div>
+
+    <!-- SORFIX -->
+    <div style="padding:32px 28px;background:linear-gradient(135deg,rgba(34,197,94,0.05),rgba(59,130,246,0.05));">
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#22c55e;margin-bottom:20px;">SORFIX Direct Routing</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:2px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span style="font-size:14px;color:var(--fg);line-height:1.5;">Client → SORFIX → Exchange — one hop, no broker</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:2px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span style="font-size:14px;color:var(--fg);line-height:1.5;">Transparent exchange fees — no hidden broker layer</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:2px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span style="font-size:14px;color:var(--fg);line-height:1.5;">First-mover Pan-African direct exchange access</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:2px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span style="font-size:14px;color:var(--fg);line-height:1.5;">Sub-millisecond routing — 6-factor scoring, real-time</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:2px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span style="font-size:14px;color:var(--fg);line-height:1.5;">Multi-currency TCA: GHS, ZAR, NGN, KES in one view</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.comparison strip -->
+
+  <!-- 4-PILLAR GRID -->
+  <div style="max-width:1000px;margin:52px auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;padding:0 20px;">
+
+    <div class="reveal" style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px 24px;">
+      <div style="width:42px;height:42px;border-radius:10px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.2);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#60a5fa" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </div>
+      <div style="font-weight:700;font-size:15px;margin-bottom:8px;">Pan-African Native</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6;">GSE, JSE, NGX, NSE — directly connected. No foreign network acting as a gateway to African liquidity.</div>
+    </div>
+
+    <div class="reveal" style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px 24px;">
+      <div style="width:42px;height:42px;border-radius:10px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.2);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#22c55e" stroke-width="1.75" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <div style="font-weight:700;font-size:15px;margin-bottom:8px;">Intelligent Venue Scoring</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6;">6-factor algorithmic scoring selects and weights venues dynamically — not fixed broker relationships or historical preference.</div>
+    </div>
+
+    <div class="reveal" style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px 24px;">
+      <div style="width:42px;height:42px;border-radius:10px;background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.2);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fbbf24" stroke-width="1.75" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div style="font-weight:700;font-size:15px;margin-bottom:8px;">Pre-Trade + Drop Copy</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6;">Full pre-trade risk gatekeeping and real-time FIX drop copy to compliance — the two table-stakes requirements for any institutional desk.</div>
+    </div>
+
+    <div class="reveal" style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px 24px;">
+      <div style="width:42px;height:42px;border-radius:10px;background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.2);display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#c084fc" stroke-width="1.75" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </div>
+      <div style="font-weight:700;font-size:15px;margin-bottom:8px;">True FX-Adjusted TCA</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6;">Cross-border all-in cost across GHS, ZAR, NGN and KES — in one base currency. A capability no competitor currently offers for African markets.</div>
+    </div>
+
+  </div><!-- /.pillar grid -->
+
+  <!-- EXCHANGE NETWORK BADGES -->
+  <div style="max-width:860px;margin:44px auto 0;padding:0 20px;">
+    <div style="text-align:center;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:20px;">Direct Exchange Connections</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+      <span style="padding:8px 16px;background:var(--card);border:1px solid rgba(16,185,129,0.3);border-radius:20px;font-size:12px;font-weight:600;color:#34d399;">GSE · Ghana</span>
+      <span style="padding:8px 16px;background:var(--card);border:1px solid rgba(16,185,129,0.3);border-radius:20px;font-size:12px;font-weight:600;color:#34d399;">JSE · South Africa</span>
+      <span style="padding:8px 16px;background:var(--card);border:1px solid rgba(16,185,129,0.3);border-radius:20px;font-size:12px;font-weight:600;color:#34d399;">NGX · Nigeria</span>
+      <span style="padding:8px 16px;background:var(--card);border:1px solid rgba(16,185,129,0.3);border-radius:20px;font-size:12px;font-weight:600;color:#34d399;">NSE · Kenya</span>
+      <span style="padding:8px 16px;background:var(--card);border:1px solid rgba(165,180,252,0.3);border-radius:20px;font-size:12px;font-weight:600;color:#a5b4fc;">NYSE · US</span>
+      <span style="padding:8px 16px;background:var(--card);border:1px solid rgba(165,180,252,0.3);border-radius:20px;font-size:12px;font-weight:600;color:#a5b4fc;">LSE · UK</span>
+      <span style="padding:8px 16px;background:var(--card);border:1px solid rgba(165,180,252,0.3);border-radius:20px;font-size:12px;font-weight:600;color:#a5b4fc;">HKEX · HK</span>
+      <span style="padding:8px 16px;background:var(--card);border:1px solid rgba(165,180,252,0.3);border-radius:20px;font-size:12px;font-weight:600;color:#a5b4fc;">TSE · Japan</span>
+    </div>
+  </div>
+
+  <!-- BOTTOM CTA -->
+  <div style="text-align:center;margin-top:52px;">
+    <a href="#products" class="btn btn-shimmer" style="display:inline-flex;align-items:center;gap:8px;padding:14px 32px;text-decoration:none;border-radius:10px;font-weight:600;font-size:15px;color:#fff;">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Connect to Exchanges Now
+    </a>
+    <p style="margin-top:14px;font-size:13px;color:var(--muted);">FIX 4.2 native · No broker integration required · Runs on Render.com</p>
+  </div>
+
+</section><!-- /#connectivity -->
+
+</body>
+</html>
