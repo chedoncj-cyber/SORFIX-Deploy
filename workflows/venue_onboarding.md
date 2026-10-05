@@ -7,7 +7,7 @@ Add a new African exchange venue to the SOR routing pool.
 
 ### Step 1 — Gather exchange details
 Confirm these from the exchange's FIX specification document:
-- [ ] FIX version (must be 4.2 or compatible)
+- [ ] FIX version (FIX 4.2 minimum; FIX 5.0 SP2 / FIXT.1.1 preferred — system now runs FIXT.1.1 by default)
 - [ ] Host / port
 - [ ] SenderCompID and TargetCompID
 - [ ] Taker fee (bps)

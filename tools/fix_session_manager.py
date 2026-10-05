@@ -1,6 +1,7 @@
 """
-FIX Session Manager — Real FIX 4.2 session layer (Phase 1 scaffold).
+FIX Session Manager — FIX 5.0 SP2 / FIXT.1.1 session layer.
 Implements the FIX session state machine: DISCONNECTED → LOGON_SENT → ACTIVE → LOGOUT_SENT.
+Transport: FIXT.1.1 (tag 8). Application version: FIX50SP2 (tag 1128=9, tag 1137=9 on Logon).
 Ready for real exchange connections — swap simulate=False in sor_config.yaml to activate.
 Requires exchange credentials in .env (HOST, PORT, SENDER_COMP_ID, TARGET_COMP_ID, USERNAME, PASSWORD).
 """
@@ -25,13 +26,14 @@ class SessionState(Enum):
 
 class FIXSessionManager:
     """
-    Manages a persistent FIX 4.2 TCP/TLS session with a single exchange.
+    Manages a persistent FIX 5.0 SP2 / FIXT.1.1 TCP/TLS session with a single exchange.
     Handles: Logon (35=A), Heartbeat (35=0), TestRequest (35=1),
              ResendRequest (35=2), Logout (35=5).
     Thread-safe. Call connect() to start and disconnect() to stop.
     """
 
-    FIX_VERSION   = "FIX.4.2"
+    FIX_VERSION   = "FIXT.1.1"  # FIXT transport layer
+    APPL_VER_ID   = "9"          # FIX50SP2 application version (tag 1128 / 1137)
     HEARTBEAT_INT = 30  # seconds
 
     def __init__(self, venue: str, host: str, port: int,
@@ -123,6 +125,7 @@ class FIXSessionManager:
             f"56={self.target_comp_id}\x01"
             f"34={self._seq_num}\x01"
             f"52={ts}\x01"
+            f"1128={self.APPL_VER_ID}\x01"  # ApplVerID — required on every FIXT.1.1 app message
         )
         full_body = header + body
         length = len(full_body.encode("ascii"))
@@ -138,7 +141,11 @@ class FIXSessionManager:
         return msg
 
     def _send_logon(self):
-        body = f"98=0\x0108={self.HEARTBEAT_INT}\x01"
+        body = (
+            f"98=0\x01"
+            f"108={self.HEARTBEAT_INT}\x01"
+            f"1137={self.APPL_VER_ID}\x01"  # DefaultApplVerID — mandatory in FIXT.1.1 Logon
+        )
         if self.username:
             body += f"553={self.username}\x01"
         if self.password:

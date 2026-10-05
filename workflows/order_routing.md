@@ -71,11 +71,13 @@ Weights configurable in `configs/sor_config.yaml`.
 ### Iceberg Orders
 Large orders sliced so only `display_qty` is visible to the market at any time.
 Each filled slice triggers a refill from the hidden remainder.
+FIX 5.0 wire: `DisplayQty (tag 1138)` on the NewOrderSingle (35=D).
 See `tools/iceberg_manager.py` and `POST /iceberg/create`.
 
 ### Basket / Portfolio Orders
 Multiple symbols submitted as one instruction; each leg is routed independently via SOR.
 Useful for index rebalancing or multi-stock strategies.
+FIX 5.0 wire: `NewOrderList (35=E)` — `build_new_order_list()` in `tools/fix_engine.py`.
 See `tools/basket_engine.py` and `POST /basket/submit`.
 
 ### Block Trades
