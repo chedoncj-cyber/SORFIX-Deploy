@@ -192,6 +192,17 @@
     .toast-inf  { background: rgba(59,130,246,0.95); color: #fff; border: 1px solid rgba(147,197,253,0.3); }
     .toast-warn { background: rgba(217,119,6,0.95);  color: #fff; border: 1px solid rgba(251,191,36,0.3); }
 
+    /* ── MiniCombo ── */
+    .mc-inp { width:100%; background:var(--surface); border:1px solid var(--border); border-radius:7px; color:var(--text); font-family:inherit; font-size:13px; font-weight:600; padding:5px 9px; outline:none; cursor:pointer; transition:border-color .12s; }
+    .mc-inp:focus { border-color:var(--accent); background:var(--card2); }
+    .mc-inp:disabled { opacity:.4; cursor:not-allowed; }
+    .mc-inp-bare { background:transparent !important; border:none !important; border-bottom:1px solid transparent !important; border-radius:0 !important; padding:2px 0 !important; }
+    .mc-inp-bare:focus { border-bottom-color:var(--border) !important; background:transparent !important; }
+    .mc-drop { position:absolute; left:0; right:0; top:calc(100% + 3px); background:var(--card2); border:1px solid var(--border); border-radius:8px; max-height:220px; overflow-y:auto; z-index:300; box-shadow:0 8px 28px rgba(0,0,0,.6); }
+    .mc-item { padding:6px 10px; font-size:12px; cursor:pointer; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mc-item:hover, .mc-item.mc-focus { background:var(--accent-g); color:var(--accent); }
+    .mc-empty { padding:8px 10px; font-size:11px; color:var(--muted); }
+
     /* ── Animations ── */
     .fade-in { animation: fadeIn 0.22s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
@@ -598,7 +609,7 @@
     </div>
     <div>
       <label>Symbol</label>
-      <select id="b-symbol" onchange="onSymbolChange()" style="width:150px" disabled></select>
+      <div id="b-symbol-wrap" style="width:165px;position:relative"></div>
     </div>
     <button class="btn btn-primary" onclick="connectBook()">Connect</button>
     <button class="btn btn-ghost"   onclick="disconnectBook(true)">Disconnect</button>
@@ -686,11 +697,7 @@
           <!-- Company row — always shown, disabled until exchange chosen -->
           <div style="padding:10px 14px;background:var(--surface)">
             <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:6px">Company</div>
-            <select id="o-company" onchange="onSubmitCompanyChange('o')"
-              style="background:transparent;border:none;color:var(--text);width:100%;font-size:14px;font-weight:600;outline:none;cursor:pointer;padding:0"
-              disabled>
-              <option value="">— Select exchange first —</option>
-            </select>
+            <div id="o-company-wrap" style="width:100%;position:relative"></div>
           </div>
 
         </div>
@@ -848,11 +855,7 @@
               </div>
               <div style="padding:10px 14px;background:var(--surface)">
                 <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:6px">Company</div>
-                <select id="algo-company" onchange="onSubmitCompanyChange('algo')"
-                  style="background:transparent;border:none;color:var(--text);width:100%;font-size:13px;font-weight:600;outline:none;cursor:pointer;padding:0"
-                  disabled>
-                  <option value="">— Select exchange first —</option>
-                </select>
+                <div id="algo-company-wrap" style="width:100%;position:relative"></div>
               </div>
             </div>
             <div id="algo-company-row" style="display:none"></div>
@@ -1627,7 +1630,8 @@ let wsConn        = null;
 let wsVenue       = '', wsSymbol = '', wsIntentional = false;
 let wsRetryDelay  = 3000, wsRetryTimer = null;
 let allSymbols    = {};
-const _compCache  = {}; // pre-built company dropdown HTML per venue
+const _compItems  = {}; // pre-built company item arrays per venue: [{v, l}]
+let _symCombo, _oCoCombo, _alCoCombo;
 let historyCache  = [];
 let priceHistory  = [];
 let prevMdCount   = 0, prevMdTime = Date.now();
@@ -1724,7 +1728,7 @@ async function pollHealth() {
 }
 
 // ── Symbol catalog ────────────────────────────────────────────────────────────
-function _buildCompCache() {
+function _buildCompItems() {
   Object.keys(TOP_COMPANIES).forEach(venue => {
     const tcList  = TOP_COMPANIES[venue] || [];
     const nameMap = {};
@@ -1733,15 +1737,13 @@ function _buildCompCache() {
     apiTickers.forEach(t => { nameMap[t] = { n: t, s: '' }; });
     const ordered    = tcList.map(c => c.t);
     const extras     = apiTickers.filter(t => !ordered.includes(t)).sort();
-    const allTickers = [...ordered, ...extras];
-    _compCache[venue] =
-      `<option value="">— ${venue} companies (${allTickers.length}) —</option>` +
-      allTickers.map(t => {
-        const info   = nameMap[t];
-        const label  = info && info.n !== t ? `${t} — ${info.n}` : t;
-        const sector = info && info.s ? ` [${info.s}]` : '';
-        return `<option value="${t}">${label}${sector}</option>`;
-      }).join('');
+    _compItems[venue] = [...ordered, ...extras].map(t => {
+      const info = nameMap[t];
+      const l = info && info.n !== t
+        ? `${t} — ${info.n}${info.s ? ' ['+info.s+']' : ''}`
+        : t;
+      return { v: t, l };
+    });
   });
 }
 
@@ -1770,7 +1772,7 @@ function _applySymbols() {
         </div>`;
     }).join('');
   renderChips();
-  _buildCompCache(); // pre-warm company dropdown cache with live symbol data
+  _buildCompItems(); // pre-warm company item arrays with live symbol data
 }
 
 async function loadSymbols() {
@@ -1826,38 +1828,26 @@ function selectOtherSymbol(venue, ticker) {
 
 function onSubmitExchangeChange(prefix) {
   const venue   = document.getElementById(`${prefix}-exchange`).value;
-  const compSel = document.getElementById(`${prefix}-company`);
+  const combo   = prefix === 'o' ? _oCoCombo : _alCoCombo;
   const infoDiv = document.getElementById(`${prefix}-company-info`);
   document.getElementById(`${prefix}-symbol`).value = '';
   if (infoDiv) infoDiv.style.display = 'none';
 
   if (!venue) {
-    compSel.innerHTML = '<option value="">— Select exchange first —</option>';
-    compSel.disabled = true;
+    combo.disable();
     return;
   }
 
-  if (_compCache[venue]) {
-    compSel.innerHTML = _compCache[venue];
-  } else {
-    // Fallback build (before cache is ready) — uses TOP_COMPANIES only
-    compSel.innerHTML =
-      `<option value="">— ${venue} companies —</option>` +
-      (TOP_COMPANIES[venue] || []).map(c =>
-        `<option value="${c.t}">${c.t} — ${c.n}${c.s ? ' ['+c.s+']' : ''}</option>`
-      ).join('');
-  }
-
-  compSel.disabled = false;
-  compSel.value = '';
+  const items = _compItems[venue] ||
+    (TOP_COMPANIES[venue] || []).map(c => ({
+      v: c.t,
+      l: `${c.t} — ${c.n}${c.s ? ' ['+c.s+']' : ''}`
+    }));
+  combo.setItems(items);
+  combo.enable();
 }
 
-function onSubmitCompanyChange(prefix) {
-  const ticker = document.getElementById(`${prefix}-company`).value;
-  const venue  = document.getElementById(`${prefix}-exchange`).value;
-  if (!ticker) return;
-  _applySubmitSelection(prefix, venue, ticker);
-}
+function onSubmitCompanyChange(prefix) { /* handled by combo onSelect callback */ }
 
 async function _applySubmitSelection(prefix, venue, ticker) {
   document.getElementById(`${prefix}-symbol`).value = ticker;
@@ -1867,18 +1857,10 @@ async function _applySubmitSelection(prefix, venue, ticker) {
     exEl.value = venue;
     onSubmitExchangeChange(prefix);
   }
-  const compEl = document.getElementById(`${prefix}-company`);
-  if (compEl) {
-    // ensure option exists then select it
-    if (!compEl.querySelector(`option[value="${ticker}"]`)) {
-      const opt = document.createElement('option');
-      opt.value = ticker;
-      const comp = (TOP_COMPANIES[venue] || []).find(c => c.t === ticker);
-      opt.textContent = `${ticker} — ${comp ? comp.n : ticker}`;
-      compEl.appendChild(opt);
-    }
-    compEl.value = ticker;
-    compEl.disabled = false;
+  const combo = prefix === 'o' ? _oCoCombo : _alCoCombo;
+  if (combo) {
+    const item = (_compItems[venue] || []).find(x => x.v === ticker);
+    combo.setValue(ticker, item ? item.l : ticker);
   }
   const infoDiv = document.getElementById(`${prefix}-company-info`);
   if (!infoDiv) return;
@@ -1918,22 +1900,14 @@ async function _applySubmitSelection(prefix, venue, ticker) {
 // ── Live order book ───────────────────────────────────────────────────────────
 function onVenueChange() {
   const venue = document.getElementById('b-venue').value;
-  const sel   = document.getElementById('b-symbol');
   if (venue && allSymbols[venue]) {
-    sel.innerHTML = '<option value="">Select…</option>' +
-      allSymbols[venue].map(s => `<option value="${s}">${s}</option>`).join('');
-    sel.disabled = false;
+    _symCombo.setItems(allSymbols[venue].map(s => ({ v: s, l: s })));
+    _symCombo.enable();
   } else {
-    sel.innerHTML = '<option value="">Select…</option>';
-    sel.disabled = true;
+    _symCombo.setItems([]);
+    _symCombo.disable();
   }
   disconnectBook(true);
-}
-
-function onSymbolChange() {
-  const venue  = document.getElementById('b-venue').value;
-  const symbol = document.getElementById('b-symbol').value;
-  if (venue && symbol) connectBook();
 }
 
 function disconnectBook(intentional=true) {
@@ -1950,8 +1924,8 @@ function disconnectBook(intentional=true) {
 }
 
 function connectBook() {
-  const venue = document.getElementById('b-venue').value;
-  const symbol = document.getElementById('b-symbol').value;
+  const venue  = document.getElementById('b-venue').value;
+  const symbol = _symCombo.getValue();
   if (!venue || !symbol) { toast('Select a venue and symbol first.', 'err'); return; }
   wsVenue = venue; wsSymbol = symbol; wsIntentional = false;
   fetch(`/market-data/book/${venue}/${symbol}`)
@@ -3466,7 +3440,104 @@ function onApplyCompanyChange() {
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
+// ── MiniCombo — instant custom dropdown (replaces slow native <select>) ───────
+function MiniCombo(wrapId, placeholder, onSelect, opts) {
+  const wrap = document.getElementById(wrapId);
+  const MAX  = (opts && opts.maxItems) || 60;
+  let items  = [], _value = '', _label = '', _open = false, _fIdx = -1;
+
+  wrap.style.position = 'relative';
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.autocomplete = 'off'; inp.spellcheck = false;
+  inp.placeholder = placeholder || 'Search…';
+  inp.className = 'mc-inp' + (opts && opts.bare ? ' mc-inp-bare' : '');
+  if (opts && opts.extraStyle) inp.style.cssText += opts.extraStyle;
+  inp.disabled = true;
+
+  const drop = document.createElement('div');
+  drop.className = 'mc-drop'; drop.style.display = 'none';
+  wrap.appendChild(inp); wrap.appendChild(drop);
+
+  function _render() {
+    const q = inp.value.trim().toLowerCase();
+    const src = q ? items.filter(x => x.l.toLowerCase().includes(q)).slice(0, MAX)
+                  : items.slice(0, MAX);
+    if (!src.length) {
+      drop.innerHTML = `<div class="mc-empty">${q ? 'No matches' : 'No items'}</div>`;
+      _fIdx = -1; return;
+    }
+    drop.innerHTML = src.map((x, i) =>
+      `<div class="mc-item" data-v="${x.v}" data-i="${i}">${x.l}</div>`).join('');
+    _fIdx = -1;
+  }
+  function _openDrop() {
+    if (inp.disabled) return;
+    _open = true; _render(); drop.style.display = '';
+  }
+  function _closeDrop(kept) {
+    _open = false; drop.style.display = 'none';
+    if (!kept) inp.value = _label;
+  }
+  function _pick(v, l) {
+    _value = v; _label = l;
+    inp.value = l; _closeDrop(true);
+    if (onSelect) onSelect(v);
+  }
+  function _moveFocus(d) {
+    const els = drop.querySelectorAll('.mc-item');
+    if (!els.length) return;
+    if (_fIdx >= 0) els[_fIdx].classList.remove('mc-focus');
+    _fIdx = Math.max(0, Math.min(els.length - 1, _fIdx + d));
+    els[_fIdx].classList.add('mc-focus');
+    els[_fIdx].scrollIntoView({ block: 'nearest' });
+  }
+
+  inp.addEventListener('focus', _openDrop);
+  inp.addEventListener('input', () => { if (_open) _render(); else _openDrop(); });
+  inp.addEventListener('keydown', e => {
+    if (!_open) { if (e.key !== 'Tab') _openDrop(); return; }
+    if      (e.key === 'ArrowDown') { e.preventDefault(); _moveFocus(1); }
+    else if (e.key === 'ArrowUp')   { e.preventDefault(); _moveFocus(-1); }
+    else if (e.key === 'Enter')     {
+      e.preventDefault();
+      const el = drop.querySelector('.mc-item.mc-focus') || drop.querySelector('.mc-item');
+      if (el) _pick(el.dataset.v, el.textContent);
+    }
+    else if (e.key === 'Escape')    { _closeDrop(false); inp.blur(); }
+  });
+  inp.addEventListener('blur', () => setTimeout(() => { if (_open) _closeDrop(false); }, 180));
+  drop.addEventListener('mousedown', e => {
+    const it = e.target.closest('.mc-item');
+    if (it) { e.preventDefault(); _pick(it.dataset.v, it.textContent); }
+  });
+
+  return {
+    setItems(arr) { items = arr || []; _value = ''; _label = ''; inp.value = ''; drop.style.display = 'none'; _open = false; },
+    getValue()    { return _value; },
+    setValue(v, l){ _value = v; _label = l || v; inp.value = _label; },
+    enable()      { inp.disabled = false; },
+    disable()     { inp.disabled = true; inp.value = ''; _value = ''; _label = ''; drop.style.display = 'none'; _open = false; items = []; },
+    clear()       { _value = ''; _label = ''; inp.value = ''; },
+  };
+}
+
+function _initCombos() {
+  _buildCompItems();
+  _symCombo = MiniCombo('b-symbol-wrap', 'Type symbol…', v => {
+    if (document.getElementById('b-venue').value && v) connectBook();
+  });
+  _oCoCombo = MiniCombo('o-company-wrap', 'Search company…', v => {
+    const venue = document.getElementById('o-exchange').value;
+    if (v && venue) _applySubmitSelection('o', venue, v);
+  }, { bare: true, extraStyle: 'font-size:14px;font-weight:600;color:var(--text);' });
+  _alCoCombo = MiniCombo('algo-company-wrap', 'Search company…', v => {
+    const venue = document.getElementById('algo-exchange').value;
+    if (v && venue) _applySubmitSelection('algo', venue, v);
+  }, { bare: true, extraStyle: 'font-size:13px;font-weight:600;color:var(--text);' });
+}
+
 (async function init() {
+  _initCombos();
   loadSymbols(); // fire & forget — uses localStorage cache instantly, fetches fresh in background
   await pollHealth();
   setInterval(pollHealth, 3000);
