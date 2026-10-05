@@ -39,7 +39,7 @@ api:
   workers: 1
 
 market_data:
-  update_interval_seconds: 0.1
+  update_interval_seconds: 2.0
   kafka_brokers: "kafka:9092"
   use_kafka: false
 

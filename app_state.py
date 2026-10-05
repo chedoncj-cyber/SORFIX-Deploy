@@ -408,8 +408,8 @@ def init_app_state(simulate: bool = None) -> AppState:
         _state.oms_bridge = OMSBridge(execution_fn=_oms_execute)
 
         # Multi-asset market data simulation
-        _state.fx_md   = FXMarketData(update_interval=0.5)
-        _state.bond_md = BondMarketData(update_interval=5.0)
+        _state.fx_md   = FXMarketData(update_interval=5.0)
+        _state.bond_md = BondMarketData(update_interval=30.0)
         _state.fx_md.start()
         _state.bond_md.start()
 

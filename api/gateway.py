@@ -305,7 +305,7 @@ async def stream_order_book(websocket: WebSocket, venue: str, symbol: str):
                 await websocket.send_text(json.dumps(payload))
             else:
                 await websocket.send_text(json.dumps({"venue": venue, "symbol": symbol, "status": "no_data"}))
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(2.0)
     except WebSocketDisconnect:
         logger.info("WS disconnected: %s:%s", venue, symbol)
     except Exception:
