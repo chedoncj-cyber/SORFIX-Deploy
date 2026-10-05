@@ -201,6 +201,199 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+    /* ═══════════════════════════════════════════════════════════
+       VISUAL UPGRADE LAYER — animations, glow, particles, tilt
+       ═══════════════════════════════════════════════════════════ */
+
+    /* Aurora header shimmer */
+    @keyframes aurora-shift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    #hdr::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg,
+        rgba(59,130,246,0.06) 0%,
+        rgba(167,139,250,0.08) 25%,
+        rgba(34,197,94,0.05) 50%,
+        rgba(99,102,241,0.07) 75%,
+        rgba(59,130,246,0.06) 100%);
+      background-size: 300% 300%;
+      animation: aurora-shift 8s ease infinite;
+      pointer-events: none;
+      border-radius: 0;
+    }
+    #hdr { position: relative; }
+
+    /* Animated underline on logo */
+    .logo::after {
+      content: '';
+      display: block;
+      height: 2px;
+      background: linear-gradient(90deg, #3b82f6, #a78bfa, #22c55e);
+      background-size: 200% 100%;
+      animation: aurora-shift 4s ease infinite;
+      border-radius: 2px;
+      margin-top: 1px;
+    }
+
+    /* Metric card glow on hover */
+    .metric {
+      transition: border-color 0.25s, box-shadow 0.25s, transform 0.18s;
+      will-change: transform;
+    }
+    .metric:hover {
+      border-color: rgba(59,130,246,0.45) !important;
+      box-shadow: 0 0 28px rgba(59,130,246,0.12), 0 4px 24px rgba(0,0,0,0.25);
+      transform: translateY(-3px);
+    }
+
+    /* Metric value glow pulse */
+    @keyframes val-glow {
+      0%,100% { text-shadow: none; }
+      50%      { text-shadow: 0 0 18px currentColor; }
+    }
+    .metric-val { animation: val-glow 3.5s ease-in-out infinite; }
+
+    /* Sparkline canvas */
+    .sparkline {
+      display: block;
+      margin-top: 8px;
+      width: 100%;
+      height: 28px;
+      opacity: 0.7;
+    }
+
+    /* 3D tilt container */
+    .tilt-card {
+      transform-style: preserve-3d;
+      transition: transform 0.12s ease;
+    }
+
+    /* Venue card enhanced */
+    .venue-card {
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.18s !important;
+    }
+    .venue-card:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3) !important;
+    }
+
+    /* Particle canvas behind dashboard */
+    #particle-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.35;
+    }
+    #main { position: relative; z-index: 1; }
+
+    /* Animated number counter */
+    @keyframes count-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .metric-val.counting { animation: count-in 0.4s ease; }
+
+    /* Tab slide transition */
+    .tab-pane:not(.hidden) {
+      animation: tab-slide-in 0.22s cubic-bezier(0.22,1,0.36,1);
+    }
+    @keyframes tab-slide-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* Live activity feed */
+    #activity-feed {
+      border-top: 1px solid var(--border);
+      max-height: 180px;
+      overflow-y: auto;
+    }
+    .af-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 16px; font-size: 11px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      animation: count-in 0.3s ease;
+    }
+    .af-row:last-child { border-bottom: none; }
+    .af-time { color: var(--muted); font-size: 10px; font-family: 'Courier New', monospace; white-space: nowrap; }
+    .af-badge { padding: 1px 7px; border-radius: 4px; font-size: 10px; font-weight: 800; flex-shrink: 0; }
+    .af-buy  { background: rgba(34,197,94,0.18); color: #4ade80; }
+    .af-sell { background: rgba(239,68,68,0.18); color: #f87171; }
+    .af-sys  { background: rgba(59,130,246,0.18); color: #93c5fd; }
+
+    /* Glowing dot enhanced */
+    .dot-live {
+      box-shadow: 0 0 0 0 rgba(74,222,128,0.7);
+      animation: dot-ping 1.4s cubic-bezier(0.4,0,0.6,1) infinite, live-pulse 1.6s ease-in-out infinite !important;
+    }
+    @keyframes dot-ping {
+      75%, 100% { box-shadow: 0 0 0 8px rgba(74,222,128,0); }
+    }
+
+    /* Nav item slide-in on load */
+    @keyframes nav-appear {
+      from { opacity: 0; transform: translateX(-12px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .nav-item {
+      animation: nav-appear 0.35s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    /* Metric card corner accent */
+    .metric::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 60px; height: 60px;
+      background: radial-gradient(circle at top right, rgba(59,130,246,0.08), transparent 70%);
+      border-radius: 0 10px 0 0;
+      pointer-events: none;
+    }
+
+    /* Hdr chip pulse when live */
+    .hdr-chip {
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .hdr-chip.live-chip {
+      border-color: rgba(74,222,128,0.4);
+      box-shadow: 0 0 12px rgba(74,222,128,0.12);
+    }
+
+    /* Card shine sweep on hover */
+    @keyframes shine {
+      from { left: -80%; }
+      to   { left: 120%; }
+    }
+    .metric::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -80%;
+      width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+      transform: skewX(-20deg);
+      transition: none;
+      pointer-events: none;
+    }
+    .metric:hover::after {
+      animation: shine 0.55s ease forwards;
+    }
+
+    /* Gradient score bars */
+    .bar-fill {
+      background: linear-gradient(90deg, #3b82f6, #a78bfa) !important;
+      box-shadow: 0 0 6px rgba(59,130,246,0.4);
+    }
+
+    /* Badge glow */
+    .badge-green { box-shadow: 0 0 8px rgba(34,197,94,0.25); }
+    .badge-red   { box-shadow: 0 0 8px rgba(239,68,68,0.25); }
   </style>
 </head>
 <body>
@@ -317,6 +510,20 @@
   <button class="nav-item tab-btn" onclick="showTab('dropcopy',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
     Drop Copy
+  </button>
+
+  <div class="sb-label" style="margin-top:16px">Multi-Asset</div>
+
+  <button class="nav-item tab-btn" onclick="showTab('oms-panel',this)" style="border:1px solid rgba(6,182,212,0.28);background:rgba(6,182,212,0.05)">
+    <svg class="nsvg" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    OMS Bridge
+    <span class="nav-badge" style="background:rgba(6,182,212,0.9)">NEW</span>
+  </button>
+
+  <button class="nav-item tab-btn" onclick="showTab('bond-panel',this)" style="border:1px solid rgba(16,185,129,0.28);background:rgba(16,185,129,0.05)">
+    <svg class="nsvg" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Bond / FX
+    <span class="nav-badge" style="background:rgba(16,185,129,0.9)">NEW</span>
   </button>
 
   <div class="sb-label" style="margin-top:16px">System</div>
@@ -999,6 +1206,172 @@
     <div style="font-size:12px">Their live jobs board will appear here</div>
   </div>
 
+</div>
+
+<!-- ── OMS BRIDGE ─────────────────────────────────────────────────────────── -->
+<div id="tab-oms-panel" class="tab-pane hidden">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+    <div style="width:40px;height:40px;border-radius:10px;background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.3);display:flex;align-items:center;justify-content:center">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    </div>
+    <div>
+      <div style="font-weight:800;font-size:16px">OMS / EMS Integration Bridge</div>
+      <div style="font-size:11px;color:var(--muted)">Register Bloomberg EMSX, Charles River, Fidessa, or any standard FIX OMS to route orders through World SORFIX</div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Register OMS -->
+    <div class="card">
+      <div class="sec-hdr">Register OMS Connection</div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div><label>OMS ID (unique key)</label><input id="oms-id" type="text" placeholder="bloomberg-prod"></div>
+        <div>
+          <label>OMS Type</label>
+          <select id="oms-type">
+            <option value="bloomberg_emsx">Bloomberg EMSX</option>
+            <option value="charles_river">Charles River (CRD)</option>
+            <option value="fidessa">Fidessa</option>
+            <option value="flextrade">FlexTrade</option>
+            <option value="generic">Generic FIX 5.0</option>
+          </select>
+        </div>
+        <div><label>Display Name</label><input id="oms-name" type="text" placeholder="Bloomberg EMSX Production"></div>
+        <div><label>Webhook URL (optional)</label><input id="oms-webhook" type="text" placeholder="https://your-oms.com/sorfix-callback"></div>
+        <button class="btn btn-primary" onclick="registerOMS()" style="background:linear-gradient(135deg,#06b6d4,#3b82f6)">Register OMS</button>
+        <div id="oms-reg-result" style="font-size:11px;color:var(--muted);min-height:16px"></div>
+      </div>
+    </div>
+
+    <!-- Submit Inbound Order -->
+    <div class="card">
+      <div class="sec-hdr">Send Inbound Order</div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div><label>OMS ID</label><input id="oms-inb-id" type="text" placeholder="bloomberg-prod"></div>
+        <div><label>Symbol</label><input id="oms-inb-sym" type="text" placeholder="AAPL"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div><label>Side</label>
+            <select id="oms-inb-side"><option value="buy">BUY</option><option value="sell">SELL</option></select>
+          </div>
+          <div><label>Quantity</label><input id="oms-inb-qty" type="number" placeholder="1000" min="1"></div>
+        </div>
+        <div><label>Limit Price (optional)</label><input id="oms-inb-price" type="number" placeholder="Market" step="any" min="0"></div>
+        <div><label>Asset Class</label>
+          <select id="oms-inb-asset">
+            <option value="equity">Equity</option>
+            <option value="bond">Bond</option>
+            <option value="fx">FX</option>
+          </select>
+        </div>
+        <button class="btn btn-buy" onclick="sendOMSOrder()">Route via OMS Bridge</button>
+        <div id="oms-inb-result" style="font-size:11px;color:var(--muted);min-height:32px;white-space:pre-wrap;font-family:monospace"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active connections -->
+  <div class="card">
+    <div class="sec-hdr" style="display:flex;align-items:center;justify-content:space-between">
+      Active OMS Connections
+      <button class="chip" onclick="loadOMSConnections()">Refresh</button>
+    </div>
+    <div id="oms-connections-table">
+      <div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">No connections registered yet. Use the form above to register.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── BOND / FX ────────────────────────────────────────────────────────────── -->
+<div id="tab-bond-panel" class="tab-pane hidden">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+    <div style="width:40px;height:40px;border-radius:10px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);display:flex;align-items:center;justify-content:center">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    </div>
+    <div>
+      <div style="font-weight:800;font-size:16px">Multi-Asset Orders — Bonds &amp; FX</div>
+      <div style="font-size:11px;color:var(--muted)">Route fixed income and foreign exchange orders through the SORFIX SOR engine</div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Bond order -->
+    <div class="card">
+      <div class="sec-hdr" style="color:#34d399">Fixed Income — Bond Order</div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div><label>ISIN / CUSIP</label><input id="bond-isin" type="text" placeholder="US912810TM85"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div><label>Side</label>
+            <select id="bond-side"><option value="buy">BUY</option><option value="sell">SELL</option></select>
+          </div>
+          <div><label>Bond Type</label>
+            <select id="bond-type">
+              <option value="GOVT">Government</option>
+              <option value="CORP">Corporate</option>
+              <option value="MUNI">Municipal</option>
+              <option value="MBS">MBS</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div><label>Face Value (USD)</label><input id="bond-face" type="number" placeholder="1000000" min="1000"></div>
+          <div><label>Clean Price (%)</label><input id="bond-price" type="number" placeholder="98.75" step="0.001" min="1" max="200"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div><label>Coupon Rate (%)</label><input id="bond-coupon" type="number" placeholder="4.50" step="0.01" min="0"></div>
+          <div><label>Maturity Date</label><input id="bond-maturity" type="text" placeholder="20340815"></div>
+        </div>
+        <button class="btn btn-buy" onclick="submitBondOrder()" style="background:linear-gradient(135deg,#059669,#10b981)">Submit Bond Order</button>
+        <div id="bond-result" style="font-size:11px;color:var(--muted);min-height:60px;white-space:pre-wrap;font-family:monospace"></div>
+      </div>
+    </div>
+
+    <!-- FX order -->
+    <div class="card">
+      <div class="sec-hdr" style="color:#60a5fa">Foreign Exchange — FX Order</div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label>Currency Pair</label>
+          <select id="fx-pair">
+            <option value="EURUSD">EUR/USD</option>
+            <option value="GBPUSD">GBP/USD</option>
+            <option value="USDJPY">USD/JPY</option>
+            <option value="USDGHS">USD/GHS (Ghana ★)</option>
+            <option value="USDNGN">USD/NGN (Nigeria ★)</option>
+            <option value="USDZAR">USD/ZAR (South Africa ★)</option>
+            <option value="USDKES">USD/KES (Kenya ★)</option>
+            <option value="AUDUSD">AUD/USD</option>
+            <option value="USDCAD">USD/CAD</option>
+            <option value="USDINR">USD/INR</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div><label>Side</label>
+            <select id="fx-side"><option value="buy">BUY base</option><option value="sell">SELL base</option></select>
+          </div>
+          <div><label>Tenor</label>
+            <select id="fx-tenor">
+              <option value="SPOT">SPOT (T+2)</option>
+              <option value="TOD">TOD (T+0)</option>
+              <option value="TOM">TOM (T+1)</option>
+              <option value="1W">1 Week</option>
+              <option value="1M">1 Month</option>
+              <option value="3M">3 Month</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div><label>Base Amount</label><input id="fx-amount" type="number" placeholder="100000" min="1000" step="1000"></div>
+          <div><label>Spot Rate (optional)</label><input id="fx-rate" type="number" placeholder="Market" step="any" min="0"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input id="fx-ndf" type="checkbox" style="width:auto">
+          <label style="margin:0;text-transform:none;letter-spacing:0">NDF (Non-Deliverable Forward)</label>
+        </div>
+        <button class="btn btn-buy" onclick="submitFXOrder()" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6)">Submit FX Order</button>
+        <div id="fx-result" style="font-size:11px;color:var(--muted);min-height:60px;white-space:pre-wrap;font-family:monospace"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ── ADMIN ──────────────────────────────────────────────────────────────── -->
@@ -3197,6 +3570,411 @@ async function loadDropLog() {
     document.getElementById('dc-log-table').innerHTML=html+'</table>';
   } catch(e){document.getElementById('dc-log-table').textContent='Error: '+e.message;}
 }
+
+/* ── OMS Bridge tab ── */
+async function registerOMS() {
+  const id   = document.getElementById('oms-id').value.trim();
+  const type = document.getElementById('oms-type').value;
+  const name = document.getElementById('oms-name').value.trim();
+  const hook = document.getElementById('oms-webhook').value.trim();
+  const res  = document.getElementById('oms-reg-result');
+  if (!id || !name) { res.textContent = 'OMS ID and Display Name are required.'; res.style.color='#f87171'; return; }
+  res.textContent = 'Registering…'; res.style.color = 'var(--muted)';
+  try {
+    const r = await fetch('/oms/register', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({oms_id:id, oms_type:type, display_name:name, webhook_url:hook||null, api_key:''}),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || 'Registration failed');
+    res.textContent = data.message; res.style.color = '#4ade80';
+    toast('OMS registered: ' + id, 'ok');
+    loadOMSConnections();
+  } catch(e) { res.textContent = 'Error: ' + e.message; res.style.color = '#f87171'; toast(e.message,'err'); }
+}
+
+async function sendOMSOrder() {
+  const oid = document.getElementById('oms-inb-id').value.trim();
+  const sym = document.getElementById('oms-inb-sym').value.trim().toUpperCase();
+  const side = document.getElementById('oms-inb-side').value;
+  const qty  = parseFloat(document.getElementById('oms-inb-qty').value) || 0;
+  const price = parseFloat(document.getElementById('oms-inb-price').value) || null;
+  const asset = document.getElementById('oms-inb-asset').value;
+  const res = document.getElementById('oms-inb-result');
+  if (!oid || !sym || !qty) { res.textContent = 'OMS ID, Symbol and Quantity required.'; return; }
+  res.textContent = 'Routing…'; res.style.color = 'var(--muted)';
+  try {
+    const payload = {symbol:sym, side, quantity:qty, asset_class:asset};
+    if (price) payload.price = price;
+    const r = await fetch('/oms/inbound', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({oms_id:oid, payload}),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || 'Routing failed');
+    const exec = data.execution || {};
+    res.textContent = `Order: ${data.cl_ord_id}\nFilled: ${exec.total_filled||0} @ ${exec.vwap||'—'}\nStatus: ${exec.success?'FILLED':'REJECTED'}`;
+    res.style.color = exec.success ? '#4ade80' : '#f87171';
+    toast(exec.success ? 'OMS order filled' : 'OMS order rejected', exec.success?'ok':'err');
+  } catch(e) { res.textContent = 'Error: '+e.message; res.style.color='#f87171'; toast(e.message,'err'); }
+}
+
+async function loadOMSConnections() {
+  const el = document.getElementById('oms-connections-table');
+  try {
+    const r = await fetch('/oms/connections');
+    const data = await r.json();
+    if (!data.length) { el.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px">No connections registered.</div>'; return; }
+    let html='<table><thead><tr><th>ID</th><th>Type</th><th>Name</th><th>Orders</th><th>Last Activity</th></tr></thead><tbody>';
+    data.forEach(c=>{
+      const ts = c.last_activity ? new Date(c.last_activity*1000).toLocaleTimeString() : '—';
+      html+=`<tr><td class="mono" style="color:#22d3ee">${c.oms_id}</td><td><span class="badge badge-blue">${c.oms_type}</span></td><td>${c.display_name}</td><td>${c.orders_sent}</td><td style="color:var(--muted)">${ts}</td></tr>`;
+    });
+    html+='</tbody></table>';
+    el.innerHTML = html;
+  } catch(e) { el.textContent='Error loading connections.'; }
+}
+
+/* ── Bond / FX tab ── */
+async function submitBondOrder() {
+  const res = document.getElementById('bond-result');
+  const isin = document.getElementById('bond-isin').value.trim().toUpperCase();
+  const side = document.getElementById('bond-side').value;
+  const type = document.getElementById('bond-type').value;
+  const face = parseFloat(document.getElementById('bond-face').value) || 0;
+  const price = parseFloat(document.getElementById('bond-price').value) || 0;
+  const coupon = parseFloat(document.getElementById('bond-coupon').value) || 0;
+  const mat = document.getElementById('bond-maturity').value.trim();
+  if (!isin || !face || !price) { res.textContent='ISIN, Face Value and Price required.'; res.style.color='#f87171'; return; }
+  res.textContent='Submitting…'; res.style.color='var(--muted)';
+  try {
+    const body = {isin, side, bond_type:type, face_value:face, clean_price_pct:price, coupon_rate:coupon};
+    if (mat) body.maturity_date = mat;
+    const r = await fetch('/orders/bond/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail||'Failed');
+    res.textContent=`Order ID: ${d.order_id}\nISIN: ${d.isin}\nClean: ${d.clean_price_pct}%  Accrued: ${d.accrued_interest?.toFixed(4)}\nDirty: ${d.dirty_price_pct?.toFixed(4)}%\nConsideration: $${d.total_consideration?.toLocaleString()}\nSettle: ${d.settlement_date}`;
+    res.style.color='#4ade80';
+    toast('Bond order submitted: '+d.order_id,'ok');
+  } catch(e){ res.textContent='Error: '+e.message; res.style.color='#f87171'; toast(e.message,'err'); }
+}
+
+async function submitFXOrder() {
+  const res = document.getElementById('fx-result');
+  const pair = document.getElementById('fx-pair').value;
+  const side = document.getElementById('fx-side').value;
+  const tenor = document.getElementById('fx-tenor').value;
+  const amount = parseFloat(document.getElementById('fx-amount').value)||0;
+  const rate = parseFloat(document.getElementById('fx-rate').value)||null;
+  const ndf = document.getElementById('fx-ndf').checked;
+  if (!amount) { res.textContent='Base Amount required.'; res.style.color='#f87171'; return; }
+  res.textContent='Submitting…'; res.style.color='var(--muted)';
+  try {
+    const body = {pair, side, tenor, base_amount:amount, ndf};
+    if (rate) body.spot_rate = rate;
+    const r = await fetch('/orders/fx/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail||'Failed');
+    const em = d.is_em_pair ? ' ★ African EM' : '';
+    res.textContent=`Order ID: ${d.order_id}\nPair: ${d.pair}${em}\nBase: ${d.base_amount?.toLocaleString()} ${d.base_ccy}\nNotional: ${d.notional_quote ? d.notional_quote.toLocaleString()+' '+d.quote_ccy : '—'}\nLot: ${d.lot_type}  Pip: ${d.pip_size}\nSettle: ${d.settlement_date}  Tenor: ${tenor}`;
+    res.style.color='#4ade80';
+    toast('FX order submitted: '+d.order_id,'ok');
+  } catch(e){ res.textContent='Error: '+e.message; res.style.color='#f87171'; toast(e.message,'err'); }
+}
 </script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   VISUAL UPGRADE LAYER
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Particle canvas ── */
+(function() {
+  const canvas = document.createElement('canvas');
+  canvas.id = 'particle-canvas';
+  document.body.insertBefore(canvas, document.body.firstChild);
+  const ctx = canvas.getContext('2d');
+  let W, H, pts = [];
+  const N = 60;
+  const COLORS = ['rgba(59,130,246,', 'rgba(167,139,250,', 'rgba(34,197,94,'];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  function init() {
+    resize();
+    pts = Array.from({length: N}, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.25,
+      r: Math.random() * 1.5 + 0.5,
+      c: COLORS[Math.floor(Math.random() * COLORS.length)],
+      a: Math.random() * 0.4 + 0.15,
+    }));
+  }
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i];
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.c + p.a + ')';
+      ctx.fill();
+      // connect nearby particles
+      for (let j = i + 1; j < pts.length; j++) {
+        const q = pts[j];
+        const dx = p.x - q.x, dy = p.y - q.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 90) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y);
+          ctx.strokeStyle = p.c + (0.12 * (1 - dist/90)) + ')';
+          ctx.lineWidth = 0.6;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize', resize);
+  init(); draw();
+})();
+
+/* ── 2. 3D tilt on metric + venue cards ── */
+(function() {
+  function addTilt(selector) {
+    document.querySelectorAll(selector).forEach(el => {
+      el.classList.add('tilt-card');
+      el.addEventListener('mousemove', e => {
+        const r = el.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width  - 0.5;
+        const y = (e.clientY - r.top)  / r.height - 0.5;
+        el.style.transform = `perspective(600px) rotateY(${x*8}deg) rotateX(${-y*8}deg) translateY(-3px)`;
+      });
+      el.addEventListener('mouseleave', () => {
+        el.style.transform = '';
+      });
+    });
+  }
+  // Run after DOM is ready and also re-run when dashboard is shown
+  function setupTilt() {
+    addTilt('.metric');
+    addTilt('.venue-card');
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupTilt);
+  } else {
+    setTimeout(setupTilt, 300);
+  }
+  // Re-apply after each dashboard refresh
+  const origShowTab = window.showTab;
+  if (origShowTab) {
+    window.showTab = function(id, btn) {
+      origShowTab(id, btn);
+      if (id === 'dashboard') setTimeout(setupTilt, 400);
+    };
+  }
+})();
+
+/* ── 3. Sparklines on metric cards ── */
+(function() {
+  const histories = { 'uptime': [], 'rate': [], 'books': [], 'execs': [] };
+  const COLORS_SP = { 'uptime': '#60a5fa', 'rate': '#4ade80', 'books': '#a78bfa', 'execs': '#fbbf24' };
+  const ID_MAP = { 'uptime': 'd-uptime', 'rate': 'd-rate', 'books': 'd-books', 'execs': 'd-execs' };
+  const METRIC_IDS = Object.keys(ID_MAP);
+
+  function parseNum(s) {
+    if (!s || s === '—') return 0;
+    return parseFloat(s.replace(/[^0-9.]/g, '')) || 0;
+  }
+
+  function drawSparkline(canvas, data, color) {
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    if (data.length < 2) return;
+    const min = Math.min(...data), max = Math.max(...data);
+    const range = max - min || 1;
+    const pts = data.map((v, i) => ({
+      x: (i / (data.length - 1)) * W,
+      y: H - ((v - min) / range) * (H - 4) - 2,
+    }));
+    // fill
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, H);
+    pts.forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.lineTo(pts[pts.length-1].x, H);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, color.replace(')', ',0.25)').replace('rgb','rgba'));
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.fill();
+    // line
+    ctx.beginPath();
+    pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  function ensureSparklines() {
+    METRIC_IDS.forEach(key => {
+      const el = document.getElementById(ID_MAP[key]);
+      if (!el) return;
+      const parent = el.closest('.metric');
+      if (!parent || parent.querySelector('.sparkline')) return;
+      const canvas = document.createElement('canvas');
+      canvas.className = 'sparkline';
+      canvas.width  = parent.offsetWidth || 180;
+      canvas.height = 28;
+      parent.appendChild(canvas);
+    });
+  }
+
+  function updateSparklines() {
+    METRIC_IDS.forEach(key => {
+      const el = document.getElementById(ID_MAP[key]);
+      if (!el) return;
+      const v = parseNum(el.textContent);
+      const hist = histories[key];
+      hist.push(v);
+      if (hist.length > 40) hist.shift();
+      const parent = el.closest('.metric');
+      if (!parent) return;
+      const canvas = parent.querySelector('.sparkline');
+      if (canvas) drawSparkline(canvas, hist, COLORS_SP[key]);
+    });
+  }
+
+  setTimeout(() => { ensureSparklines(); setInterval(updateSparklines, 1500); }, 1200);
+})();
+
+/* ── 4. Animated counter on metric values ── */
+(function() {
+  function animateCount(el, to) {
+    const from = parseFloat(el.dataset.prevVal || 0);
+    if (isNaN(to) || to === from) return;
+    el.dataset.prevVal = to;
+    const start = performance.now();
+    const dur = 600;
+    const isFloat = String(to).includes('.');
+    function step(now) {
+      const t = Math.min((now - start) / dur, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      const val = from + (to - from) * ease;
+      el.textContent = isFloat ? val.toFixed(1) : Math.round(val).toLocaleString();
+      if (t < 1) requestAnimationFrame(step);
+      else el.textContent = isFloat ? to.toFixed(1) : to.toLocaleString();
+    }
+    requestAnimationFrame(step);
+  }
+
+  // Intercept DOM text changes on metric vals
+  const ids = ['d-uptime', 'd-rate', 'd-books', 'd-execs'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const obs = new MutationObserver(() => {
+      const raw = parseFloat(el.textContent.replace(/[^0-9.]/g, ''));
+      if (!isNaN(raw)) animateCount(el, raw);
+    });
+    obs.observe(el, { childList: true, characterData: true, subtree: true });
+  });
+})();
+
+/* ── 5. Live activity feed on dashboard ── */
+(function() {
+  const VERBS  = ['ROUTE','FILL','PARTIAL','REJECT','SPLIT'];
+  const VENUES = ['NYSE','LSE','HKEX','TSE','SSE','SZSE','TADAWUL'];
+  const SYMS   = ['AAPL','TSLA','BABA','NVDA','AMZN','MSFT','GOOG','META'];
+  const SIDES  = ['BUY','SELL'];
+
+  function ts() {
+    return new Date().toTimeString().slice(0,8);
+  }
+
+  function ensureFeed() {
+    const dash = document.getElementById('tab-dashboard');
+    if (!dash || dash.querySelector('#activity-feed')) return;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'card overflow-hidden';
+    wrapper.style.marginTop = '16px';
+    wrapper.innerHTML = '<div class="sec-hdr" style="display:flex;align-items:center;gap:8px;">' +
+      '<span class="dot dot-live" style="width:6px;height:6px"></span>Live Activity Feed</div>' +
+      '<div id="activity-feed"></div>';
+    dash.appendChild(wrapper);
+  }
+
+  function addRow(side, sym, qty, venue, verb) {
+    const feed = document.getElementById('activity-feed');
+    if (!feed) return;
+    const row = document.createElement('div');
+    row.className = 'af-row';
+    const cls = (verb === 'REJECT') ? 'af-sys' : (side === 'BUY' ? 'af-buy' : 'af-sell');
+    row.innerHTML =
+      '<span class="af-time">' + ts() + '</span>' +
+      '<span class="af-badge ' + cls + '">' + (verb || side) + '</span>' +
+      '<span style="font-weight:700;color:var(--text)">' + sym + '</span>' +
+      '<span style="color:var(--muted)">×' + qty.toLocaleString() + '</span>' +
+      '<span style="margin-left:auto;color:var(--muted);font-size:10px">' + venue + '</span>';
+    feed.insertBefore(row, feed.firstChild);
+    if (feed.children.length > 12) feed.removeChild(feed.lastChild);
+  }
+
+  function simulate() {
+    const side  = SIDES[Math.random() < 0.6 ? 0 : 1];
+    const sym   = SYMS[Math.floor(Math.random() * SYMS.length)];
+    const qty   = Math.round((Math.random() * 9000 + 500) / 100) * 100;
+    const venue = VENUES[Math.floor(Math.random() * VENUES.length)];
+    const verb  = VERBS[Math.floor(Math.random() * VERBS.length)];
+    addRow(side, sym, qty, venue, verb);
+  }
+
+  setTimeout(() => {
+    ensureFeed();
+    // seed with a few rows
+    for (let i = 0; i < 5; i++) simulate();
+    setInterval(simulate, 1800 + Math.random() * 1200);
+  }, 800);
+})();
+
+/* ── 6. Header chip live glow ── */
+(function() {
+  function pulseChi() {
+    document.querySelectorAll('.hdr-chip').forEach(c => {
+      c.classList.add('live-chip');
+      setTimeout(() => c.classList.remove('live-chip'), 800);
+    });
+  }
+  setInterval(pulseChi, 3000);
+})();
+
+/* ── 7. Nav item staggered appear ── */
+(function() {
+  document.querySelectorAll('.nav-item').forEach((el, i) => {
+    el.style.animationDelay = (i * 35) + 'ms';
+  });
+})();
+
+/* ── 8. Score bars gradient always ── */
+(function() {
+  // Override bar fill colors set by JS to use gradient
+  const orig = document.createElement;
+  const barObs = new MutationObserver(() => {
+    document.querySelectorAll('.bar-fill').forEach(el => {
+      if (!el.style.background.includes('gradient')) {
+        el.style.background = 'linear-gradient(90deg, #3b82f6, #a78bfa)';
+        el.style.boxShadow = '0 0 6px rgba(59,130,246,0.4)';
+      }
+    });
+  });
+  barObs.observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+
 </body>
 </html>
