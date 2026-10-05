@@ -52,31 +52,38 @@ async def lifespan(app: FastAPI):
     from app_state import init_app_state
     logger.info("Pan SORFIX starting...")
     try:
-        init_app_state()  # simulate flag driven by sor_config.yaml
-    except RuntimeError as exc:
-        logger.critical("Startup failed — check configs/: %s", exc)
+        state = init_app_state(start_pipelines=False)
+    except Exception as exc:
+        logger.critical("Startup failed: %s", exc, exc_info=True)
         raise
-    logger.info("App state initialized. Market data pipeline running.")
+    _md_tasks = [
+        asyncio.create_task(state.pipeline.run_async(), name="market-data"),
+        asyncio.create_task(state.fx_md.run_async(),    name="fx-md"),
+        asyncio.create_task(state.bond_md.run_async(),  name="bond-md"),
+    ]
+    logger.info("App state initialized. Asyncio market data tasks running.")
     yield
+    for t in _md_tasks:
+        t.cancel()
+    await asyncio.gather(*_md_tasks, return_exceptions=True)
     from app_state import get_app_state, reset_app_state
     try:
-        state = get_app_state()
+        s = get_app_state()
     except RuntimeError:
-        pass  # startup failed — nothing to clean up
+        pass
     else:
-        state.pipeline.stop()
         try:
-            state.db.close()
+            s.db.close()
         except Exception as exc:
             logger.warning("DB close error: %s", exc)
-        for fn in (state.gse.disconnect, state.jse.disconnect,
-                   state.ngx.disconnect, state.nse.disconnect,
-                   state.cse.disconnect, state.egx.disconnect,
-                   state.brvm.disconnect, state.bse.disconnect,
-                   state.nsx.disconnect, state.sem.disconnect,
-                   state.mse.disconnect, state.bvmt.disconnect,
-                   state.dse.disconnect, state.zse.disconnect,
-                   state.luse.disconnect):
+        for fn in (s.gse.disconnect, s.jse.disconnect,
+                   s.ngx.disconnect, s.nse.disconnect,
+                   s.cse.disconnect, s.egx.disconnect,
+                   s.brvm.disconnect, s.bse.disconnect,
+                   s.nsx.disconnect, s.sem.disconnect,
+                   s.mse.disconnect, s.bvmt.disconnect,
+                   s.dse.disconnect, s.zse.disconnect,
+                   s.luse.disconnect):
             try:
                 fn()
             except Exception as exc:
