@@ -178,7 +178,7 @@ def _load_sor_config(raw: dict) -> dict:
         raise RuntimeError(f"sor_config.yaml is malformed: {exc}") from exc
 
 
-def init_app_state(simulate: bool = None) -> AppState:
+def init_app_state(simulate: bool = None, start_pipelines: bool = True) -> AppState:
     global _state
     with _init_lock:
         if _state is not None:
@@ -276,7 +276,8 @@ def init_app_state(simulate: bool = None) -> AppState:
             nse_in = NSEINAdapter(); nse_in.connect();  adapters_connected.append(nse_in)
             euronext = EURONEXTAdapter(); euronext.connect(); adapters_connected.append(euronext)
 
-            pipeline.start()
+            if start_pipelines:
+                pipeline.start()
         except Exception:
             for adapter in reversed(adapters_connected):
                 try:
@@ -410,8 +411,9 @@ def init_app_state(simulate: bool = None) -> AppState:
         # Multi-asset market data simulation
         _state.fx_md   = FXMarketData(update_interval=5.0)
         _state.bond_md = BondMarketData(update_interval=30.0)
-        _state.fx_md.start()
-        _state.bond_md.start()
+        if start_pipelines:
+            _state.fx_md.start()
+            _state.bond_md.start()
 
         return _state
 

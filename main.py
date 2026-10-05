@@ -109,6 +109,11 @@ def run_server(port: int = None):
 
     # workers > 1 uses uvicorn multiprocess supervisor (Linux/production).
     # workers == 1 runs in-process — no subprocess race on stdout, simpler on Windows.
+    try:
+        import uvloop as _uvloop  # noqa: F401
+        _event_loop = "uvloop"
+    except ImportError:
+        _event_loop = "auto"
     uvicorn.run(
         "api.gateway:app",
         host=host,
@@ -116,6 +121,7 @@ def run_server(port: int = None):
         workers=workers if workers > 1 else None,
         reload=False,
         log_level="info",
+        loop=_event_loop,
     )
 
 

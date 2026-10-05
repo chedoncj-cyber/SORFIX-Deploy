@@ -126,6 +126,25 @@ class MarketDataPipeline:
         if self._thread:
             self._thread.join(timeout=5)
 
+    async def run_async(self):
+        """Run as an asyncio task — cooperative sleep releases event loop between ticks."""
+        import asyncio
+        with self._lock:
+            if self._running:
+                return
+            self._running = True
+        loop = asyncio.get_running_loop()
+        try:
+            while self._running:
+                try:
+                    await loop.run_in_executor(None, self._tick)
+                except Exception:
+                    logger.exception("MarketDataPipeline _tick() error")
+                await asyncio.sleep(self.update_interval)
+        finally:
+            with self._lock:
+                self._running = False
+
     def _run(self):
         while self._running:
             try:
@@ -215,6 +234,21 @@ class BondMarketData:
     def stop(self):
         self._running = False
 
+    async def run_async(self):
+        """Run as an asyncio task — cooperative sleep releases event loop between ticks."""
+        import asyncio
+        self._running = True
+        loop = asyncio.get_running_loop()
+        try:
+            while self._running:
+                try:
+                    await loop.run_in_executor(None, self._tick)
+                except Exception:
+                    logger.exception("BondMarketData _tick() error")
+                await asyncio.sleep(self._interval)
+        finally:
+            self._running = False
+
     def get_yield(self, isin: str) -> Optional[float]:
         with self._lock:
             return self._yields.get(isin.upper())
@@ -261,6 +295,21 @@ class FXMarketData:
 
     def stop(self):
         self._running = False
+
+    async def run_async(self):
+        """Run as an asyncio task — cooperative sleep releases event loop between ticks."""
+        import asyncio
+        self._running = True
+        loop = asyncio.get_running_loop()
+        try:
+            while self._running:
+                try:
+                    await loop.run_in_executor(None, self._tick)
+                except Exception:
+                    logger.exception("FXMarketData _tick() error")
+                await asyncio.sleep(self._interval)
+        finally:
+            self._running = False
 
     def get_rate(self, pair: str) -> Optional[float]:
         pair = pair.replace("/", "").upper()

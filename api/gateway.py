@@ -52,28 +52,35 @@ async def lifespan(app: FastAPI):
     from app_state import init_app_state
     logger.info("World SORFIX starting...")
     try:
-        init_app_state()  # simulate flag driven by sor_config.yaml
-    except RuntimeError as exc:
-        logger.critical("Startup failed — check configs/: %s", exc)
+        state = init_app_state(start_pipelines=False)
+    except Exception as exc:
+        logger.critical("Startup failed: %s", exc, exc_info=True)
         raise
-    logger.info("App state initialized. Market data pipeline running.")
+    _md_tasks = [
+        asyncio.create_task(state.pipeline.run_async(), name="market-data"),
+        asyncio.create_task(state.fx_md.run_async(),    name="fx-md"),
+        asyncio.create_task(state.bond_md.run_async(),  name="bond-md"),
+    ]
+    logger.info("App state initialized. Asyncio market data tasks running.")
     yield
+    for t in _md_tasks:
+        t.cancel()
+    await asyncio.gather(*_md_tasks, return_exceptions=True)
     from app_state import get_app_state, reset_app_state
     try:
-        state = get_app_state()
+        s = get_app_state()
     except RuntimeError:
-        pass  # startup failed — nothing to clean up
+        pass
     else:
-        state.pipeline.stop()
         try:
-            state.db.close()
+            s.db.close()
         except Exception as exc:
             logger.warning("DB close error: %s", exc)
-        for fn in (state.nyse.disconnect, state.lse.disconnect,
-                   state.hkex.disconnect, state.tse.disconnect,
-                   state.sse.disconnect, state.szse.disconnect,
-                   state.tadawul.disconnect, state.nse_in.disconnect,
-                   state.euronext.disconnect):
+        for fn in (s.nyse.disconnect, s.lse.disconnect,
+                   s.hkex.disconnect, s.tse.disconnect,
+                   s.sse.disconnect, s.szse.disconnect,
+                   s.tadawul.disconnect, s.nse_in.disconnect,
+                   s.euronext.disconnect):
             try:
                 fn()
             except Exception as exc:
