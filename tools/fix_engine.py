@@ -174,6 +174,60 @@ def build_ioi(
     return build_raw_fix(MSG_IOI, sender, target, fields, seq_num=seq_num)
 
 
+def build_quote_request(
+    req_id: str,
+    symbol: str,         # FX pair e.g. "EUR/USD"
+    currency: str,       # base currency e.g. "EUR"
+    quantity: float,
+    sender: str,
+    target: str,
+    settle_date: Optional[str] = None,
+    seq_num: int = 1,
+) -> bytes:
+    """FIX 5.0 QuoteRequest (35=R) — used to request FX spot/forward quotes."""
+    fields = [
+        (131, req_id),           # QuoteReqID
+        (146, 1),                # NoRelatedSym
+        (55,  symbol),           # Symbol
+        (167, "FOR"),            # SecurityType = Foreign Exchange
+        (38,  int(quantity)),    # OrderQty (base currency amount)
+        (15,  currency),         # Currency (base)
+        (63,  "0"),              # SettlType = Regular
+    ]
+    if settle_date:
+        fields.append((64, settle_date))
+    return build_raw_fix(b"R", sender, target, fields, seq_num=seq_num)
+
+
+def build_quote(
+    quote_id: str,
+    req_id: str,
+    symbol: str,
+    bid_px: Optional[float],
+    ask_px: Optional[float],
+    sender: str,
+    target: str,
+    currency: str = "USD",
+    settle_date: Optional[str] = None,
+    seq_num: int = 1,
+) -> bytes:
+    """FIX 5.0 Quote (35=S) — sends a two-way FX price quote back to the OMS."""
+    fields = [
+        (117, quote_id),         # QuoteID
+        (131, req_id),           # QuoteReqID
+        (55,  symbol),           # Symbol
+        (167, "FOR"),            # SecurityType
+        (15,  currency),         # Currency
+    ]
+    if bid_px is not None:
+        fields.append((132, f"{bid_px:.5f}"))  # BidPx
+    if ask_px is not None:
+        fields.append((133, f"{ask_px:.5f}"))  # OfferPx
+    if settle_date:
+        fields.append((64, settle_date))
+    return build_raw_fix(b"S", sender, target, fields, seq_num=seq_num)
+
+
 def build_market_data_request(
     req_id: str,
     symbol: str,

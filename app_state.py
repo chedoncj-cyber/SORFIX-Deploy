@@ -33,6 +33,8 @@ from tools.basket_engine   import BasketEngine
 from tools.drop_copy       import DropCopyEngine
 from tools.best_execution  import BestExecutionStore
 from tools.block_trade     import BlockTradeEngine
+from tools.oms_bridge      import OMSBridge
+from tools.market_data_pipeline import FXMarketData, BondMarketData
 from tools.venue_adapters.gse_adapter  import GSEAdapter
 from tools.venue_adapters.jse_adapter  import JSEAdapter
 from tools.venue_adapters.ngx_adapter  import NGXAdapter
@@ -86,6 +88,9 @@ class AppState:
     drop_copy:        DropCopyEngine = None
     best_exec:        BestExecutionStore = None
     block_trade:      BlockTradeEngine = None
+    oms_bridge:       OMSBridge = None
+    fx_md:            FXMarketData = None
+    bond_md:          BondMarketData = None
 
 
 _state: Optional[AppState] = None
@@ -389,6 +394,38 @@ def init_app_state(simulate: bool = None) -> AppState:
         _state.drop_copy        = DropCopyEngine()
         _state.best_exec        = BestExecutionStore()
         _state.block_trade      = BlockTradeEngine()
+
+        async def _oms_execute(order_dict: dict) -> dict:
+            from tools.smart_order_router import Order, OrderSide
+            import time as _t
+            _s = get_app_state()
+            o = Order(
+                symbol=order_dict.get("symbol", ""),
+                side=OrderSide(order_dict.get("side", "buy")),
+                quantity=order_dict.get("quantity", 0),
+                price=order_dict.get("price"),
+                base_currency=order_dict.get("base_currency", "USD"),
+            )
+            decision = _s.sor.route(o)
+            result   = _s.execution.execute(decision, o.side)
+            vwap = result.total_cost / result.total_filled if result.total_filled > 0 else None
+            if result.total_filled > 0 and vwap:
+                _s.positions.record_fill(o.symbol, o.side.value, result.total_filled, vwap)
+                _s.risk.record_fill(result.total_filled, vwap)
+            return {
+                "success": result.success,
+                "total_filled": result.total_filled,
+                "total_cost": result.total_cost,
+                "vwap": vwap,
+                "order_id": decision.order_id,
+            }
+
+        _state.oms_bridge = OMSBridge(execution_fn=_oms_execute)
+        _state.fx_md   = FXMarketData(update_interval=0.5)
+        _state.bond_md = BondMarketData(update_interval=5.0)
+        _state.fx_md.start()
+        _state.bond_md.start()
+
         return _state
 
 

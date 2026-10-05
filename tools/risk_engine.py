@@ -49,6 +49,9 @@ class RiskEngine:
         base_currency: str = "USD",
         last_trade_price: Optional[float] = None,
         current_position_qty: float = 0.0,
+        asset_class: str = "equity",
+        face_value: Optional[float] = None,   # bond: principal in USD
+        base_amount: Optional[float] = None,  # fx: base currency amount
     ) -> Optional[RiskViolation]:
         """Return a RiskViolation if the order fails pre-trade risk, else None."""
         if not self.config.enabled:
@@ -58,20 +61,26 @@ class RiskEngine:
             self._checks_total += 1
             self._maybe_reset_daily()
 
-            violation = (
-                self._check_qty(quantity)
-                or self._check_notional(quantity, price)
-                or self._check_price_band(price, last_trade_price)
-                or self._check_daily_notional(quantity, price)
-                or self._check_position(side, quantity, current_position_qty)
-            )
+            # Route to asset-class-specific notional computation
+            if asset_class == "bond":
+                violation = self._check_bond(face_value, price, side, quantity, current_position_qty)
+            elif asset_class == "fx":
+                violation = self._check_fx(base_amount, side, quantity, current_position_qty)
+            else:
+                violation = (
+                    self._check_qty(quantity)
+                    or self._check_notional(quantity, price)
+                    or self._check_price_band(price, last_trade_price)
+                    or self._check_daily_notional(quantity, price)
+                    or self._check_position(side, quantity, current_position_qty)
+                )
 
             if violation:
                 self._blocks_total += 1
                 logger.warning(
-                    "Risk block [%s] %s %s qty=%.0f price=%s: %s",
+                    "Risk block [%s] %s %s qty=%.0f price=%s asset=%s: %s",
                     symbol, side.upper(), violation.check,
-                    quantity, price, violation.detail,
+                    quantity, price, asset_class, violation.detail,
                 )
             return violation
 
@@ -170,6 +179,46 @@ class RiskEngine:
                 "max_position_qty",
                 f"projected position {projected:,.0f} would exceed limit "
                 f"±{self.config.max_position_qty:,.0f}",
+            )
+        return None
+
+    def _check_bond(
+        self, face_value: Optional[float], clean_price_pct: Optional[float],
+        side: str, quantity: float, current_qty: float,
+    ) -> Optional[RiskViolation]:
+        """Bond risk: notional based on face value × clean price / 100."""
+        if face_value is None:
+            return RiskViolation("bond_face_value", "face_value is required for bond orders")
+        notional = face_value * (clean_price_pct / 100.0) if clean_price_pct else face_value
+        if notional > self.config.max_order_notional:
+            return RiskViolation(
+                "max_order_notional",
+                f"bond notional {notional:,.2f} exceeds limit {self.config.max_order_notional:,.2f}",
+            )
+        projected = self._daily_notional + notional
+        if projected > self.config.max_daily_notional:
+            return RiskViolation(
+                "max_daily_notional",
+                f"projected daily notional {projected:,.2f} would exceed limit {self.config.max_daily_notional:,.2f}",
+            )
+        return None
+
+    def _check_fx(
+        self, base_amount: Optional[float], side: str,
+        quantity: float, current_qty: float,
+    ) -> Optional[RiskViolation]:
+        """FX risk: notional = base_amount (quantity in base currency)."""
+        amount = base_amount if base_amount is not None else quantity
+        if amount > self.config.max_order_notional:
+            return RiskViolation(
+                "max_order_notional",
+                f"FX base amount {amount:,.0f} exceeds limit {self.config.max_order_notional:,.0f}",
+            )
+        projected = self._daily_notional + amount
+        if projected > self.config.max_daily_notional:
+            return RiskViolation(
+                "max_daily_notional",
+                f"projected daily FX notional {projected:,.0f} would exceed {self.config.max_daily_notional:,.0f}",
             )
         return None
 
