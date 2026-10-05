@@ -156,3 +156,131 @@ class MarketDataPipeline:
                 "venues": list(VENUE_SYMBOLS.keys()),
                 "symbols_per_venue": {v: len(s) for v, s in VENUE_SYMBOLS.items()},
             }
+
+
+# ── Bond yield simulation ──────────────────────────────────────────────────────
+# Mid yield in %, vol in bps/day  (GBM on yield, not price)
+
+SIMULATED_BONDS: dict = {
+    # ISIN: {country, coupon_pct, maturity_yr, mid_yield_pct, vol_bps}
+    "US912810TM85": {"country": "USA",    "coupon": 4.50, "mat": 10, "yield": 4.45, "vol": 2.0},
+    "US912810TM86": {"country": "USA",    "coupon": 3.75, "mat": 30, "yield": 4.62, "vol": 2.5},
+    "GB00BN65WP19": {"country": "UK",     "coupon": 3.25, "mat": 10, "yield": 4.15, "vol": 2.2},
+    "DE0001102580": {"country": "GER",    "coupon": 2.50, "mat": 10, "yield": 2.68, "vol": 1.8},
+    "GH0000000XXX": {"country": "GHANA",  "coupon": 15.5, "mat": 5,  "yield": 15.3, "vol": 8.0},
+    "NG0000000XXX": {"country": "NIGERIA","coupon": 17.8, "mat": 7,  "yield": 17.6, "vol": 10.0},
+    "ZA0006970756": {"country": "SA",     "coupon": 8.00, "mat": 10, "yield": 8.25, "vol": 4.0},
+    "KE2000007778": {"country": "KENYA",  "coupon": 13.5, "mat": 5,  "yield": 13.2, "vol": 6.0},
+}
+
+# ── FX rate simulation ─────────────────────────────────────────────────────────
+# Spot rate vs USD, annualised vol
+
+SIMULATED_FX_RATES: dict = {
+    "EURUSD": {"rate": 1.0875, "vol": 0.06},
+    "GBPUSD": {"rate": 1.2720, "vol": 0.07},
+    "USDJPY": {"rate": 149.50, "vol": 0.08},
+    "USDCHF": {"rate": 0.8950, "vol": 0.05},
+    "AUDUSD": {"rate": 0.6580, "vol": 0.09},
+    "USDCAD": {"rate": 1.3620, "vol": 0.06},
+    "NZDUSD": {"rate": 0.6030, "vol": 0.10},
+    "USDZAR": {"rate": 18.55,  "vol": 0.14},
+    "USDGHS": {"rate": 14.20,  "vol": 0.18},
+    "USDNGN": {"rate": 1580.0, "vol": 0.22},
+    "USDKES": {"rate": 131.50, "vol": 0.12},
+    "USDBRL": {"rate": 4.97,   "vol": 0.16},
+    "USDINR": {"rate": 83.40,  "vol": 0.07},
+    "USDMXN": {"rate": 17.15,  "vol": 0.12},
+}
+
+
+class BondMarketData:
+    """
+    Simulates bond yield/price updates via GBM on yield.
+    In production: subscribe to a Bloomberg or Refinitiv bond data feed.
+    """
+
+    def __init__(self, update_interval: float = 5.0):
+        self._yields: dict = {isin: d["yield"] for isin, d in SIMULATED_BONDS.items()}
+        self._lock = threading.Lock()
+        self._interval = update_interval
+        self._running = False
+        self._thread: threading.Thread = None
+
+    def start(self):
+        self._running = True
+        self._thread = threading.Thread(target=self._run, daemon=True, name="BondMD")
+        self._thread.start()
+
+    def stop(self):
+        self._running = False
+
+    def get_yield(self, isin: str) -> Optional[float]:
+        with self._lock:
+            return self._yields.get(isin.upper())
+
+    def get_rate_snapshot(self) -> dict:
+        with self._lock:
+            return dict(self._yields)
+
+    def _run(self):
+        while self._running:
+            self._tick()
+            time.sleep(self._interval)
+
+    def _tick(self):
+        dt = self._interval / 86_400  # fraction of trading day
+        with self._lock:
+            for isin, data in SIMULATED_BONDS.items():
+                vol_bps = data["vol"] * 0.0001  # bps → decimal
+                z = random.gauss(0.0, 1.0)
+                # Random walk on yield (arithmetic, not GBM — yields can go near zero)
+                self._yields[isin] = max(
+                    0.01,
+                    self._yields[isin] + vol_bps * math.sqrt(dt) * z * 100
+                )
+
+
+class FXMarketData:
+    """
+    Simulates FX spot rate updates via GBM.
+    In production: subscribe to an ECN (EBS, Reuters Matching, or LMAX feed).
+    """
+
+    def __init__(self, update_interval: float = 0.5):
+        self._rates: dict = {pair: d["rate"] for pair, d in SIMULATED_FX_RATES.items()}
+        self._lock = threading.Lock()
+        self._interval = update_interval
+        self._running = False
+        self._thread: threading.Thread = None
+
+    def start(self):
+        self._running = True
+        self._thread = threading.Thread(target=self._run, daemon=True, name="FXMD")
+        self._thread.start()
+
+    def stop(self):
+        self._running = False
+
+    def get_rate(self, pair: str) -> Optional[float]:
+        pair = pair.replace("/", "").upper()
+        with self._lock:
+            return self._rates.get(pair)
+
+    def get_rate_snapshot(self) -> dict:
+        with self._lock:
+            return dict(self._rates)
+
+    def _run(self):
+        while self._running:
+            self._tick()
+            time.sleep(self._interval)
+
+    def _tick(self):
+        dt = self._interval / (252 * 6.5 * 3600)  # fraction of trading year
+        with self._lock:
+            for pair, data in SIMULATED_FX_RATES.items():
+                vol = data["vol"]
+                z = random.gauss(0.0, 1.0)
+                gbm = math.exp(-0.5 * vol**2 * dt + vol * math.sqrt(dt) * z)
+                self._rates[pair] = max(0.0001, self._rates[pair] * gbm)
