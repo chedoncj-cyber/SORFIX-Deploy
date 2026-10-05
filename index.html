@@ -931,6 +931,8 @@
           <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg>Basket Trading</span>
           <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Best Execution</span>
           <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>FIX Drop Copy</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>OMS/EMS Bridge</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Multi-Asset</span>
         </div>
         <div class="exchange-pills" style="margin-top:12px;">
           <span class="pill pill-pan">🇬🇭 GSE · GHS</span>
@@ -971,6 +973,8 @@
           <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg>Basket Trading</span>
           <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Best Execution</span>
           <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>FIX Drop Copy</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>OMS/EMS Bridge</span>
+          <span class="pf-tag new-feat"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Multi-Asset</span>
         </div>
         <div class="exchange-pills" style="margin-top:12px;">
           <span class="pill pill-world">🇺🇸 NYSE · USD</span>
@@ -1232,6 +1236,33 @@
       <div class="feat-tooltip"><div class="feat-tooltip-title">Compliance Stream</div>Every order event — submission, acknowledgement, fill, rejection — is simultaneously copied to your compliance system in real time via FIX. Your surveillance team sees every trade as it happens, without connecting directly to the exchange or writing custom integrations.</div>
     </div>
 
+    <!-- OMS/EMS Integration -->
+    <div class="feat reveal">
+      <div class="feat-icon-svg" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+      </div>
+      <h3>OMS/EMS Integration <span class="feat-hint">?</span></h3>
+      <p>Native Bloomberg EMSX, Charles River, Fidessa, and FlexTrade connectivity. REST inbound + FIX acceptor. Async ExecutionReport webhooks.</p>
+      <div class="feat-tooltip"><div class="feat-tooltip-title">Buy-Side Bridge</div>SORFIX connects directly to your existing Order Management System. Bloomberg EMSX orders arrive via FIX custom tags 9003–9061 and are routed through the SOR. Fills return as FIX ExecutionReports and async webhook callbacks — zero workflow disruption for your desk.</div>
+    </div>
+
+    <!-- Multi-Asset Support -->
+    <div class="feat reveal">
+      <div class="feat-icon-svg" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75">
+          <line x1="12" y1="1" x2="12" y2="23"/>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+      </div>
+      <h3>Multi-Asset Support <span class="feat-hint">?</span></h3>
+      <p>Bonds (accrued interest, dirty price, YTM), FX spot/forward/NDF — including African EM pairs USDGHS, USDNGN, USDZAR, USDKES. All over FIX 5.0.</p>
+      <div class="feat-tooltip"><div class="feat-tooltip-title">Beyond Equities</div>Route fixed-income and FX orders through the same SOR that handles equities. Bond orders automatically compute accrued interest and dirty price. FX orders support spot, forward tenors, and NDF for restricted EM currencies — a capability no other African SOR currently offers.</div>
+    </div>
+
   </div><!-- /.features-grid institutional -->
 </section>
 
@@ -1345,6 +1376,8 @@
     <div class="ct-row"><div>TWAP / VWAP Algos</div><div class="ck">✓</div><div class="ck">✓</div></div>
     <div class="ct-row"><div>Pre-Trade Risk Engine</div><div class="ck">✓</div><div class="ck">✓</div></div>
     <div class="ct-row"><div>Crypto Payments</div><div class="ck">✓ Coinbase Commerce</div><div class="ck">✓ Coinbase Commerce</div></div>
+    <div class="ct-row"><div>OMS/EMS Integration</div><div class="ck">✓ EMSX · CRD · Fidessa</div><div class="ck">✓ EMSX · CRD · Fidessa · Generic FIX</div></div>
+    <div class="ct-row"><div>Multi-Asset (Bonds + FX)</div><div class="ck">✓ Bonds · FX Spot/Fwd</div><div class="ck">✓ Bonds · FX + African EM Pairs</div></div>
   </div>
 </section>
 
