@@ -1,7 +1,16 @@
 # FIX Session Management Workflow
 
 ## Objective
-Establish, maintain, and gracefully close FIX 4.2 sessions with each African exchange.
+Establish, maintain, and gracefully close FIX 5.0 SP2 / FIXT.1.1 sessions with each exchange.
+
+## Protocol Version
+| Field | Value | Notes |
+|-------|-------|-------|
+| BeginString (tag 8) | `FIXT.1.1` | FIXT transport layer — replaces `FIX.4.2` |
+| ApplVerID (tag 1128) | `9` | FIX50SP2 — present on every application message |
+| DefaultApplVerID (tag 1137) | `9` | Set once in Logon message |
+
+All message construction is in `tools/fix_engine.py`. The version constants `FIX_VERSION` and `APPL_VER_ID` are the single source of truth — do not hard-code version strings elsewhere.
 
 ## FIX Session Lifecycle
 ```
