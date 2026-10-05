@@ -3244,7 +3244,7 @@ function buildRolesGrid() {
   venues.forEach(v => {
     (TOP_COMPANIES[v] || []).forEach(c => {
       if (search && !c.n.toLowerCase().includes(search) && !c.t.toLowerCase().includes(search)) return;
-      companies.push({ ticker: c.t, name: c.n, sector: c.s || '', venue: v, website: c.w || '' });
+      companies.push({ ticker: c.t, name: c.n, sector: c.s || '—', venue: v, website: c.w || '' });
     });
   });
 
@@ -3316,6 +3316,7 @@ function openRolesPanel(ticker, name) {
 }
 
 function closeRolesPanel() {
+}
 
 // ── END LIVE ROLES ────────────────────────────────────────────────────────────
 
