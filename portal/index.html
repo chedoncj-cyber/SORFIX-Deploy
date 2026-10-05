@@ -1154,42 +1154,7 @@
   </div>
 
   <!-- Company card grid -->
-  <div id="roles-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:14px;margin-bottom:24px"></div>
-
-  <!-- Careers panel — appears below grid after selecting a company -->
-  <div id="roles-panel" style="display:none">
-    <!-- Panel header -->
-    <div id="roles-panel-hdr" class="card p-4 mb-0" style="border-bottom-left-radius:0;border-bottom-right-radius:0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-      <div style="display:flex;align-items:center;gap:14px">
-        <div id="roles-panel-badge" style="width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff"></div>
-        <div>
-          <div id="roles-panel-name"  style="font-size:16px;font-weight:800;color:var(--text)"></div>
-          <div id="roles-panel-meta"  style="font-size:11px;color:var(--muted);margin-top:2px"></div>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <a id="roles-panel-website" href="#" target="_blank" rel="noopener noreferrer" style="display:none;padding:9px 16px;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:#60a5fa;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap">
-          🌐 Visit Website ↗
-        </a>
-        <a id="roles-panel-link" href="#" target="_blank" rel="noopener noreferrer"
-          style="padding:9px 20px;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#6366f1);color:#fff;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;box-shadow:0 3px 12px rgba(124,58,237,0.4)">
-          Open Careers Page &#8599;
-        </a>
-        <button onclick="closeRolesPanel()" style="padding:9px 14px;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer">✕ Close</button>
-      </div>
-    </div>
-    <!-- Embed note + iframe -->
-    <div class="card" style="border-top:none;border-top-left-radius:0;border-top-right-radius:0;padding:0;overflow:hidden">
-      <div id="roles-embed-note" style="padding:10px 18px;background:#1e1b4b;border-bottom:1px solid rgba(99,102,241,0.3);font-size:12px;color:#a5b4fc;display:flex;align-items:center;gap:10px">
-        <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-        If the page does not load below, click <strong style="color:#fff;margin:0 4px">Open Careers Page ↗</strong> to open it directly in a new tab.
-      </div>
-      <iframe id="roles-iframe" src="about:blank"
-        style="width:100%;height:calc(100vh - 320px);min-height:580px;border:none;background:#fff;display:block"
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-        title="Company Careers"></iframe>
-    </div>
-  </div>
+  <div id="roles-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px"></div>
 
 </div>
 
@@ -3151,20 +3116,32 @@ function buildRolesGrid() {
   }
 
   grid.innerHTML = companies.map(c => {
-    const vc      = VENUE_COLORS[c.venue] || { bg:'#374151' };
+    const vc       = VENUE_COLORS[c.venue] || { bg:'#374151' };
     const initials = c.ticker.slice(0, 3);
-    const isSelected = c.ticker === _selectedRoleTicker;
-    const hasCareer  = !!CAREERS[c.ticker];
+    const career   = CAREERS[c.ticker];
+    const url      = career ? career.url : _careersUrl(c.ticker, c.name);
+    const flag     = career ? (career.flag || '') : '';
+    const country  = career ? (career.country || '') : '';
     return `
-      <div class="role-card${isSelected ? ' selected' : ''}" onclick="openRolesPanel('${c.ticker}','${c.name.replace(/'/g,"\\'")}','${c.venue}','${c.sector}','${c.website.replace(/'/g,"\\'")}')">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div class="role-initials" style="background:${vc.bg}">${initials}</div>
-          <span class="role-exbadge role-exbadge-${c.venue}">${c.venue}</span>
+      <div class="role-card" style="display:flex;flex-direction:column;gap:10px;cursor:default">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="display:flex;align-items:center;gap:9px">
+            <div class="role-initials" style="background:${vc.bg};flex-shrink:0">${initials}</div>
+            <span class="role-exbadge role-exbadge-${c.venue}">${c.venue}</span>
+          </div>
+          ${flag ? `<span style="font-size:18px;line-height:1" title="${country}">${flag}</span>` : ''}
         </div>
-        <div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.3;min-height:36px">${c.name}</div>
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">${c.sector}</div>
-        ${c.website ? `<a href="${c.website}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="font-size:10px;color:#60a5fa;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:block;margin-top:2px" title="${c.website}">🌐 Visit Website ↗</a>` : ''}
-        <div class="role-view-btn" style="margin-top:6px">${hasCareer ? 'View Roles ↗' : 'Search Roles ↗'}</div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.35">${c.name}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:0.05em">${c.sector}</div>
+          ${country ? `<div style="font-size:10px;color:var(--muted);margin-top:1px">${country}</div>` : ''}
+        </div>
+        <a href="${url}" target="_blank" rel="noopener noreferrer"
+          style="margin-top:auto;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#6366f1);color:#fff;font-size:12px;font-weight:700;text-decoration:none;box-shadow:0 3px 10px rgba(124,58,237,0.35);transition:opacity 0.15s"
+          onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          ${career ? 'View Roles' : 'Search Roles'}
+        </a>
       </div>`;
   }).join('');
 }
@@ -3181,46 +3158,13 @@ function filterRolesGrid() {
   buildRolesGrid();
 }
 
-function openRolesPanel(ticker, name, venue, sector, website) {
-  _selectedRoleTicker = ticker;
-  buildRolesGrid(); // re-render to mark selected card
-
-  const career    = CAREERS[ticker];
-  const url       = career ? career.url : _careersUrl(ticker, name);
-  const label     = career ? career.label : (name + ' — Job Search');
-  const vc        = VENUE_COLORS[venue] || { bg:'#374151' };
-  const initials  = ticker.slice(0, 3);
-  const flag      = career ? (career.flag || '') : '';
-  const country   = career ? (career.country || venue) : venue;
-
-  document.getElementById('roles-panel-badge').textContent  = initials;
-  document.getElementById('roles-panel-badge').style.background = vc.bg;
-  document.getElementById('roles-panel-name').textContent   = name;
-  document.getElementById('roles-panel-meta').innerHTML     =
-    `${flag} ${country} &nbsp;·&nbsp; ${venue} &nbsp;·&nbsp; ${sector}`;
-  document.getElementById('roles-panel-link').href = url;
-  document.getElementById('roles-panel-link').title = label;
-  document.getElementById('roles-iframe').src = url;
-
-  // Show or hide "Visit Website" button
-  const webBtn = document.getElementById('roles-panel-website');
-  if (webBtn) {
-    if (website) { webBtn.href = website; webBtn.style.display = ''; }
-    else { webBtn.style.display = 'none'; }
-  }
-
-  const panel = document.getElementById('roles-panel');
-  panel.style.display = '';
-  // Smooth scroll to panel
-  setTimeout(() => panel.scrollIntoView({ behavior:'smooth', block:'start' }), 80);
+function openRolesPanel(ticker, name) {
+  const career = CAREERS[ticker];
+  const url    = career ? career.url : _careersUrl(ticker, name);
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 function closeRolesPanel() {
-  document.getElementById('roles-panel').style.display = 'none';
-  document.getElementById('roles-iframe').src = 'about:blank';
-  _selectedRoleTicker = null;
-  buildRolesGrid();
-}
 
 // ── END LIVE ROLES ────────────────────────────────────────────────────────────
 
