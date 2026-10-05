@@ -34,6 +34,9 @@ from api.routes.best_exec_routes import router as best_exec_router
 from api.routes.block_trade_routes import router as block_trade_router
 from api.routes.oms_routes       import router as oms_router
 from api.routes.multi_asset      import router as multi_asset_router
+from api.routes.payment        import router as payment_router
+from api.routes.stripe_payment import router as stripe_payment_router
+from api.routes.config         import router as config_router
 
 _log_level = getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), logging.INFO)
 logging.basicConfig(
@@ -143,7 +146,10 @@ app.add_middleware(
 async def auth_and_rate_limit(request: Request, call_next):
     # Skip auth/rate-limit for health, docs, portal, root
     skip_paths = {"/", "/health", "/ready", "/portal", "/docs",
-                  "/openapi.json", "/redoc"}
+                  "/openapi.json", "/redoc",
+                  "/api/config",
+                  "/api/payment/create-charge",
+                  "/api/payment/create-payment-intent"}
     if request.url.path in skip_paths or request.url.path.startswith("/ws"):
         return await call_next(request)
 
@@ -193,6 +199,9 @@ app.include_router(best_exec_router)
 app.include_router(block_trade_router)
 app.include_router(oms_router)
 app.include_router(multi_asset_router)
+app.include_router(payment_router)
+app.include_router(stripe_payment_router)
+app.include_router(config_router)
 
 
 @app.get("/portal", include_in_schema=False)
