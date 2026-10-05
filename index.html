@@ -899,7 +899,7 @@
   <div class="stat-item reveal"><div class="stat-num c-purple" data-prefix="< " data-count="1" data-suffix="ms">0</div><div class="stat-label">Routing Latency</div></div>
   <div class="stat-item reveal"><div class="stat-num c-gold" data-count="8">0</div><div class="stat-label">Live Exchanges</div></div>
   <div class="stat-item reveal"><div class="stat-num c-blue" data-count="6">0</div><div class="stat-label">Scoring Factors</div></div>
-  <div class="stat-item reveal"><div class="stat-num c-green">FIX 4.2</div><div class="stat-label">Protocol</div></div>
+  <div class="stat-item reveal"><div class="stat-num c-green" style="font-size:13px;letter-spacing:.5px">FIXT.1.1</div><div class="stat-label">Protocol</div></div>
 </div>
 
 <!-- PRODUCTS -->
@@ -1002,7 +1002,7 @@
   <div class="steps">
     <div class="step reveal"><div class="step-connector"></div><div class="step-num">1</div><div class="step-icon-svg" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25)"><svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><h3>Order Received <span class="step-hint">?</span></h3><p>REST API validates the order via Pydantic v2, pre-trade risk checks fire, and the order enters the routing engine.</p><div class="step-tooltip"><div class="step-tooltip-title">📋 Summary</div>Think of clicking "Buy" on a stock. The system instantly checks: Is the order valid? Do you have the funds? Is the quantity within safe limits? If every check passes, the order moves into the queue. If anything fails, it's rejected right away with a clear reason — nothing moves forward until everything is verified.</div></div>
     <div class="step reveal"><div class="step-connector"></div><div class="step-num">2</div><div class="step-icon-svg" style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25)"><svg viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><h3>Venue Scored <span class="step-hint">?</span></h3><p>6-factor scoring evaluates liquidity, spread, FX cost, fee, latency and reliability across all enabled venues.</p><div class="step-tooltip"><div class="step-tooltip-title">🧠 Summary</div>Before buying, the system scouts every available stock exchange — like comparing prices across multiple shops. Each exchange gets graded on 6 things: how much stock is available, how tight the price gap is, currency conversion cost, trading fees, how fast it responds, and how reliable it is. The highest-scoring exchanges go to the top of the list.</div></div>
-    <div class="step reveal"><div class="step-connector"></div><div class="step-num">3</div><div class="step-icon-svg" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25)"><svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 8 13 13 13 8 21"/></svg></div><h3>Smart Routing <span class="step-hint">?</span></h3><p>Proportional allocation splits the order across top-scoring venues. All legs execute in parallel via FIX 4.2.</p><div class="step-tooltip"><div class="step-tooltip-title">⚡ Summary</div>Instead of buying all your shares from one exchange, the system splits your order across the top-ranked exchanges — like buying in bulk from multiple suppliers to get the best overall deal. All the pieces execute at the same time, so it's fast. The results are then combined into one clean purchase summary for you.</div></div>
+    <div class="step reveal"><div class="step-connector"></div><div class="step-num">3</div><div class="step-icon-svg" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25)"><svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 8 13 13 13 8 21"/></svg></div><h3>Smart Routing <span class="step-hint">?</span></h3><p>Proportional allocation splits the order across top-scoring venues. All legs execute in parallel via FIX 5.0 SP2 / FIXT.1.1, with ApplVerID on every message.</p><div class="step-tooltip"><div class="step-tooltip-title">⚡ Summary</div>Instead of buying all your shares from one exchange, the system splits your order across the top-ranked exchanges — like buying in bulk from multiple suppliers to get the best overall deal. All the pieces execute at the same time, so it's fast. The results are then combined into one clean purchase summary for you.</div></div>
     <div class="step reveal"><div class="step-num">4</div><div class="step-icon-svg" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25)"><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><h3>Fill Confirmed <span class="step-hint">?</span></h3><p>Execution reports arrive, positions update, TCA data is stored. Fill ratio, VWAP and slippage are returned.</p><div class="step-tooltip"><div class="step-tooltip-title">✅ Summary</div>Your purchase is done. The system collects confirmation receipts from every exchange used, calculates the average price you paid across all the splits, checks how close it got to the ideal price, and hands back a full report: how many shares were bought, at what average price, and exactly how long the whole thing took — start to finish.</div></div>
   <!-- ROUTE VISUALISATION -->
   <div class="route-viz reveal">
@@ -1337,7 +1337,7 @@
     <div class="ct-row"><div>Listed Companies</div><div class="ck">284</div><div class="ck">246</div></div>
     <div class="ct-row"><div>6-Factor SOR Engine</div><div class="ck">✓</div><div class="ck">✓</div></div>
     <div class="ct-row"><div>GBM Price Simulation</div><div class="ck">✓</div><div class="ck">✓</div></div>
-    <div class="ct-row"><div>FIX 4.2 Adapters</div><div class="ck">✓ (GSE·JSE·NGX·NSE)</div><div class="ck">✓ (NYSE·LSE·HKEX·TSE)</div></div>
+    <div class="ct-row"><div>FIX 5.0 SP2 Adapters</div><div class="ck">✓ (GSE·JSE·NGX·NSE)</div><div class="ck">✓ (NYSE·LSE·HKEX·TSE)</div></div>
     <div class="ct-row"><div>FX Cost Model</div><div class="ck">PAPSS (8–20 bps)</div><div>Global (USD/GBP/HKD/JPY)</div></div>
     <div class="ct-row"><div>Settlement Cycle</div><div>T+3 (African standard)</div><div>T+1 NYSE · T+2 LSE·HKEX·TSE</div></div>
     <div class="ct-row"><div>Avg Routing Latency</div><div class="ck">~6ms</div><div class="ck">&lt;1ms (NYSE)</div></div>
@@ -1385,7 +1385,7 @@
     <a href="http://localhost:9090/docs" target="_blank">Pan API Docs</a>
     <a href="http://localhost:9091/docs" target="_blank">World API Docs</a>
   </div>
-  <p>Pan SORFIX v3.0 · World SORFIX v1.0 · FIX 4.2 Protocol · Powered by Coinbase Commerce</p>
+  <p>Pan SORFIX v3.0 · World SORFIX v1.0 · FIX 5.0 SP2 / FIXT.1.1 · Powered by Coinbase Commerce</p>
   <p style="margin-top:8px;font-size:11px;">© 2026 SORFIX. All Rights Reserved. Proprietary and confidential.</p>
 </footer>
 
@@ -2079,7 +2079,7 @@ pollStatus(); setInterval(pollStatus, 10000);
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       Connect to Exchanges Now
     </a>
-    <p style="margin-top:14px;font-size:13px;color:var(--muted);">FIX 4.2 native · No broker integration required · Runs on Render.com</p>
+    <p style="margin-top:14px;font-size:13px;color:var(--muted);">FIX 5.0 SP2 / FIXT.1.1 · No broker integration required · Runs on Render.com</p>
   </div>
 
 </section><!-- /#connectivity -->
