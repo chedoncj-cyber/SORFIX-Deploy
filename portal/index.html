@@ -2850,7 +2850,7 @@ const CAREERS = {
   // NYSE
   AAPL        : { name:'Apple Inc.', venue:'NYSE', country:'United States', flag:'🇺🇸', url:'https://www.apple.com/careers/us/', label:'Apple Inc. Careers' , website:'https://www.apple.com' },
   MSFT        : { name:'Microsoft Corporation', venue:'NYSE', country:'United States', flag:'🇺🇸', url:'https://careers.microsoft.com/', label:'Microsoft Corporation Careers' , website:'https://www.att.com' },
-  GOOGL       : { name:'Alphabet Inc.', venue:'NYSE', country:'United States', flag:'🇺🇸', url:'https://careers.google.com/', label:'Alphabet Inc. Careers' , website:'https://about.google' },
+  GOOGL       : { name:'Alphabet Inc.', venue:'NYSE', country:'United States', flag:'🇺🇸', url:'https://careers.google.com/', label:'Alphabet Inc. Careers' , website:'https://www.google.com' },
   AMZN        : { name:'Amazon.com Inc.', venue:'NYSE', country:'United States', flag:'🇺🇸', url:'https://www.amazon.jobs/', label:'Amazon.com Inc. Careers' , website:'https://www.amazon.com' },
   META        : { name:'Meta Platforms Inc.', venue:'NYSE', country:'United States', flag:'🇺🇸', url:'https://www.metacareers.com/', label:'Meta Platforms Inc. Careers' , website:'https://www.meta.com' },
   NVDA        : { name:'NVIDIA Corporation', venue:'NYSE', country:'United States', flag:'🇺🇸', url:'https://www.nvidia.com/en-us/about-nvidia/careers/', label:'NVIDIA Corporation Careers' , website:'https://www.nvidia.com' },
@@ -3273,11 +3273,11 @@ const VENUE_COLORS = {
   LUSE: { bg:'#78350F', pill:'roles-pill-luse' },
 };
 
-// For companies without a CAREERS entry, fall back to a LinkedIn/Google search
+// For companies without a CAREERS entry, fall back to Google Jobs search
 function _careersUrl(ticker, companyName) {
   if (CAREERS[ticker]) return CAREERS[ticker].url;
-  const q = encodeURIComponent(companyName + ' careers jobs');
-  return `https://www.google.com/search?q=${q}`;
+  const q = encodeURIComponent(companyName + ' jobs careers');
+  return 'https://www.google.com/search?q=' + q + '&ibp=htl;jobs';
 }
 
 let _rolesExchange  = 'ALL';
