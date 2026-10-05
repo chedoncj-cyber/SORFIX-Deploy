@@ -613,7 +613,7 @@
     </div>
     <div>
       <label>Symbol</label>
-      <select id="b-symbol" style="width:150px" disabled></select>
+      <select id="b-symbol" onchange="onSymbolChange()" style="width:150px" disabled></select>
     </div>
     <button class="btn btn-primary" onclick="connectBook()">Connect</button>
     <button class="btn btn-ghost"   onclick="disconnectBook(true)">Disconnect</button>
@@ -1660,6 +1660,7 @@ let wsConn        = null;
 let wsVenue       = '', wsSymbol = '', wsIntentional = false;
 let wsRetryDelay  = 3000, wsRetryTimer = null;
 let allSymbols    = {};
+const _compCache  = {}; // pre-built company dropdown HTML per venue
 let historyCache  = [];
 let priceHistory  = [];
 let prevMdCount   = 0, prevMdTime = Date.now();
@@ -1765,34 +1766,70 @@ async function pollHealth() {
 }
 
 // ── Symbol catalog ────────────────────────────────────────────────────────────
+function _buildCompCache() {
+  Object.keys(TOP_COMPANIES).forEach(venue => {
+    const tcList  = TOP_COMPANIES[venue] || [];
+    const nameMap = {};
+    tcList.forEach(c => { nameMap[c.t] = { n: c.n, s: c.s || '' }; });
+    const apiTickers = (allSymbols[venue] || []).filter(t => !nameMap[t]);
+    apiTickers.forEach(t => { nameMap[t] = { n: t, s: '' }; });
+    const ordered    = tcList.map(c => c.t);
+    const extras     = apiTickers.filter(t => !ordered.includes(t)).sort();
+    const allTickers = [...ordered, ...extras];
+    _compCache[venue] =
+      `<option value="">— ${venue} companies (${allTickers.length}) —</option>` +
+      allTickers.map(t => {
+        const info   = nameMap[t];
+        const label  = info && info.n !== t ? `${t} — ${info.n}` : t;
+        const sector = info && info.s ? ` [${info.s}]` : '';
+        return `<option value="${t}">${label}${sector}</option>`;
+      }).join('');
+  });
+}
+
+function _applySymbols() {
+  const allKnown = new Set(Object.values(allSymbols).flat());
+  Object.values(TOP_COMPANIES).flat().forEach(c => allKnown.add(c.t));
+  document.getElementById('symbol-list').innerHTML =
+    [...allKnown].map(s => `<option value="${s}">`).join('');
+  document.getElementById('d-symbols').innerHTML =
+    Object.entries(allSymbols).map(([venue, syms]) => {
+      const active = new Set(syms);
+      const others = (TOP_COMPANIES[venue] || []).filter(c => !active.has(c.t));
+      const selectHtml = others.length ? `
+        <div style="margin-top:10px">
+          <select style="font-size:11px;padding:5px 8px;border-radius:6px;background:var(--surface);border:1px solid var(--border);color:var(--muted);width:100%;cursor:pointer;outline:none"
+                  onchange="selectOtherSymbol('${venue}', this.value); this.selectedIndex=0">
+            <option value="">Find other ${venue} stock…</option>
+            ${others.map(c => `<option value="${c.t}">${c.t} — ${c.n}</option>`).join('')}
+          </select>
+        </div>` : '';
+      return `
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#60a5fa;margin-bottom:8px">${venue}</div>
+          ${syms.map(s => `<div style="font-size:12px;padding:2px 0;color:var(--muted)">${s}</div>`).join('')}
+          ${selectHtml}
+        </div>`;
+    }).join('');
+  renderChips();
+  _buildCompCache();
+}
+
 async function loadSymbols() {
+  const CACHE_KEY = 'sorfix_sym_v1';
+  const CACHE_TTL = 5 * 60 * 1000;
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (raw) {
+      const { ts, data } = JSON.parse(raw);
+      if (Date.now() - ts < CACHE_TTL) { allSymbols = data; _applySymbols(); }
+    }
+  } catch {}
   try {
     const r = await fetch('/market-data/symbols');
     allSymbols = await r.json();
-    const allKnown = new Set(Object.values(allSymbols).flat());
-    Object.values(TOP_COMPANIES).flat().forEach(c => allKnown.add(c.t));
-    document.getElementById('symbol-list').innerHTML =
-      [...allKnown].map(s => `<option value="${s}">`).join('');
-    document.getElementById('d-symbols').innerHTML =
-      Object.entries(allSymbols).map(([venue, syms]) => {
-        const active = new Set(syms);
-        const others = (TOP_COMPANIES[venue] || []).filter(c => !active.has(c.t));
-        const selectHtml = others.length ? `
-          <div style="margin-top:10px">
-            <select style="font-size:11px;padding:5px 8px;border-radius:6px;background:var(--surface);border:1px solid var(--border);color:var(--muted);width:100%;cursor:pointer;outline:none"
-                    onchange="selectOtherSymbol('${venue}', this.value); this.selectedIndex=0">
-              <option value="">Find other ${venue} stock…</option>
-              ${others.map(c => `<option value="${c.t}">${c.t} — ${c.n}</option>`).join('')}
-            </select>
-          </div>` : '';
-        return `
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#60a5fa;margin-bottom:8px">${venue}</div>
-            ${syms.map(s => `<div style="font-size:12px;padding:2px 0;color:var(--muted)">${s}</div>`).join('')}
-            ${selectHtml}
-          </div>`;
-      }).join('');
-    renderChips();
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: allSymbols })); } catch {}
+    _applySymbols();
   } catch {}
 }
 
@@ -1842,28 +1879,15 @@ function onSubmitExchangeChange(prefix) {
     return;
   }
 
-  // PRIMARY: TOP_COMPANIES always available (284 companies, named) — no API dependency
-  const tcList  = TOP_COMPANIES[venue] || [];
-  const nameMap = {};
-  tcList.forEach(c => { nameMap[c.t] = { n: c.n, s: c.s || '' }; });
-
-  // MERGE: add any live API tickers not already in TOP_COMPANIES
-  const apiTickers = (allSymbols[venue] || []).filter(t => !nameMap[t]);
-  apiTickers.forEach(t => { nameMap[t] = { n: t, s: '' }; });
-
-  // Sort: TOP_COMPANIES order (original listing order), then any extras A-Z
-  const ordered = tcList.map(c => c.t);
-  const extras  = apiTickers.filter(t => !ordered.includes(t)).sort();
-  const allTickers = [...ordered, ...extras];
-
-  compSel.innerHTML =
-    `<option value="">— ${venue} companies (${allTickers.length}) —</option>` +
-    allTickers.map(t => {
-      const info  = nameMap[t];
-      const label = info && info.n !== t ? `${t} — ${info.n}` : t;
-      const sector = info && info.s ? ` [${info.s}]` : '';
-      return `<option value="${t}">${label}${sector}</option>`;
-    }).join('');
+  if (_compCache[venue]) {
+    compSel.innerHTML = _compCache[venue];
+  } else {
+    compSel.innerHTML =
+      `<option value="">— ${venue} companies —</option>` +
+      (TOP_COMPANIES[venue] || []).map(c =>
+        `<option value="${c.t}">${c.t} — ${c.n}${c.s ? ' ['+c.s+']' : ''}</option>`
+      ).join('');
+  }
 
   compSel.disabled = false;
   compSel.value = '';
@@ -1909,12 +1933,20 @@ async function _applySubmitSelection(prefix, venue, ticker) {
     document.getElementById('o-co-ask').textContent    = '…';
     document.getElementById('o-co-spread').textContent = '…';
     infoDiv.style.display = '';
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
     try {
-      const bk = await fetch(`/market-data/book/${venue}/${ticker}`).then(r => r.json());
+      const bk = await fetch(`/market-data/book/${venue}/${ticker}`, {signal:ctrl.signal}).then(r => r.json());
+      clearTimeout(t);
       document.getElementById('o-co-bid').textContent    = bk.best_bid != null ? Number(bk.best_bid).toFixed(4) : '—';
       document.getElementById('o-co-ask').textContent    = bk.best_ask != null ? Number(bk.best_ask).toFixed(4) : '—';
       document.getElementById('o-co-spread').textContent = bk.spread   != null ? (bk.spread*10000).toFixed(1)+'bps' : '—';
-    } catch(_) {}
+    } catch(_) {
+      clearTimeout(t);
+      document.getElementById('o-co-bid').textContent    = '—';
+      document.getElementById('o-co-ask').textContent    = '—';
+      document.getElementById('o-co-spread').textContent = '—';
+    }
   } else {
     const nm = document.getElementById(`${prefix}-co-name`);
     const mt = document.getElementById(`${prefix}-co-meta`);
@@ -1928,12 +1960,21 @@ async function _applySubmitSelection(prefix, venue, ticker) {
 function onVenueChange() {
   const venue = document.getElementById('b-venue').value;
   const sel   = document.getElementById('b-symbol');
-  sel.innerHTML = '<option value="">Select…</option>';
   if (venue && allSymbols[venue]) {
-    allSymbols[venue].forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
+    sel.innerHTML = '<option value="">Select…</option>' +
+      allSymbols[venue].map(s => `<option value="${s}">${s}</option>`).join('');
     sel.disabled = false;
-  } else { sel.disabled = true; }
+  } else {
+    sel.innerHTML = '<option value="">Select…</option>';
+    sel.disabled = true;
+  }
   disconnectBook(true);
+}
+
+function onSymbolChange() {
+  const venue  = document.getElementById('b-venue').value;
+  const symbol = document.getElementById('b-symbol').value;
+  if (venue && symbol) connectBook();
 }
 
 function disconnectBook(intentional=true) {
@@ -1954,6 +1995,8 @@ function connectBook() {
   const symbol = document.getElementById('b-symbol').value;
   if (!venue || !symbol) { toast('Select a venue and symbol first.', 'err'); return; }
   wsVenue = venue; wsSymbol = symbol; wsIntentional = false;
+  fetch(`/market-data/book/${venue}/${symbol}`)
+    .then(r => r.json()).then(d => { if (!d.status) renderBook(d); }).catch(() => {});
   _openWs(venue, symbol);
 }
 
@@ -3402,7 +3445,8 @@ function onApplyCompanyChange() {
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 (async function init() {
-  await Promise.all([loadSymbols(), pollHealth()]);
+  loadSymbols(); // fire & forget — uses localStorage cache instantly, fetches fresh in background
+  await pollHealth();
   setInterval(pollHealth, 3000);
   setInterval(() => {
     if (!document.getElementById('tab-history').classList.contains('hidden'))   loadHistory();
