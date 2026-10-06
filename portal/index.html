@@ -67,8 +67,8 @@
     .nav-item.active { background: var(--accent-g); color: var(--accent); border-color: rgba(59,130,246,0.22); }
     .nav-item.active .nsvg { stroke: var(--accent); }
     .nsvg { width: 15px; height: 15px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
-    .nav-badge { margin-left: auto; background: var(--accent); color: #fff; border-radius: 10px; font-size: 10px; font-weight: 700; padding: 1px 6px; line-height: 1.6; }
-    .nav-halt  { margin-left: auto; background: rgba(239,68,68,0.2); color: #f87171; border-radius: 5px; font-size: 9px; font-weight: 900; padding: 2px 6px; letter-spacing: 0.05em; }
+    .nav-badge { margin-left: auto; background: var(--accent); color: #fff; border-radius: 10px; font-size: 12px; font-weight: 700; padding: 1px 6px; line-height: 1.6; }
+    .nav-halt  { margin-left: auto; background: rgba(239,68,68,0.2); color: #f87171; border-radius: 5px; font-size: 11px; font-weight: 900; padding: 2px 6px; letter-spacing: 0.05em; }
     .sb-footer { margin-top: auto; padding: 12px 16px; border-top: 1px solid var(--border); }
 
     /* ── Main ── */
@@ -81,16 +81,16 @@
     /* ── Metric cards ── */
     .metric { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; position: relative; overflow: hidden; transition: border-color 0.2s; }
     .metric:hover { border-color: rgba(59,130,246,0.3); }
-    .metric-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
-    .metric-val { font-size: 30px; font-weight: 900; line-height: 1; }
-    .metric-sub { font-size: 11px; margin-top: 6px; color: var(--muted); }
+    .metric-lbl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+    .metric-val { font-size: 32px; font-weight: 900; line-height: 1; }
+    .metric-sub { font-size: 13px; margin-top: 6px; color: var(--muted); }
 
     /* ── Venue cards ── */
     .venue-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; transition: border-color 0.15s; }
     .venue-card:hover { border-color: rgba(59,130,246,0.3); }
 
     /* ── Live Roles ── */
-    .roles-pill { padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.14s; }
+    .roles-pill { padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;transition:all 0.14s; }
     .roles-pill:hover { border-color:rgba(167,139,250,0.5);color:var(--text); }
     .roles-pill-active, .roles-pill.active-pill { background:rgba(167,139,250,0.15);border-color:#a78bfa;color:#a78bfa; }
     .roles-pill-nyse.active-pill  { background:rgba(34,197,94,0.12);border-color:#4ade80;color:#4ade80; }
@@ -100,8 +100,8 @@
     .role-card { background:#0b1630;border:1px solid rgba(59,130,246,0.18);border-radius:12px;padding:18px 16px;cursor:pointer;transition:all 0.16s;display:flex;flex-direction:column;gap:8px; }
     .role-card:hover { border-color:rgba(96,165,250,0.45);background:#0f1f4a;transform:translateY(-2px);box-shadow:0 6px 24px rgba(15,31,74,0.5); }
     .role-card.selected { border-color:#60a5fa;background:rgba(96,165,250,0.08); }
-    .role-initials { width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0; }
-    .role-exbadge { display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:800;letter-spacing:0.06em; }
+    .role-initials { width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;flex-shrink:0; }
+    .role-exbadge { display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:800;letter-spacing:0.06em; }
     .role-exbadge-NYSE { background:rgba(34,197,94,0.2);color:#4ade80; }
     .role-exbadge-LSE  { background:rgba(96,165,250,0.2);color:#60a5fa; }
     .role-exbadge-HKEX { background:rgba(248,113,113,0.2);color:#f87171; }
@@ -116,11 +116,11 @@
     .role-exbadge-TADAWUL  { background:rgba(34,197,94,0.2);color:#4ade80; }
     .role-exbadge-NSE_IN   { background:rgba(251,191,36,0.2);color:#fbbf24; }
     .role-exbadge-EURONEXT { background:rgba(99,102,241,0.2);color:#818cf8; }
-    .role-view-btn { margin-top:auto;padding:7px 0;border-radius:7px;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.25);color:#a78bfa;font-size:11px;font-weight:700;text-align:center;transition:all 0.14s; }
+    .role-view-btn { margin-top:auto;padding:7px 0;border-radius:7px;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.25);color:#a78bfa;font-size:13px;font-weight:700;text-align:center;transition:all 0.14s; }
     .role-card:hover .role-view-btn { background:rgba(167,139,250,0.22);border-color:#a78bfa; }
 
     /* ── Sec header ── */
-    .sec-hdr { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    .sec-hdr { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 12px 16px; border-bottom: 1px solid var(--border); }
 
     /* ── Dots ── */
     .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
@@ -131,7 +131,7 @@
     .dot-live { background: #4ade80; animation: live-pulse 1.6s ease-in-out infinite; }
 
     /* ── Badges ── */
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 700; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 13px; font-weight: 700; }
     .badge-green  { background: rgba(34,197,94,0.15);   color: #4ade80; }
     .badge-red    { background: rgba(239,68,68,0.15);   color: #f87171; }
     .badge-yellow { background: rgba(245,158,11,0.15);  color: #fde047; }
@@ -141,7 +141,7 @@
     .badge-purple { background: rgba(167,139,250,0.15); color: #c4b5fd; }
 
     /* ── Buttons ── */
-    .btn { padding: 8px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: inherit; font-size: 13px; border: 1px solid transparent; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn { padding: 8px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: inherit; font-size: 14px; border: 1px solid transparent; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
     .btn:hover:not(:disabled) { opacity: 0.84; transform: translateY(-1px); }
     .btn:active:not(:disabled) { transform: translateY(0); }
     .btn:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -158,14 +158,14 @@
     .kill-resume:hover { background: rgba(34,197,94,0.18); border-color: #22c55e; box-shadow: 0 0 32px rgba(34,197,94,0.18); }
 
     /* ── Inputs ── */
-    input, select { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 9px 12px; width: 100%; outline: none; font-family: inherit; font-size: 13px; transition: border-color 0.14s, box-shadow 0.14s; }
+    input, select { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 9px 12px; width: 100%; outline: none; font-family: inherit; font-size: 14px; transition: border-color 0.14s, box-shadow 0.14s; }
     input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.10); }
-    label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 6px; }
+    label { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 6px; }
 
     /* ── Tables ── */
     table { border-collapse: collapse; width: 100%; }
-    th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 10px 12px; }
-    td { padding: 9px 12px; font-size: 12px; border-bottom: 1px solid var(--border); }
+    th { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 10px 12px; }
+    td { padding: 9px 12px; font-size: 14px; border-bottom: 1px solid var(--border); }
     tr:last-child td { border-bottom: none; }
     tbody tr { transition: background 0.1s; }
     tbody tr:hover td { background: rgba(59,130,246,0.04); }
@@ -179,13 +179,13 @@
     .bar-fill { border-radius: 3px; height: 5px; transition: width 0.4s ease; }
 
     /* ── Chips ── */
-    .chip { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 11px; font-weight: 700; padding: 3px 9px; color: var(--muted); transition: all 0.12s; }
+    .chip { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700; padding: 3px 9px; color: var(--muted); transition: all 0.12s; }
     .chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-g); }
     .chip.active { border-color: var(--accent); background: var(--accent-g); color: var(--accent); }
 
     /* ── Toasts ── */
     #toast-root { position: fixed; bottom: 22px; right: 22px; z-index: 9999; display: flex; flex-direction: column-reverse; gap: 8px; pointer-events: none; }
-    .toast { padding: 12px 18px; border-radius: 9px; font-size: 12px; font-weight: 600; pointer-events: all; min-width: 240px; max-width: 340px; opacity: 0; transform: translateX(24px); transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
+    .toast { padding: 12px 18px; border-radius: 9px; font-size: 14px; font-weight: 600; pointer-events: all; min-width: 240px; max-width: 340px; opacity: 0; transform: translateX(24px); transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
     .toast.show { opacity: 1; transform: none; }
     .toast-ok   { background: rgba(22,163,74,0.95);  color: #fff; border: 1px solid rgba(74,222,128,0.3); }
     .toast-err  { background: rgba(185,28,28,0.95);  color: #fff; border: 1px solid rgba(248,113,113,0.3); }
@@ -193,15 +193,15 @@
     .toast-warn { background: rgba(217,119,6,0.95);  color: #fff; border: 1px solid rgba(251,191,36,0.3); }
 
     /* ── MiniCombo ── */
-    .mc-inp { width:100%; background:var(--surface); border:1px solid var(--border); border-radius:7px; color:var(--text); font-family:inherit; font-size:13px; font-weight:600; padding:5px 9px; outline:none; cursor:pointer; transition:border-color .12s; }
+    .mc-inp { width:100%; background:var(--surface); border:1px solid var(--border); border-radius:7px; color:var(--text); font-family:inherit; font-size:14px; font-weight:600; padding:5px 9px; outline:none; cursor:pointer; transition:border-color .12s; }
     .mc-inp:focus { border-color:var(--accent); background:var(--card2); }
     .mc-inp:disabled { opacity:.4; cursor:not-allowed; }
     .mc-inp-bare { background:transparent !important; border:none !important; border-bottom:1px solid transparent !important; border-radius:0 !important; padding:2px 0 !important; }
     .mc-inp-bare:focus { border-bottom-color:var(--border) !important; background:transparent !important; }
     .mc-drop { position:absolute; left:0; right:0; top:calc(100% + 3px); background:var(--card2); border:1px solid var(--border); border-radius:8px; max-height:220px; overflow-y:auto; z-index:300; box-shadow:0 8px 28px rgba(0,0,0,.6); }
-    .mc-item { padding:6px 10px; font-size:12px; cursor:pointer; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mc-item { padding:6px 10px; font-size:14px; cursor:pointer; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .mc-item:hover, .mc-item.mc-focus { background:var(--accent-g); color:var(--accent); }
-    .mc-empty { padding:8px 10px; font-size:11px; color:var(--muted); }
+    .mc-empty { padding:8px 10px; font-size:13px; color:var(--muted); }
 
     /* ── Animations ── */
     .fade-in { animation: fadeIn 0.22s ease; }
@@ -1747,11 +1747,13 @@ function _applySymbols() {
   Object.values(TOP_COMPANIES).flat().forEach(c => allKnown.add(c.t));
   document.getElementById('symbol-list').innerHTML =
     [...allKnown].map(s => `<option value="${s}">`).join('');
-  document.getElementById('d-symbols').innerHTML =
-    Object.entries(allSymbols).map(([venue, syms]) => {
-      const active = new Set(syms);
-      const others = (TOP_COMPANIES[venue] || []).filter(c => !active.has(c.t));
-      const selectHtml = others.length ? `
+  _buildCompItems(); // pre-warm company item arrays — runs first so combos are ready immediately
+  setTimeout(function() {
+    document.getElementById('d-symbols').innerHTML =
+      Object.entries(allSymbols).map(([venue, syms]) => {
+        const active = new Set(syms);
+        const others = (TOP_COMPANIES[venue] || []).filter(c => !active.has(c.t));
+        const selectHtml = others.length ? `
         <div style="margin-top:10px">
           <select style="font-size:11px;padding:5px 8px;border-radius:6px;background:var(--surface);border:1px solid var(--border);color:var(--muted);width:100%;cursor:pointer;outline:none"
                   onchange="selectOtherSymbol('${venue}', this.value); this.selectedIndex=0">
@@ -1759,15 +1761,15 @@ function _applySymbols() {
             ${others.map(c => `<option value="${c.t}">${c.t} — ${c.n}</option>`).join('')}
           </select>
         </div>` : '';
-      return `
+        return `
         <div>
           <div style="font-size:11px;font-weight:700;color:#60a5fa;margin-bottom:8px">${venue}</div>
           ${syms.map(s => `<div style="font-size:12px;padding:2px 0;color:var(--muted)">${s}</div>`).join('')}
           ${selectHtml}
         </div>`;
-    }).join('');
-  renderChips();
-  _buildCompItems(); // pre-warm company item arrays with live symbol data
+      }).join('');
+    renderChips();
+  }, 0);
 }
 
 async function loadSymbols() {
@@ -4124,7 +4126,7 @@ async function submitFXOrder() {
     requestAnimationFrame(draw);
   }
   window.addEventListener('resize', resize);
-  init(); draw();
+  init(); // draw loop intentionally not started — canvas is hidden
 })();
 
 /* ── 2. 3D tilt on metric + venue cards ── */
