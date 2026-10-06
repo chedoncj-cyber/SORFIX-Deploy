@@ -1942,8 +1942,12 @@ async function _applySubmitSelection(prefix, venue, ticker) {
 // ── Live order book ───────────────────────────────────────────────────────────
 function onVenueChange() {
   const venue = document.getElementById('b-venue').value;
-  if (venue && allSymbols[venue]) {
-    _symCombo.setItems(allSymbols[venue].map(s => ({ v: s, l: s })));
+  // Fall back to TOP_COMPANIES tickers if API symbols not loaded yet
+  const syms = (allSymbols[venue] && allSymbols[venue].length)
+    ? allSymbols[venue]
+    : (TOP_COMPANIES[venue] || []).map(c => c.t);
+  if (venue && syms.length) {
+    _symCombo.setItems(syms.map(s => ({ v: s, l: s })));
     _symCombo.enable();
   } else {
     _symCombo.setItems([]);
@@ -3423,9 +3427,9 @@ function onApplyCompanyChange() {
 function MiniCombo(wrapId, placeholder, onSelect, opts) {
   const wrap = document.getElementById(wrapId);
   const MAX  = (opts && opts.maxItems) || 60;
-  let items  = [], _value = '', _label = '', _open = false, _fIdx = -1;
+  let items = [], _value = '', _label = '', _open = false, _fIdx = -1, _preHtml = '';
 
-  wrap.style.position = 'relative';
+  wrap.style.position = 'relative'; wrap.style.cursor = 'pointer';
   const inp = document.createElement('input');
   inp.type = 'text'; inp.autocomplete = 'off'; inp.spellcheck = false;
   inp.placeholder = placeholder || 'Search…';
@@ -3437,21 +3441,29 @@ function MiniCombo(wrapId, placeholder, onSelect, opts) {
   drop.className = 'mc-drop'; drop.style.display = 'none';
   wrap.appendChild(inp); wrap.appendChild(drop);
 
+  function _buildHtml(src) {
+    return src.length
+      ? src.map((x, i) => `<div class="mc-item" data-v="${x.v}" data-i="${i}">${x.l}</div>`).join('')
+      : `<div class="mc-empty">No items</div>`;
+  }
   function _render() {
     const q = inp.value.trim().toLowerCase();
-    const src = q ? items.filter(x => x.l.toLowerCase().includes(q)).slice(0, MAX)
-                  : items.slice(0, MAX);
-    if (!src.length) {
-      drop.innerHTML = `<div class="mc-empty">${q ? 'No matches' : 'No items'}</div>`;
-      _fIdx = -1; return;
+    if (!q) { drop.innerHTML = _preHtml; }
+    else {
+      const src = items.filter(x => x.l.toLowerCase().includes(q)).slice(0, MAX);
+      drop.innerHTML = src.length
+        ? src.map((x, i) => `<div class="mc-item" data-v="${x.v}" data-i="${i}">${x.l}</div>`).join('')
+        : `<div class="mc-empty">No matches</div>`;
     }
-    drop.innerHTML = src.map((x, i) =>
-      `<div class="mc-item" data-v="${x.v}" data-i="${i}">${x.l}</div>`).join('');
     _fIdx = -1;
   }
   function _openDrop() {
-    if (inp.disabled) return;
-    _open = true; _render(); drop.style.display = '';
+    if (inp.disabled || _open) return;
+    _open = true;
+    // Use pre-rendered HTML when no filter — pure display show, no DOM work
+    if (!inp.value.trim()) drop.innerHTML = _preHtml;
+    else _render();
+    drop.style.display = '';
   }
   function _closeDrop(kept) {
     _open = false; drop.style.display = 'none';
@@ -3471,6 +3483,10 @@ function MiniCombo(wrapId, placeholder, onSelect, opts) {
     els[_fIdx].scrollIntoView({ block: 'nearest' });
   }
 
+  // Click anywhere in the wrapper — not just the input — to open
+  wrap.addEventListener('mousedown', e => {
+    if (e.target !== inp && !inp.disabled) { e.preventDefault(); inp.focus(); _openDrop(); }
+  });
   inp.addEventListener('focus', _openDrop);
   inp.addEventListener('input', () => { if (_open) _render(); else _openDrop(); });
   inp.addEventListener('keydown', e => {
@@ -3491,11 +3507,16 @@ function MiniCombo(wrapId, placeholder, onSelect, opts) {
   });
 
   return {
-    setItems(arr) { items = arr || []; _value = ''; _label = ''; inp.value = ''; drop.style.display = 'none'; _open = false; },
+    setItems(arr) {
+      items = arr || []; _value = ''; _label = ''; inp.value = '';
+      _open = false; drop.style.display = 'none';
+      _preHtml = _buildHtml(items.slice(0, MAX)); // pre-render once — instant open
+      drop.innerHTML = _preHtml;
+    },
     getValue()    { return _value; },
     setValue(v, l){ _value = v; _label = l || v; inp.value = _label; },
     enable()      { inp.disabled = false; },
-    disable()     { inp.disabled = true; inp.value = ''; _value = ''; _label = ''; drop.style.display = 'none'; _open = false; items = []; },
+    disable()     { inp.disabled = true; inp.value = ''; _value = ''; _label = ''; _preHtml = ''; drop.innerHTML = ''; drop.style.display = 'none'; _open = false; items = []; },
     clear()       { _value = ''; _label = ''; inp.value = ''; },
   };
 }
