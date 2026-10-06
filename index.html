@@ -211,7 +211,7 @@
     .hero-badge .dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
     h1 { font-size:clamp(44px,7vw,84px); font-weight:900; line-height:1.05; letter-spacing:-2px; margin-bottom:24px; font-family:var(--font-display); }
-    h1 .grad { background:linear-gradient(135deg,#fff 0%,#60a5fa 50%,#a78bfa 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    h1 .grad { color: #f8fafc; }
     .hero-sub { font-size:clamp(16px,2.5vw,20px); color:var(--muted); max-width:580px; margin:0 auto 40px; line-height:1.7; }
     .hero-ctas { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
     canvas#particles { position:absolute; inset:0; z-index:0; }
@@ -279,7 +279,7 @@
     .step-num { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#3b82f6,#6366f1); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; margin:0 auto 16px; }
     .step-icon { font-size:28px; margin-bottom:12px; }
     .step h3 { font-size:15px; font-weight:700; margin-bottom:8px; }
-    .step p { font-size:13px; color:var(--muted); line-height:1.6; }
+    .step p { font-size:14px; color:var(--muted); line-height:1.65; }
     .step-connector { position:absolute; top:50%; right:-13px; transform:translateY(-50%); width:26px; height:2px; background:var(--border); z-index:1; }
     .step:last-child .step-connector { display:none; }
     .step-tooltip { position:absolute; bottom:calc(100% + 14px); left:50%; transform:translateX(-50%) translateY(6px); width:260px; background:#1a1f2e; border:1px solid var(--accent); border-radius:12px; padding:14px 16px; font-size:12px; line-height:1.65; color:var(--text); text-align:left; opacity:0; pointer-events:none; transition:opacity 0.22s,transform 0.22s; z-index:200; box-shadow:0 8px 32px rgba(0,0,0,0.55); }
@@ -299,7 +299,7 @@
     .feat:hover { transform:translateY(-2px); border-color:var(--accent); }
     .feat-icon { font-size:28px; margin-bottom:14px; }
     .feat h3 { font-size:16px; font-weight:700; margin-bottom:8px; }
-    .feat p { font-size:13px; color:var(--muted); line-height:1.6; }
+    .feat p { font-size:14px; color:var(--muted); line-height:1.65; }
 
     /* COMPARE */
     .compare-table { max-width:900px; margin:60px auto 0; border:1px solid var(--border); border-radius:16px; overflow:hidden; }
@@ -709,29 +709,13 @@
       -moz-osx-font-smoothing: grayscale;
     }
 
-    /* gradient h1 */
     h1 {
-      background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 25%, #a5f3fc 50%, #c4b5fd 80%, #e879f9 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 32px rgba(165,243,252,0.2));
-    }
-    /* fallback for browsers without background-clip:text */
-    @supports not (-webkit-background-clip: text) {
-      h1 { color: var(--text); background: none; filter: none; }
+      color: #f8fafc;
     }
 
-    /* gradient section-title */
     .section-title {
-      background: linear-gradient(120deg, #f1f5f9 0%, #cbd5e1 40%, #94a3b8 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #f1f5f9;
       letter-spacing: -0.02em;
-    }
-    @supports not (-webkit-background-clip: text) {
-      .section-title { color: var(--text); background: none; }
     }
 
     /* feature card h3 — bright white with cyan tint */
@@ -905,7 +889,6 @@
 <!-- PRODUCTS -->
 <section id="products" style="background:var(--bg);">
   <div class="reveal center" style="margin-bottom:60px;">
-    <div class="section-label">Our Products</div>
     <div class="section-title">Two Platforms. Every Market Covered.</div>
   </div>
   <div class="products">
@@ -999,7 +982,6 @@
 <!-- HOW IT WORKS -->
 <section id="how" class="how-section">
   <div class="center reveal">
-    <div class="section-label">How It Works</div>
     <div class="section-title">Order Lifecycle in 4 Steps</div>
     <p class="section-sub">From order submission to fill confirmation — all in under 10 milliseconds.</p>
   </div>
@@ -1116,7 +1098,6 @@
 <!-- FEATURES -->
 <section id="features" style="background:var(--bg);">
   <div class="center reveal">
-    <div class="section-label">Full Trading Suite</div>
     <div class="section-title">Core Infrastructure &amp; Institutional Grade Tools</div>
     <p class="section-sub" style="max-width:640px;margin:12px auto 0;color:var(--muted);font-size:15px;line-height:1.6;">From direct exchange routing to dark pool crossing — every capability an institutional desk requires, built into one system.</p>
   </div>
@@ -1269,7 +1250,6 @@
 <!-- PRICING -->
 <section id="pricing">
   <div class="center reveal">
-    <div class="section-label">Pricing</div>
     <div class="section-title">Simple, Transparent Access</div>
     <p class="section-sub">Ad-hoc access or monthly plans. Pay with crypto via Coinbase Commerce.</p>
   </div>
@@ -1359,7 +1339,6 @@
 <!-- COMPARE -->
 <section id="compare" style="background:var(--bg2);">
   <div class="center reveal">
-    <div class="section-label">Comparison</div>
     <div class="section-title">Pan SORFIX vs World SORFIX</div>
   </div>
   <div class="compare-table reveal">
@@ -1383,7 +1362,6 @@
 
 <!-- CTA -->
 <section class="cta-section">
-  <div class="section-label center">Get Started</div>
   <div class="section-title">Launch Your SORFIX Platform</div>
   <p class="section-sub center" style="margin:12px auto 0;">Open either portal or purchase access below. Pay with BTC, ETH, USDC and more.</p>
   <div class="cta-cards">
@@ -1981,7 +1959,6 @@ pollStatus(); setInterval(pollStatus, 10000);
 <!-- ═══ BROKER CONNECTIVITY & TRADE ROUTING ═══ -->
 <section id="connectivity" style="background:var(--bg2);padding:80px 0;">
   <div class="center reveal">
-    <div class="section-label">Trade Routing Architecture</div>
     <div class="section-title">Direct. Intelligent. No Broker Middleman.</div>
     <p class="section-sub" style="max-width:660px;margin:14px auto 0;color:var(--muted);font-size:15px;line-height:1.65;">
       Traditional networks like LSEG Autex Trade Route send your order through a broker layer before it reaches an exchange — adding latency, cost, and opacity at every step. SORFIX connects directly.
