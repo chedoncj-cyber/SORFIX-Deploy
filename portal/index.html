@@ -1789,11 +1789,13 @@ function _applySymbols() {
   Object.values(TOP_COMPANIES).flat().forEach(c => allKnown.add(c.t));
   document.getElementById('symbol-list').innerHTML =
     [...allKnown].map(s => `<option value="${s}">`).join('');
-  document.getElementById('d-symbols').innerHTML =
-    Object.entries(allSymbols).map(([venue, syms]) => {
-      const active = new Set(syms);
-      const others = (TOP_COMPANIES[venue] || []).filter(c => !active.has(c.t));
-      const selectHtml = others.length ? `
+  _buildCompItems(); // pre-warm company item arrays — runs first so combos are ready immediately
+  setTimeout(function() {
+    document.getElementById('d-symbols').innerHTML =
+      Object.entries(allSymbols).map(([venue, syms]) => {
+        const active = new Set(syms);
+        const others = (TOP_COMPANIES[venue] || []).filter(c => !active.has(c.t));
+        const selectHtml = others.length ? `
         <div style="margin-top:10px">
           <select style="font-size:11px;padding:5px 8px;border-radius:6px;background:var(--surface);border:1px solid var(--border);color:var(--muted);width:100%;cursor:pointer;outline:none"
                   onchange="selectOtherSymbol('${venue}', this.value); this.selectedIndex=0">
@@ -1801,15 +1803,15 @@ function _applySymbols() {
             ${others.map(c => `<option value="${c.t}">${c.t} — ${c.n}</option>`).join('')}
           </select>
         </div>` : '';
-      return `
+        return `
         <div>
           <div style="font-size:11px;font-weight:700;color:#60a5fa;margin-bottom:8px">${venue}</div>
           ${syms.map(s => `<div style="font-size:12px;padding:2px 0;color:var(--muted)">${s}</div>`).join('')}
           ${selectHtml}
         </div>`;
-    }).join('');
-  renderChips();
-  _buildCompItems();
+      }).join('');
+    renderChips();
+  }, 0);
 }
 
 async function loadSymbols() {
@@ -4102,7 +4104,7 @@ async function submitFXOrder() {
     requestAnimationFrame(draw);
   }
   window.addEventListener('resize', resize);
-  init(); draw();
+  init(); // draw loop intentionally not started — canvas is hidden
 })();
 
 /* ── 2. 3D tilt on metric + venue cards ── */
