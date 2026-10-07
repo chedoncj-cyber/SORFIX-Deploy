@@ -930,7 +930,7 @@
         </div>
       </div>
       <div class="product-footer">
-        <a href="http://localhost:9090/portal" target="_blank" class="btn btn-pan">Open Portal →</a>
+        <a href="https://pan-sorfix.onrender.com/portal" target="_blank" class="btn btn-pan">Open Portal →</a>
         <button class="btn btn-ghost" onclick="openPayModal('pan','day')">Buy Access</button>
       </div>
     </div>
@@ -972,7 +972,7 @@
         </div>
       </div>
       <div class="product-footer">
-        <a href="http://localhost:9091/portal" target="_blank" class="btn btn-world">Open Portal →</a>
+        <a href="https://world-sorfix.onrender.com/portal" target="_blank" class="btn btn-world">Open Portal →</a>
         <button class="btn btn-ghost" onclick="openPayModal('world','day')">Buy Access</button>
       </div>
     </div>
@@ -2094,5 +2094,23 @@ pollStatus(); setInterval(pollStatus, 10000);
 
 </section><!-- /#connectivity -->
 
+
+<script>
+/* Keep both SORFIX backends warm — prevents Render.com free-tier cold starts.
+   Pings /health every 10 minutes while the page is open. */
+(function keepWarm() {
+  var urls = [
+    'https://pan-sorfix.onrender.com/health',
+    'https://world-sorfix.onrender.com/health'
+  ];
+  function ping() {
+    urls.forEach(function(u) {
+      fetch(u, { mode: 'no-cors', cache: 'no-store' }).catch(function(){});
+    });
+  }
+  ping();
+  setInterval(ping, 10 * 60 * 1000);
+})();
+</script>
 </body>
 </html>
