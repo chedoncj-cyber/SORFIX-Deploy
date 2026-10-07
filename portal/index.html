@@ -198,7 +198,7 @@
     .mc-inp:disabled { opacity:.4; cursor:not-allowed; }
     .mc-inp-bare { background:transparent !important; border:none !important; border-bottom:1px solid transparent !important; border-radius:0 !important; padding:2px 0 !important; }
     .mc-inp-bare:focus { border-bottom-color:var(--border) !important; background:transparent !important; }
-    .mc-drop { position:absolute; left:0; right:0; top:calc(100% + 3px); background:var(--card2); border:1px solid var(--border); border-radius:8px; max-height:220px; overflow-y:auto; z-index:300; box-shadow:0 8px 28px rgba(0,0,0,.6); }
+    .mc-drop { position:absolute; left:0; right:0; top:calc(100% + 3px); background:var(--card2); border:1px solid var(--border); border-radius:8px; max-height:220px; overflow-y:auto; z-index:300; box-shadow:0 8px 28px rgba(0,0,0,.6); contain:content; will-change:transform; }
     .mc-item { padding:6px 10px; font-size:14px; cursor:pointer; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .mc-item:hover, .mc-item.mc-focus { background:var(--accent-g); color:var(--accent); }
     .mc-empty { padding:8px 10px; font-size:13px; color:var(--muted); }
@@ -1748,7 +1748,7 @@ function _applySymbols() {
   document.getElementById('symbol-list').innerHTML =
     [...allKnown].map(s => `<option value="${s}">`).join('');
   _buildCompItems(); // pre-warm company item arrays — runs first so combos are ready immediately
-  setTimeout(function() {
+  (window.requestIdleCallback || function(fn) { setTimeout(fn, 0); })(function() {
     document.getElementById('d-symbols').innerHTML =
       Object.entries(allSymbols).map(([venue, syms]) => {
         const active = new Set(syms);
@@ -1769,7 +1769,7 @@ function _applySymbols() {
         </div>`;
       }).join('');
     renderChips();
-  }, 0);
+  });
 }
 
 async function loadSymbols() {
@@ -3444,7 +3444,7 @@ function onApplyCompanyChange() {
 // ── MiniCombo — zero-write open path: setItems pre-populates DOM, open just shows ─
 function MiniCombo(wrapId, placeholder, onSelect, opts) {
   const wrap = document.getElementById(wrapId);
-  const MAX  = (opts && opts.maxItems) || 60;
+  const MAX  = (opts && opts.maxItems) || 30;
   let items = [], _value = '', _label = '', _open = false, _fIdx = -1, _preHtml = '', _domSynced = false;
 
   wrap.style.position = 'relative'; wrap.style.cursor = 'pointer';
