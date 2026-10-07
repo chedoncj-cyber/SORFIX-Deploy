@@ -3420,11 +3420,11 @@ function onApplyCompanyChange() {
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
-// ── MiniCombo — instant custom dropdown (replaces slow native <select>) ───────
+// ── MiniCombo — zero-write open path: setItems pre-populates DOM, open just shows ─
 function MiniCombo(wrapId, placeholder, onSelect, opts) {
   const wrap = document.getElementById(wrapId);
   const MAX  = (opts && opts.maxItems) || 60;
-  let items = [], _value = '', _label = '', _open = false, _fIdx = -1, _preHtml = '';
+  let items = [], _value = '', _label = '', _open = false, _fIdx = -1, _preHtml = '', _domSynced = false;
 
   wrap.style.position = 'relative'; wrap.style.cursor = 'pointer';
   const inp = document.createElement('input');
@@ -3445,22 +3445,23 @@ function MiniCombo(wrapId, placeholder, onSelect, opts) {
   }
   function _render() {
     const q = inp.value.trim().toLowerCase();
-    if (!q) { drop.innerHTML = _preHtml; }
-    else {
+    if (!q) {
+      if (!_domSynced) { drop.innerHTML = _preHtml; _domSynced = true; }
+    } else {
       const src = items.filter(x => x.l.toLowerCase().includes(q)).slice(0, MAX);
       drop.innerHTML = src.length
         ? src.map((x, i) => `<div class="mc-item" data-v="${x.v}" data-i="${i}">${x.l}</div>`).join('')
         : `<div class="mc-empty">No matches</div>`;
+      _domSynced = false;
     }
     _fIdx = -1;
   }
   function _openDrop() {
     if (inp.disabled || _open) return;
     _open = true;
-    // Use pre-rendered HTML when no filter — pure display show, no DOM work
-    if (!inp.value.trim()) drop.innerHTML = _preHtml;
-    else _render();
-    drop.style.display = '';
+    inp.value = ''; // clear so full list shows — restored by _closeDrop if nothing picked
+    if (!_domSynced) { drop.innerHTML = _preHtml; _domSynced = true; }
+    drop.style.display = ''; // no DOM write if setItems already pre-populated the list
   }
   function _closeDrop(kept) {
     _open = false; drop.style.display = 'none';
@@ -3507,13 +3508,13 @@ function MiniCombo(wrapId, placeholder, onSelect, opts) {
     setItems(arr) {
       items = arr || []; _value = ''; _label = ''; inp.value = '';
       _open = false; drop.style.display = 'none';
-      _preHtml = _buildHtml(items.slice(0, MAX)); // pre-render once — instant open
-      drop.innerHTML = _preHtml;
+      _preHtml = _buildHtml(items.slice(0, MAX));
+      drop.innerHTML = _preHtml; _domSynced = true; // pre-populate DOM — open costs nothing
     },
     getValue()    { return _value; },
     setValue(v, l){ _value = v; _label = l || v; inp.value = _label; },
     enable()      { inp.disabled = false; },
-    disable()     { inp.disabled = true; inp.value = ''; _value = ''; _label = ''; _preHtml = ''; drop.innerHTML = ''; drop.style.display = 'none'; _open = false; items = []; },
+    disable()     { inp.disabled = true; inp.value = ''; _value = ''; _label = ''; _preHtml = ''; drop.innerHTML = ''; _domSynced = false; drop.style.display = 'none'; _open = false; items = []; },
     clear()       { _value = ''; _label = ''; inp.value = ''; },
   };
 }
