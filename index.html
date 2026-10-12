@@ -128,7 +128,7 @@
     /* BUTTONS */
     .btn {
       padding:8px 20px; border-radius:8px; font-size:13px; font-weight:600;
-      cursor:pointer; transition:all 0.2s; text-decoration:none;
+      cursor:pointer; transition:opacity 0.18s, transform 0.18s, border-color 0.18s, background-color 0.18s, box-shadow 0.18s, color 0.18s; text-decoration:none;
       display:inline-flex; align-items:center; gap:6px; border:none;
     }
     .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
@@ -209,7 +209,7 @@
       color:var(--accent2); margin-bottom:24px; letter-spacing:0.5px;
     }
     .hero-badge .dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 60%{opacity:0.4;transform:scale(1.15)} }
     h1 { font-size:clamp(44px,7vw,84px); font-weight:900; line-height:1.05; letter-spacing:-2px; margin-bottom:24px; font-family:var(--font-display); }
     h1 .grad { color: #f8fafc; }
     .hero-sub { font-size:clamp(16px,2.5vw,20px); color:var(--muted); max-width:580px; margin:0 auto 40px; line-height:1.7; }
@@ -239,7 +239,7 @@
     .products { display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:1200px; margin:0 auto; }
     .product-card {
       border-radius:20px; overflow:hidden; border:1px solid var(--border);
-      position:relative; transition:transform 0.3s,box-shadow 0.3s;
+      position:relative; transition:transform 0.25s cubic-bezier(0.22,1,0.36,1),box-shadow 0.25s cubic-bezier(0.22,1,0.36,1);
     }
     .product-card:hover { transform:translateY(-4px); }
     .product-card.pan { box-shadow:var(--glow-pan); border-color:rgba(16,185,129,0.3); }
