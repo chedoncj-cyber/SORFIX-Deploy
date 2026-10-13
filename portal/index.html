@@ -209,6 +209,8 @@
     @keyframes price-flash-down { 0%{color:#f87171} 100%{color:inherit} }
     .price-flash-up   { animation: price-flash-up   0.5s ease-out forwards; }
     .price-flash-down { animation: price-flash-down 0.5s ease-out forwards; }
+    @keyframes pulse-load { 0%,100%{opacity:0.25} 50%{opacity:0.85} }
+    .bk-loading { text-align:center; padding:20px; color:var(--muted); font-size:12px; font-style:italic; animation:pulse-load 1.1s ease-in-out infinite; }
     .mc-item { padding:8px 12px; font-size:14px; cursor:pointer; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-left:2px solid transparent; transition:background 0.08s,border-color 0.08s,color 0.08s; }
     .mc-item:hover, .mc-item.mc-focus { background:var(--accent-g); color:var(--accent); border-left-color:var(--accent); }
     .mc-item.mc-selected { color:var(--accent); font-weight:700; background:rgba(59,130,246,0.06); border-left-color:var(--accent); }
@@ -1880,25 +1882,42 @@ async function _applySubmitSelection(prefix, venue, ticker) {
   const name = comp ? comp.n : ticker;
   const sect = comp ? (comp.s || '') : '';
   if (prefix === 'o') {
-    document.getElementById('o-co-name').textContent   = name;
-    document.getElementById('o-co-meta').textContent   = `${venue}  ·  ${sect}`;
-    document.getElementById('o-co-bid').textContent    = '…';
-    document.getElementById('o-co-ask').textContent    = '…';
-    document.getElementById('o-co-spread').textContent = '…';
+    document.getElementById('o-co-name').textContent = name;
+    document.getElementById('o-co-meta').textContent = `${venue}  ·  ${sect}`;
     infoDiv.style.display = '';
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 5000);
-    try {
-      const bk = await fetch(`/market-data/book/${venue}/${ticker}`, {signal:ctrl.signal}).then(r => r.json());
-      clearTimeout(t);
-      document.getElementById('o-co-bid').textContent    = bk.best_bid != null ? Number(bk.best_bid).toFixed(4) : '—';
-      document.getElementById('o-co-ask').textContent    = bk.best_ask != null ? Number(bk.best_ask).toFixed(4) : '—';
-      document.getElementById('o-co-spread').textContent = bk.spread   != null ? (bk.spread*10000).toFixed(1)+'bps' : '—';
-    } catch(_) {
-      clearTimeout(t);
-      document.getElementById('o-co-bid').textContent    = '—';
-      document.getElementById('o-co-ask').textContent    = '—';
-      document.getElementById('o-co-spread').textContent = '—';
+    // Priority 1: live WebSocket feed for this symbol — zero latency
+    if (wsVenue === venue && wsSymbol === ticker && prevBid != null) {
+      document.getElementById('o-co-bid').textContent    = Number(prevBid).toFixed(4);
+      document.getElementById('o-co-ask').textContent    = prevAsk != null ? Number(prevAsk).toFixed(4) : '—';
+      document.getElementById('o-co-spread').textContent = prevAsk != null ? ((prevAsk - prevBid)*10000).toFixed(1)+'bps' : '—';
+    } else {
+      const _bkc = _getCachedBook(venue, ticker);
+      if (_bkc) {
+        // Priority 2: in-memory cache — near-zero latency
+        document.getElementById('o-co-bid').textContent    = _bkc.best_bid != null ? Number(_bkc.best_bid).toFixed(4) : '—';
+        document.getElementById('o-co-ask').textContent    = _bkc.best_ask != null ? Number(_bkc.best_ask).toFixed(4) : '—';
+        document.getElementById('o-co-spread').textContent = _bkc.spread   != null ? (_bkc.spread*10000).toFixed(1)+'bps' : '—';
+      } else {
+        // Priority 3: fetch from server — only on cold cache
+        document.getElementById('o-co-bid').textContent    = '…';
+        document.getElementById('o-co-ask').textContent    = '…';
+        document.getElementById('o-co-spread').textContent = '…';
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 5000);
+        try {
+          const bk = await fetch(`/market-data/book/${venue}/${ticker}`, {signal:ctrl.signal}).then(r => r.json());
+          clearTimeout(t);
+          _bookCache.set(`${venue}:${ticker}`, {ts:Date.now(),data:bk});
+          document.getElementById('o-co-bid').textContent    = bk.best_bid != null ? Number(bk.best_bid).toFixed(4) : '—';
+          document.getElementById('o-co-ask').textContent    = bk.best_ask != null ? Number(bk.best_ask).toFixed(4) : '—';
+          document.getElementById('o-co-spread').textContent = bk.spread   != null ? (bk.spread*10000).toFixed(1)+'bps' : '—';
+        } catch(_) {
+          clearTimeout(t);
+          document.getElementById('o-co-bid').textContent    = '—';
+          document.getElementById('o-co-ask').textContent    = '—';
+          document.getElementById('o-co-spread').textContent = '—';
+        }
+      }
     }
   } else {
     const nm = document.getElementById(`${prefix}-co-name`);
@@ -1939,13 +1958,30 @@ function disconnectBook(intentional=true) {
   wsAttempt = 0;
 }
 
+// ── Book data cache (10s TTL) — serves prices instantly on repeat selections ──
+const _bookCache = new Map();
+function _getCachedBook(venue, sym) {
+  const e = _bookCache.get(`${venue}:${sym}`);
+  return e && Date.now() - e.ts < 10000 ? e.data : null;
+}
+function _bookLoading() {
+  const ld = '<tr><td colspan="3" class="bk-loading">connecting…</td></tr>';
+  document.getElementById('b-bids').innerHTML = ld;
+  document.getElementById('b-asks').innerHTML = ld;
+  setEl('b-best-bid','…'); setEl('b-best-ask','…'); setEl('b-spread','…'); setEl('b-mid','…');
+}
+
 function connectBook() {
   const venue  = document.getElementById('b-venue').value;
   const symbol = _symCombo.getValue();
   if (!venue || !symbol) { toast('Select a venue and symbol first.', 'err'); return; }
   wsVenue = venue; wsSymbol = symbol; wsIntentional = false;
+  const cached = _getCachedBook(venue, symbol);
+  if (cached) renderBook(cached); else _bookLoading(); // instant render or immediate pulse
   fetch(`/market-data/book/${venue}/${symbol}`)
-    .then(r => r.json()).then(d => { if (!d.status) renderBook(d); }).catch(() => {});
+    .then(r => r.json())
+    .then(d => { if (!d.status) { _bookCache.set(`${venue}:${symbol}`, {ts:Date.now(),data:d}); renderBook(d); } })
+    .catch(() => {});
   _openWs(venue, symbol);
 }
 
@@ -1971,6 +2007,7 @@ function _openWs(venue, symbol) {
     const d = JSON.parse(e.data);
     if (d.status === 'no_data') return;
     wsAttempt = 0; // reset backoff on first successful message — not just on socket open
+    _bookCache.set(`${venue}:${symbol}`, {ts:Date.now(),data:d}); // keep cache warm — Submit Order reads this
     renderBook(d);
   };
 }
