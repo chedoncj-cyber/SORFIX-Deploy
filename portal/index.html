@@ -1746,8 +1746,8 @@ async function pollHealth() {
     if (rate != null) setEl('d-rate', rate.toLocaleString());
     setEl('d-total', 'total: ' + h.market_data_updates.toLocaleString());
 
-    // Venue cards
-    document.getElementById('d-venues').innerHTML = h.venues.map(v => `
+    // Venue cards — deferred so this never blocks a click or keydown in the event queue
+    const _vh = h.venues.map(v => `
       <div class="venue-card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
           <div style="font-size:22px;font-weight:900;color:#60a5fa">${v.venue}</div>
@@ -1763,6 +1763,9 @@ async function pollHealth() {
           <div><div style="color:var(--muted)">Status</div><div style="font-weight:700;margin-top:2px;color:${v.enabled ? '#4ade80' : '#f87171'}">${v.enabled ? 'Active' : 'Disabled'}</div></div>
         </div>
       </div>`).join('');
+    (window.requestIdleCallback || function(fn){setTimeout(fn,0);})(function() {
+      document.getElementById('d-venues').innerHTML = _vh;
+    });
   } catch {
     document.getElementById('hdr-dot').className = 'dot dot-down';
     setEl('hdr-status', 'unreachable');
@@ -3563,8 +3566,8 @@ function _initCombos() {
 (async function init() {
   _initCombos();
   loadSymbols(); // fire & forget — uses localStorage cache instantly, fetches fresh in background
-  await pollHealth();
-  setInterval(pollHealth, 3000);
+  pollHealth(); // fire first poll without blocking init
+  setInterval(pollHealth, 10000); // was 3000 — venue card DOM writes no longer block clicks
   setInterval(() => {
     if (!document.getElementById('tab-history').classList.contains('hidden'))   loadHistory();
     if (!document.getElementById('tab-positions').classList.contains('hidden')) loadPositions();
