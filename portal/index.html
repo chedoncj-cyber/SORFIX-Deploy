@@ -199,14 +199,21 @@
     .mc-inp-bare { background:transparent !important; border:none !important; border-bottom:1px solid transparent !important; border-radius:0 !important; padding:2px 0 !important; }
     .mc-inp-bare:focus { border-bottom-color:var(--border) !important; background:transparent !important; }
     .mc-drop { position:absolute; left:0; right:0; top:calc(100% + 3px); background:var(--card2); border:1px solid var(--border); border-radius:8px; max-height:220px; overflow-y:auto; z-index:300; box-shadow:0 8px 28px rgba(0,0,0,.6); contain:content; opacity:0; visibility:hidden; pointer-events:none; }
-    .mc-drop.open { opacity:1; visibility:visible; pointer-events:auto; }
+    .mc-drop.open { opacity:1; visibility:visible; pointer-events:auto; animation:mc-open 0.07s ease-out both; }
+    .mc-drop::-webkit-scrollbar { width:4px; }
+    .mc-drop::-webkit-scrollbar-track { background:transparent; }
+    .mc-drop::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+    .mc-drop::-webkit-scrollbar-thumb:hover { background:var(--accent); }
+    @keyframes mc-open { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:none} }
     @keyframes price-flash-up   { 0%{color:#4ade80} 100%{color:inherit} }
     @keyframes price-flash-down { 0%{color:#f87171} 100%{color:inherit} }
     .price-flash-up   { animation: price-flash-up   0.5s ease-out forwards; }
     .price-flash-down { animation: price-flash-down 0.5s ease-out forwards; }
-    .mc-item { padding:6px 10px; font-size:14px; cursor:pointer; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .mc-item:hover, .mc-item.mc-focus { background:var(--accent-g); color:var(--accent); }
-    .mc-empty { padding:8px 10px; font-size:13px; color:var(--muted); }
+    .mc-item { padding:8px 12px; font-size:14px; cursor:pointer; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-left:2px solid transparent; transition:background 0.08s,border-color 0.08s,color 0.08s; }
+    .mc-item:hover, .mc-item.mc-focus { background:var(--accent-g); color:var(--accent); border-left-color:var(--accent); }
+    .mc-item.mc-selected { color:var(--accent); font-weight:700; background:rgba(59,130,246,0.06); border-left-color:var(--accent); }
+    .mc-empty { padding:10px 12px; font-size:13px; color:var(--muted); font-style:italic; }
+    .mc-hl { background:rgba(96,165,250,0.2); color:#93c5fd; border-radius:2px; font-weight:700; padding:0 1px; }
 
     /* ── Animations ── */
     .fade-in { animation: fadeIn 0.22s ease; }
@@ -3492,6 +3499,11 @@ function MiniCombo(wrapId, placeholder, onSelect, opts) {
       ? src.map((x, i) => `<div class="mc-item" data-v="${x.v}" data-i="${i}">${x.l}</div>`).join('')
       : `<div class="mc-empty">No items</div>`;
   }
+  function _highlight(text, q) {
+    const i = text.toLowerCase().indexOf(q);
+    if (i < 0) return text;
+    return text.slice(0, i) + '<mark class="mc-hl">' + text.slice(i, i + q.length) + '</mark>' + text.slice(i + q.length);
+  }
   function _render() {
     const q = inp.value.trim().toLowerCase();
     if (!q) {
@@ -3499,8 +3511,8 @@ function MiniCombo(wrapId, placeholder, onSelect, opts) {
     } else {
       const src = items.filter(x => x.l.toLowerCase().includes(q)).slice(0, MAX);
       drop.innerHTML = src.length
-        ? src.map((x, i) => `<div class="mc-item" data-v="${x.v}" data-i="${i}">${x.l}</div>`).join('')
-        : `<div class="mc-empty">No matches</div>`;
+        ? src.map((x, i) => `<div class="mc-item" data-v="${x.v}" data-i="${i}">${_highlight(x.l, q)}</div>`).join('')
+        : `<div class="mc-empty">No matches for "${q}"</div>`;
       _domSynced = false;
     }
     _fIdx = -1;
@@ -3510,6 +3522,10 @@ function MiniCombo(wrapId, placeholder, onSelect, opts) {
     _open = true;
     inp.value = ''; // clear so full list shows — restored by _closeDrop if nothing picked
     if (!_domSynced) { drop.innerHTML = _preHtml; _domSynced = true; }
+    if (_value) {
+      const sel = [...drop.querySelectorAll('.mc-item')].find(el => el.dataset.v === _value);
+      if (sel) { sel.classList.add('mc-selected'); sel.scrollIntoView({ block: 'nearest' }); }
+    }
     drop.classList.add('open'); // CSS visibility/opacity toggle — no layout work
   }
   function _closeDrop(kept) {
