@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 — Page Not Found · World SORFIX</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="/portal/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #07080f;
+      --surface: #0d0f1d;
+      --card:    #111422;
+      --border:  #1c2035;
+      --accent:  #3b82f6;
+      --red:     #ef4444;
+      --text:    #e1e7ef;
+      --muted:   #5a6580;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 24px;
+    }
+
+    .four-oh-four {
+      font-size: 96px; font-weight: 900; line-height: 1;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      letter-spacing: -4px;
+    }
+    .heading { font-size: 22px; font-weight: 700; margin-top: 12px; color: var(--text); }
+    .subtext { font-size: 14px; color: var(--muted); margin-top: 8px; text-align: center; max-width: 400px; }
+
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 40px 48px; text-align: center;
+      margin-top: 24px; display: flex; flex-direction: column; align-items: center; gap: 20px;
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #fff;
+      padding: 11px 24px; border-radius: 8px; font-size: 14px; font-weight: 700;
+      text-decoration: none; transition: opacity 0.15s, transform 0.15s;
+      border: none; cursor: pointer; font-family: inherit;
+    }
+    .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    .links { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .soft-link {
+      font-size: 13px; color: var(--muted); text-decoration: none;
+      border: 1px solid var(--border); padding: 7px 14px; border-radius: 6px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .soft-link:hover { color: var(--text); border-color: var(--accent); }
+
+    .footer {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      text-align: center; padding: 12px; font-size: 11px; color: var(--muted);
+      border-top: 1px solid var(--border); font-family: 'Inter', sans-serif;
+    }
+    .footer a { color: var(--muted); margin: 0 6px; text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="four-oh-four">404</div>
+    <div class="heading">Page Not Found</div>
+    <p class="subtext">The page you're looking for doesn't exist or may have been moved.</p>
+
+    <a href="/portal/" class="btn">← Back to Portal</a>
+
+    <div class="links">
+      <a href="/portal/privacy-policy.html" class="soft-link">Privacy Policy</a>
+      <a href="/portal/terms.html" class="soft-link">Terms of Use</a>
+      <a href="/portal/cookie-policy.html" class="soft-link">Cookie Policy</a>
+    </div>
+  </div>
+
+<footer class="footer">
+  &copy; 2026 SORFIX &nbsp;·&nbsp;
+  <a href="/portal/terms.html">Demo only — not investment advice</a>
+</footer>
+
+</body>
+</html>

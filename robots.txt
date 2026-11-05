@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /api/
+Disallow: /.env
+Allow: /portal/
+Sitemap: https://world-sorfix.onrender.com/sitemap.xml
