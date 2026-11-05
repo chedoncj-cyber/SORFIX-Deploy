@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pan SORFIX Portal</title>
+  <meta name="description" content="Pan SORFIX — Smart Order Router portal for African financial exchanges including GSE, JSE, NGX, NSE, CSE, EGX and 9 more. Demonstration system." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="canonical" href="https://pan-sorfix.onrender.com/portal" />
+  <link rel="icon" type="image/svg+xml" href="/portal/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -426,15 +430,356 @@
     /* Badge glow */
     .badge-green { box-shadow: 0 0 8px rgba(34,197,94,0.25); }
     .badge-red   { box-shadow: 0 0 8px rgba(239,68,68,0.25); }
-  </style>
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .metric::after { display: none; }
+    }
+
+    /* ── Mobile responsiveness ── */
+    @media (max-width: 768px) {
+      #sidebar { transform: translateX(-100%); transition: transform 0.25s; }
+      #sidebar.open { transform: translateX(0); }
+      #main { margin-left: 0 !important; }
+      .mobile-menu-btn { display: flex !important; }
+    }
+    .mobile-menu-btn { display: none; align-items: center; justify-content: center; width: 36px; height: 36px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; flex-shrink: 0; }
+    .mobile-menu-btn span { display: block; width: 16px; height: 2px; background: var(--text); border-radius: 2px; position: relative; }
+    .mobile-menu-btn span::before, .mobile-menu-btn span::after { content: ''; display: block; width: 16px; height: 2px; background: var(--text); border-radius: 2px; position: absolute; left: 0; }
+    .mobile-menu-btn span::before { top: -5px; }
+    .mobile-menu-btn span::after  { top: 5px; }
+  
+    /* ── Header Dropdown Nav ─────────────────────────────────── */
+    .hdr-nav { display:flex;align-items:center;gap:2px;margin-left:12px;border-left:1px solid var(--border);padding-left:12px; }
+    .hdr-dd { position:relative; }
+    .hdr-dd-trigger {
+      display:flex;align-items:center;gap:6px;padding:6px 10px;
+      background:transparent;border:1px solid transparent;border-radius:7px;
+      color:var(--muted);font-size:12.5px;font-weight:500;cursor:pointer;
+      font-family:'Inter',sans-serif;transition:all 0.14s;white-space:nowrap;
+    }
+    .hdr-dd-trigger:hover,.hdr-dd-trigger[aria-expanded="true"] {
+      background:var(--card);border-color:var(--border);color:var(--text);
+    }
+    .hdr-dd-icon { width:13px;height:13px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round; }
+    .hdr-dd-caret { width:11px;height:11px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;transition:transform 0.2s; }
+    .hdr-dd-trigger[aria-expanded="true"] .hdr-dd-caret { transform:rotate(180deg); }
+    .hdr-dd-panel {
+      display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:220px;
+      background:var(--card2);border:1px solid var(--border);border-radius:10px;
+      box-shadow:0 16px 48px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.3);
+      z-index:999;overflow:hidden;animation:ddSlideIn 0.18s ease;
+    }
+    .hdr-dd-panel.open { display:block; }
+    #dd-exchanges .hdr-dd-panel { min-width:340px; }
+    @keyframes ddSlideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+    .hdr-dd-hdr { font-size:10px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--muted);padding:10px 14px 6px;border-bottom:1px solid var(--border); }
+    .hdr-dd-grid { display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px;padding:8px; }
+    .hdr-dd-item {
+      display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:7px;cursor:pointer;
+      color:var(--text);font-size:12px;font-weight:600;background:transparent;
+      border:1px solid transparent;font-family:'Inter',sans-serif;transition:all .12s;text-align:left;text-decoration:none;
+    }
+    .hdr-dd-item:hover { background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.2);color:var(--accent); }
+    .hdr-dd-item-row {
+      display:flex !important;align-items:center;gap:10px;padding:10px 14px;
+      border-radius:0;border:none;border-bottom:1px solid var(--border);width:100%;
+    }
+    .hdr-dd-item-row:last-child { border-bottom:none; }
+    .hdr-dd-item-row:hover { background:rgba(255,255,255,.03);border-color:transparent;color:var(--text); }
+    .hdr-dd-dot { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
+    .hdr-dd-sub { font-size:10px;font-weight:400;color:var(--muted);margin-left:auto;white-space:nowrap; }
+    .hdr-dd-item-icon { width:15px;height:15px;flex-shrink:0;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round; }
+    .hdr-dd-item-label { font-size:13px;font-weight:600;color:var(--text);line-height:1.3; }
+    .hdr-dd-item-desc { font-size:11px;color:var(--muted);line-height:1.4;margin-top:1px; }
+    .hdr-dd-footer { padding:8px;border-top:1px solid var(--border); }
+    .hdr-dd-all {
+      width:100%;padding:7px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);
+      border-radius:6px;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;
+      font-family:'Inter',sans-serif;transition:all .12s;
+    }
+    .hdr-dd-all:hover { background:rgba(59,130,246,.15); }
+    @media (max-width:900px) { .hdr-nav { display:none; } }
+
+    
+    /* ═══════════════════════════════════════════════════════════
+       TOOLFOLIO-STYLE SIDEBAR REDESIGN
+    ═══════════════════════════════════════════════════════════ */
+
+    /* ── Sidebar redesign ── */
+    :root { --sw-collapsed: 60px; }
+
+    #sidebar {
+      width: var(--sw);
+      transition: width 0.22s cubic-bezier(0.4,0,0.2,1);
+      overflow: hidden;
+    }
+    #sidebar.collapsed { width: var(--sw-collapsed); }
+    #sidebar.collapsed + #main { margin-left: var(--sw-collapsed); }
+
+    /* Sidebar brand row (new) */
+    .sb-brand {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 10px 0 14px; height: 44px; flex-shrink: 0;
+      border-bottom: 1px solid var(--border); margin-bottom: 6px;
+    }
+    .sb-brand-logo {
+      display: flex; align-items: center; gap: 9px;
+      font-size: 13px; font-weight: 700; color: var(--text);
+      white-space: nowrap; overflow: hidden;
+    }
+    .sb-brand-logo svg { flex-shrink: 0; }
+    .sb-brand-name { opacity: 1; transition: opacity 0.15s; white-space: nowrap; }
+    #sidebar.collapsed .sb-brand-name { opacity: 0; pointer-events: none; }
+    #sidebar.collapsed .sb-brand { justify-content: center; }
+
+    /* Collapse toggle button */
+    .sb-collapse-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; border-radius: 6px;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); cursor: pointer; flex-shrink: 0;
+      transition: all 0.14s; font-size: 0;
+    }
+    .sb-collapse-btn svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.22s; }
+    .sb-collapse-btn:hover { background: var(--card); color: var(--text); border-color: rgba(59,130,246,0.3); }
+    #sidebar.collapsed .sb-collapse-btn { margin: 0 auto; }
+    #sidebar.collapsed .sb-collapse-btn svg { transform: rotate(180deg); }
+
+    /* Section labels */
+    .sb-label {
+      font-size: 9.5px; font-weight: 700; letter-spacing: 0.11em;
+      text-transform: uppercase; color: var(--muted);
+      padding: 10px 14px 4px;
+      transition: opacity 0.15s, padding 0.22s;
+      white-space: nowrap; overflow: hidden;
+    }
+    #sidebar.collapsed .sb-label { opacity: 0; padding: 10px 0 4px; height: 0; overflow: hidden; margin: 0; padding: 0; }
+
+    /* Nav items — Toolfolio style */
+    .nav-item {
+      position: relative;
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px 9px 14px; margin: 1px 6px; border-radius: 8px;
+      cursor: pointer; color: var(--muted); font-size: 13px; font-weight: 500;
+      transition: background 0.14s, color 0.14s, border-color 0.14s, padding 0.22s;
+      border: 1px solid transparent;
+      background: transparent; width: calc(100% - 12px); text-align: left; font-family: inherit;
+      white-space: nowrap; overflow: hidden;
+    }
+    .nav-item::before {
+      content: '';
+      position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+      width: 0; height: 60%; border-radius: 0 3px 3px 0;
+      background: var(--accent); transition: width 0.18s;
+    }
+    .nav-item:hover { background: var(--card); color: var(--text); border-color: var(--border); }
+    .nav-item.active {
+      background: rgba(59,130,246,0.09);
+      color: #93c5fd;
+      border-color: rgba(59,130,246,0.2);
+    }
+    .nav-item.active::before { width: 3px; }
+    .nav-item.active .nsvg { stroke: #93c5fd; }
+
+    /* Icon */
+    .nsvg { width: 16px; height: 16px; flex-shrink: 0; min-width: 16px; }
+
+    /* Nav item text — hide on collapse */
+    .nav-item-text { opacity: 1; transition: opacity 0.1s; overflow: hidden; }
+    #sidebar.collapsed .nav-item-text { opacity: 0; }
+
+    /* Collapsed icon-only mode */
+    #sidebar.collapsed .nav-item {
+      justify-content: center; padding: 10px 0; margin: 2px 4px;
+      width: calc(100% - 8px); border-radius: 8px;
+    }
+    #sidebar.collapsed .nav-item:hover::after {
+      content: attr(data-label);
+      position: fixed;
+      left: calc(var(--sw-collapsed) + 8px);
+      background: var(--card2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 5px 11px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 999;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+
+    /* Badges — hide in collapsed */
+    #sidebar.collapsed .nav-badge,
+    #sidebar.collapsed .nav-halt { display: none; }
+
+    /* Sidebar footer */
+    .sb-footer {
+      margin-top: auto; padding: 10px 8px; border-top: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .sb-footer-btn {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 7px; cursor: pointer;
+      color: var(--muted); font-size: 12px; font-weight: 500;
+      background: transparent; border: 1px solid transparent;
+      font-family: 'Inter', sans-serif; transition: all 0.14s;
+      white-space: nowrap; overflow: hidden; text-align: left;
+    }
+    .sb-footer-btn:hover { background: var(--card); color: var(--text); border-color: var(--border); }
+    .sb-footer-btn svg { width: 15px; height: 15px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    #sidebar.collapsed .sb-footer-btn { justify-content: center; padding: 9px 0; }
+    #sidebar.collapsed .sb-footer-text { opacity: 0; }
+
+    /* ── Toolfolio-style Cards redesign ── */
+    .metric {
+      border-radius: 12px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .metric:hover {
+      border-color: rgba(59,130,246,0.35);
+      box-shadow: 0 4px 20px rgba(59,130,246,0.08);
+    }
+    .metric-lbl {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted);
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .metric-val { font-size: 28px; font-weight: 900; letter-spacing: -0.5px; }
+
+    /* ── Venue card redesign (tool-card style) ── */
+    .venue-card {
+      border-radius: 12px; padding: 18px;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+      cursor: default;
+    }
+    .venue-card:hover {
+      border-color: rgba(59,130,246,0.35);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+      transform: translateY(-1px);
+    }
+
+    /* ── Card redesign ── */
+    .card { border-radius: 12px; }
+
+    /* ── Tab pane padding ── */
+    .tab-pane { padding: 20px 24px; }
+
+    /* ── Responsive: main margin transitions ── */
+    #main { transition: margin-left 0.22s cubic-bezier(0.4,0,0.2,1); }
+
+    @media (max-width: 768px) {
+      #sidebar.collapsed + #main { margin-left: 0; }
+    }
+
+    </style>
 </head>
 <body>
+<!-- Skip navigation -->
+<a href="#main-content" style="position:absolute;left:-9999px;top:0;z-index:9999;background:#3b82f6;color:#fff;padding:8px 16px;font-size:13px;" onfocus="this.style.left='0'" onblur="this.style.left='-9999px'">Skip to main content</a>
+
+<!-- Financial Disclaimer -->
+<div style="background:#1a0a0a;border-bottom:1px solid #3d1515;padding:8px 20px;text-align:center;font-size:11.5px;font-family:'Inter',sans-serif;color:rgba(239,68,68,0.9);letter-spacing:0.02em;">
+  ⚠️ DEMONSTRATION SYSTEM ONLY — Not connected to live exchanges. No real trades executed. Not investment advice.
+  <a href="/portal/terms.html" style="color:#f87171;text-decoration:underline;margin-left:8px;">Terms of Use</a>
+</div>
+
 <div id="toast-root"></div>
 
 <!-- ═══ HEADER ════════════════════════════════════════════════════════════════ -->
 <header id="hdr">
+  <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')" aria-label="Toggle navigation menu"><span></span></button>
   <div class="logo">Pan SORFIX <span style="font-size:11px;opacity:0.7;font-weight:500">v3</span></div>
   <div class="logo-sub">Pan-African Smart Order Router</div>
+
+<!-- ── Dropdown Nav Bar ── -->
+<nav class="hdr-nav" aria-label="Portal navigation">
+  <!-- Exchanges -->
+  <div class="hdr-dd" id="dd-exchanges">
+    <button class="hdr-dd-trigger" aria-haspopup="true" aria-expanded="false">
+      <svg class="hdr-dd-icon" viewBox="0 0 24 24"><polyline points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+      Exchanges
+      <svg class="hdr-dd-caret" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="hdr-dd-panel" role="menu">
+      <div class="hdr-dd-hdr">African Exchanges</div>
+      <div class="hdr-dd-grid">
+        <button class="hdr-dd-item" onclick="filterExchange('GSE')"><span class="hdr-dd-dot" style="background:#4ade80"></span>GSE<span class="hdr-dd-sub">Ghana</span></button>
+        <button class="hdr-dd-item" onclick="filterExchange('JSE')"><span class="hdr-dd-dot" style="background:#60a5fa"></span>JSE<span class="hdr-dd-sub">South Africa</span></button>
+        <button class="hdr-dd-item" onclick="filterExchange('NGX')"><span class="hdr-dd-dot" style="background:#f87171"></span>NGX<span class="hdr-dd-sub">Nigeria</span></button>
+        <button class="hdr-dd-item" onclick="filterExchange('NSE')"><span class="hdr-dd-dot" style="background:#a78bfa"></span>NSE<span class="hdr-dd-sub">Kenya</span></button>
+        <button class="hdr-dd-item" onclick="filterExchange('CSE')"><span class="hdr-dd-dot" style="background:#22d3ee"></span>CSE<span class="hdr-dd-sub">Cairo</span></button>
+        <button class="hdr-dd-item" onclick="filterExchange('EGX')"><span class="hdr-dd-dot" style="background:#fb923c"></span>EGX<span class="hdr-dd-sub">Egypt</span></button>
+        <button class="hdr-dd-item" onclick="filterExchange('BRVM')"><span class="hdr-dd-dot" style="background:#eab308"></span>BRVM<span class="hdr-dd-sub">W. Africa</span></button>
+        <button class="hdr-dd-item" onclick="filterExchange('BSE')"><span class="hdr-dd-dot" style="background:#34d399"></span>BSE<span class="hdr-dd-sub">Botswana</span></button>
+        <button class="hdr-dd-item" onclick="filterExchange('NSX')"><span class="hdr-dd-dot" style="background:#38bdf8"></span>NSX<span class="hdr-dd-sub">Namibia</span></button>
+        <button class="hdr-dd-item" onclick="filterExchange('SEM')"><span class="hdr-dd-dot" style="background:#f472b6"></span>SEM<span class="hdr-dd-sub">Mauritius</span></button>
+        <button class="hdr-dd-item" onclick="filterExchange('MSE')"><span class="hdr-dd-dot" style="background:#a3e635"></span>MSE<span class="hdr-dd-sub">Morocco</span></button>
+        <button class="hdr-dd-item" onclick="filterExchange('BVMT')"><span class="hdr-dd-dot" style="background:#fb7185"></span>BVMT<span class="hdr-dd-sub">Tunisia</span></button>
+        <button class="hdr-dd-item" onclick="filterExchange('DSE')"><span class="hdr-dd-dot" style="background:#818cf8"></span>DSE<span class="hdr-dd-sub">Tanzania</span></button>
+        <button class="hdr-dd-item" onclick="filterExchange('ZSE')"><span class="hdr-dd-dot" style="background:#2dd4bf"></span>ZSE<span class="hdr-dd-sub">Zimbabwe</span></button>
+        <button class="hdr-dd-item" onclick="filterExchange('LUSE')"><span class="hdr-dd-dot" style="background:#fbbf24"></span>LUSE<span class="hdr-dd-sub">Zambia</span></button>
+      </div>
+      <div class="hdr-dd-footer"><button class="hdr-dd-all" onclick="filterExchange('ALL')">View All Exchanges</button></div>
+    </div>
+  </div>
+
+  <!-- Sections -->
+  <div class="hdr-dd" id="dd-sections">
+    <button class="hdr-dd-trigger" aria-haspopup="true" aria-expanded="false">
+      <svg class="hdr-dd-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+      Sections
+      <svg class="hdr-dd-caret" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="hdr-dd-panel" role="menu">
+      <div class="hdr-dd-hdr">Portal Sections</div>
+      <button class="hdr-dd-item hdr-dd-item-row" onclick="showTab('dashboard',document.querySelector('[onclick*=dashboard]'))">
+        <svg class="hdr-dd-item-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        <div><div class="hdr-dd-item-label">Dashboard</div><div class="hdr-dd-item-desc">Overview metrics &amp; live stats</div></div>
+      </button>
+      <button class="hdr-dd-item hdr-dd-item-row" onclick="showTab('book',document.querySelector('[onclick*=book]'))">
+        <svg class="hdr-dd-item-icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <div><div class="hdr-dd-item-label">Live Book</div><div class="hdr-dd-item-desc">Real-time order book depth</div></div>
+      </button>
+      <button class="hdr-dd-item hdr-dd-item-row" onclick="showTab('submit',document.querySelector('[onclick*=submit]'))">
+        <svg class="hdr-dd-item-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <div><div class="hdr-dd-item-label">Submit Order</div><div class="hdr-dd-item-desc">New order entry &amp; routing</div></div>
+      </button>
+      <button class="hdr-dd-item hdr-dd-item-row" onclick="showTab('history',document.querySelector('[onclick*=history]'))">
+        <svg class="hdr-dd-item-icon" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.63"/></svg>
+        <div><div class="hdr-dd-item-label">Order History</div><div class="hdr-dd-item-desc">Execution logs &amp; fills</div></div>
+      </button>
+    </div>
+  </div>
+  <!-- Resources -->
+  <div class="hdr-dd" id="dd-resources">
+    <button class="hdr-dd-trigger" aria-haspopup="true" aria-expanded="false">
+      <svg class="hdr-dd-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Resources
+      <svg class="hdr-dd-caret" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="hdr-dd-panel" role="menu">
+      <div class="hdr-dd-hdr">Legal &amp; Docs</div>
+      <a class="hdr-dd-item hdr-dd-item-row" href="/portal/privacy-policy.html">
+        <svg class="hdr-dd-item-icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <div><div class="hdr-dd-item-label">Privacy Policy</div><div class="hdr-dd-item-desc">How we handle your data</div></div>
+      </a>
+      <a class="hdr-dd-item hdr-dd-item-row" href="/portal/terms.html">
+        <svg class="hdr-dd-item-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div><div class="hdr-dd-item-label">Terms of Use</div><div class="hdr-dd-item-desc">Usage terms &amp; disclaimer</div></div>
+      </a>
+      <a class="hdr-dd-item hdr-dd-item-row" href="/portal/cookie-policy.html">
+        <svg class="hdr-dd-item-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+        <div><div class="hdr-dd-item-label">Cookie Policy</div><div class="hdr-dd-item-desc">Cookie &amp; tracking info</div></div>
+      </a>
+    </div>
+  </div>
+</nav>
+
   <div class="hdr-spacer"></div>
   <div class="hdr-chip">
     <span class="hdr-lbl">Rate</span>
@@ -448,136 +793,165 @@
     <span class="dot" id="hdr-dot"></span>
     <span id="hdr-status" style="font-weight:600">connecting…</span>
   </div>
+  <div class="hdr-chip" id="hdr-ws-lat-chip" style="display:none">
+    <span class="hdr-lbl">WS</span>
+    <span id="hdr-ws-lat" class="mono font-bold" style="color:#a78bfa">—</span>
+  </div>
 </header>
 
 <!-- ═══ SIDEBAR ═══════════════════════════════════════════════════════════════ -->
 <nav id="sidebar">
+  <!-- Toolfolio sidebar brand + collapse toggle -->
+  <div class="sb-brand">
+    <div class="sb-brand-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      <span class="sb-brand-name">SOR Nav</span>
+    </div>
+    <button class="sb-collapse-btn" id="sb-collapse-btn" aria-label="Collapse sidebar" title="Collapse sidebar">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+  </div>
+
   <div class="sb-label">Trading</div>
 
-  <button class="nav-item tab-btn active" onclick="showTab('dashboard',this)">
+  <button class="nav-item" data-label="Dashboard" tab-btn active" onclick="showTab('dashboard',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-    Dashboard
+    <span class="nav-item-text">Dashboard</span>
   </button>
 
-  <button class="nav-item tab-btn" onclick="showTab('book',this)">
+  <button class="nav-item" data-label="Live" tab-btn" onclick="showTab('book',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    Live Book
+    <span class="nav-item-text">Live Book</span>
   </button>
 
-  <button class="nav-item tab-btn" onclick="showTab('submit',this)">
+  <button class="nav-item" data-label="Submit" tab-btn" onclick="showTab('submit',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-    Submit Order
+    <span class="nav-item-text">Submit Order</span>
   </button>
 
-  <button class="nav-item tab-btn" onclick="showTab('history',this)">
+  <button class="nav-item" data-label="Order" tab-btn" onclick="showTab('history',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-    Order History
+    <span class="nav-item-text">Order History</span>
     <span id="history-badge" class="nav-badge hidden">0</span>
   </button>
 
-  <button class="nav-item tab-btn" onclick="showTab('positions',this)">
+  <button class="nav-item" data-label="Positions" tab-btn" onclick="showTab('positions',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
-    Positions
+    <span class="nav-item-text">Positions</span>
   </button>
 
-  <button class="nav-item tab-btn" onclick="showTab('algo',this)">
+  <button class="nav-item" data-label="Algo" tab-btn" onclick="showTab('algo',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><rect x="9" y="9" width="6" height="6"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v2M15 3v2M9 19v2M15 19v2M3 9h2M3 15h2M19 9h2M19 15h2"/></svg>
-    Algo Orders
+    <span class="nav-item-text">Algo Orders</span>
   </button>
 
-  <button class="nav-item tab-btn" onclick="showTab('tca',this)">
+  <button class="nav-item" data-label="TCA" tab-btn" onclick="showTab('tca',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
-    TCA
+    <span class="nav-item-text">TCA</span>
   </button>
 
-  <button class="nav-item tab-btn" onclick="showTab('jobs',this)">
+  <button class="nav-item" data-label="Live" tab-btn" onclick="showTab('jobs',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-    Live Jobs
+    <span class="nav-item-text">Live Jobs</span>
     <span id="jobs-badge" class="nav-badge hidden">0</span>
   </button>
 
-  <button class="nav-item tab-btn" onclick="showTab('roles',this)" style="border:1px solid rgba(167,139,250,0.35);margin-top:2px;background:rgba(167,139,250,0.06)">
+  <button class="nav-item" data-label="Live" tab-btn" onclick="showTab('roles',this)" style="border:1px solid rgba(167,139,250,0.35);margin-top:2px;background:rgba(167,139,250,0.06)">
     <svg class="nsvg" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
-    Live Roles
+    <span class="nav-item-text">Live Roles</span>
   </button>
 
-  <button class="nav-item tab-btn" onclick="showTab('apply',this)" style="border:1px solid rgba(96,165,250,0.3);margin-top:2px">
+  <button class="nav-item" data-label="Apply" tab-btn" onclick="showTab('apply',this)" style="border:1px solid rgba(96,165,250,0.3);margin-top:2px">
     <svg class="nsvg" viewBox="0 0 24 24"><path d="M21 13v10h-6v-6h-6v6H3V13L12 3z"/></svg>
-    Apply
+    <span class="nav-item-text">Apply</span>
   </button>
 
 
   <div class="sb-label" style="margin-top:16px">Institutional</div>
 
-  <button class="nav-item tab-btn" onclick="showTab('ioi',this)">
+  <button class="nav-item" data-label="IOI" tab-btn" onclick="showTab('ioi',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-    IOI Board
+    <span class="nav-item-text">IOI Board</span>
   </button>
 
-  <button class="nav-item tab-btn" onclick="showTab('darkpool',this)">
+  <button class="nav-item" data-label="Dark" tab-btn" onclick="showTab('darkpool',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/></svg>
-    Dark Pool
+    <span class="nav-item-text">Dark Pool</span>
   </button>
 
-  <button class="nav-item tab-btn" onclick="showTab('block',this)">
+  <button class="nav-item" data-label="Block" tab-btn" onclick="showTab('block',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-    Block Trades
+    <span class="nav-item-text">Block Trades</span>
   </button>
 
-  <button class="nav-item tab-btn" onclick="showTab('iceberg',this)">
+  <button class="nav-item" data-label="Iceberg" tab-btn" onclick="showTab('iceberg',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><polygon points="12 2 22 20 2 20"/><line x1="12" y1="8" x2="12" y2="14"/></svg>
-    Iceberg Orders
+    <span class="nav-item-text">Iceberg Orders</span>
   </button>
 
-  <button class="nav-item tab-btn" onclick="showTab('basket',this)">
+  <button class="nav-item" data-label="Basket" tab-btn" onclick="showTab('basket',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
-    Basket Trading
+    <span class="nav-item-text">Basket Trading</span>
   </button>
 
-  <button class="nav-item tab-btn" onclick="showTab('bestexec',this)">
+  <button class="nav-item" data-label="Best" tab-btn" onclick="showTab('bestexec',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-    Best Execution
+    <span class="nav-item-text">Best Execution</span>
   </button>
 
-  <button class="nav-item tab-btn" onclick="showTab('dropcopy',this)">
+  <button class="nav-item" data-label="Drop" tab-btn" onclick="showTab('dropcopy',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-    Drop Copy
+    <span class="nav-item-text">Drop Copy</span>
   </button>
 
   <!-- OMS-BRIDGE-NAV -->
   <div class="sb-label" style="margin-top:16px">Multi-Asset</div>
 
-  <button class="nav-item tab-btn" onclick="showTab('oms-panel',this)" style="border:1px solid rgba(6,182,212,0.28);background:rgba(6,182,212,0.05)">
+  <button class="nav-item" data-label="OMS" tab-btn" onclick="showTab('oms-panel',this)" style="border:1px solid rgba(6,182,212,0.28);background:rgba(6,182,212,0.05)">
     <svg class="nsvg" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-    OMS Bridge
+    <span class="nav-item-text">OMS Bridge</span>
     <span class="nav-badge" style="background:rgba(6,182,212,0.9)">NEW</span>
   </button>
 
-  <button class="nav-item tab-btn" onclick="showTab('bond-panel',this)" style="border:1px solid rgba(16,185,129,0.28);background:rgba(16,185,129,0.05)">
+  <button class="nav-item" data-label="Bond" tab-btn" onclick="showTab('bond-panel',this)" style="border:1px solid rgba(16,185,129,0.28);background:rgba(16,185,129,0.05)">
     <svg class="nsvg" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-    Bond / FX
+    <span class="nav-item-text">Bond / FX</span>
     <span class="nav-badge" style="background:rgba(16,185,129,0.9)">NEW</span>
   </button>
 
   <div class="sb-label" style="margin-top:16px">System</div>
 
-  <button class="nav-item tab-btn" onclick="showTab('admin',this)">
+  <button class="nav-item" data-label="Admin" tab-btn" onclick="showTab('admin',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-    Admin
+    <span class="nav-item-text">Admin</span>
     <span id="halt-badge" class="nav-halt hidden">HALT</span>
   </button>
 
-  <div class="sb-footer">
-    <div style="font-size:11px;font-weight:600;color:var(--muted)">v3.0.0 · FIX 4.2</div>
+  
     <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
       <span class="dot dot-up" style="width:6px;height:6px"></span>
       <span style="font-size:11px;color:var(--muted)">GSE · JSE · NGX · NSE · CSE · EGX · BRVM · BSE · NSX · SEM · MSE · BVMT · DSE · ZSE · LUSE</span>
     </div>
   </div>
+
+  <!-- Toolfolio sidebar footer -->
+  <div class="sb-footer">
+    <a class="sb-footer-btn" href="/portal/privacy-policy.html" data-label="Privacy Policy">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span class="sb-footer-text">Privacy Policy</span>
+    </a>
+    <a class="sb-footer-btn" href="/portal/terms.html" data-label="Terms of Use">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span class="sb-footer-text">Terms of Use</span>
+    </a>
+  </div>
+
 </nav>
 
 <!-- ═══ MAIN CONTENT ══════════════════════════════════════════════════════════ -->
-<main id="main">
+<main id="main" tabindex="-1">
 
 <!-- ── DASHBOARD ─────────────────────────────────────────────────────────── -->
 <div id="tab-dashboard" class="tab-pane">
@@ -1670,7 +2044,7 @@
 let currentSide   = 'buy';
 let wsConn        = null;
 let wsVenue       = '', wsSymbol = '', wsIntentional = false;
-let wsAttempt = 0, wsRetryTimer = null;
+let wsAttempt = 0, wsRetryTimer = null, wsConnectTime = 0;
 let allSymbols    = {};
 const _compItems  = {}; // pre-built company item arrays per venue: [{v, l}]
 let _symCombo, _oCoCombo, _alCoCombo;
@@ -2031,8 +2405,14 @@ function _openWs(venue, symbol) {
   if (wsConn) { try { wsConn.close(); } catch {} wsConn = null; }
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
   wsConn = new WebSocket(`${proto}//${location.host}/ws/book/${venue}/${symbol}`);
+  wsConnectTime = Date.now();
   setWsDot('warn'); setEl('ws-status', 'connecting…');
-  wsConn.onopen = () => { setWsDot('live'); setEl('ws-status', 'LIVE'); };
+  wsConn.onopen = () => {
+    const lat = Date.now() - wsConnectTime;
+    setWsDot('live'); setEl('ws-status', 'LIVE');
+    setEl('hdr-ws-lat', lat + 'ms');
+    document.getElementById('hdr-ws-lat-chip').style.display = '';
+  };
   wsConn.onclose = () => {
     wsConn = null;
     if (!wsIntentional) {
@@ -2040,7 +2420,7 @@ function _openWs(venue, symbol) {
       setWsDot('warn');
       // AWS Full Jitter: delay = random(0, min(cap, base × 2^attempt)) — never exceeds cap, spreads reconnect herd
       const delay = Math.random() * Math.min(30000, 1000 * Math.pow(2, Math.min(wsAttempt, 14)));
-      setEl('ws-status', `reconnect in ${(delay / 1000).toFixed(1)}s…`);
+      setEl('ws-status', `reconnect in ${(delay / 1000).toFixed(1)}s… (try ${wsAttempt})`);
       wsRetryTimer = setTimeout(() => _openWs(wsVenue, wsSymbol), delay);
     } else { setWsDot('down'); setEl('ws-status', 'disconnected'); }
   };
@@ -2615,6 +2995,14 @@ document.addEventListener('keydown', e => {
     if (!document.getElementById('tab-submit').classList.contains('hidden')) submitOrder();
   }
   if (e.key === 'Escape') disconnectBook(true);
+  // Ctrl+K — jump to Live Book and focus the venue selector
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    const bookBtn = Array.from(document.querySelectorAll('.tab-btn'))
+      .find(b => (b.getAttribute('onclick') || '').includes("'book'"));
+    if (bookBtn) showTab('book', bookBtn);
+    requestAnimationFrame(() => document.getElementById('b-venue').focus());
+  }
 });
 
 // ── Live Jobs ─────────────────────────────────────────────────────────────────
@@ -4420,6 +4808,80 @@ async function submitFXOrder() {
     });
   });
   barObs.observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+
+<!-- Footer -->
+<footer style="text-align:center;padding:16px;font-size:11px;color:#5a6580;border-top:1px solid #1c2035;margin-top:auto;font-family:'Inter',sans-serif;">
+  &copy; 2026 SORFIX.
+  <a href="/portal/privacy-policy.html" style="color:#5a6580;text-decoration:underline;margin:0 8px;">Privacy Policy</a>
+  <a href="/portal/terms.html" style="color:#5a6580;text-decoration:underline;margin:0 8px;">Terms of Use</a>
+  <a href="/portal/cookie-policy.html" style="color:#5a6580;text-decoration:underline;margin:0 8px;">Cookie Policy</a>
+  <span style="color:#ef4444;margin-left:8px;">⚠️ Demo only — not investment advice</span>
+</footer>
+
+<!-- Cookie Consent -->
+<div id="cookie-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(13,15,29,0.97);border-top:1px solid #1c2035;padding:14px 24px;align-items:center;justify-content:space-between;gap:16px;z-index:9999;flex-wrap:wrap;">
+  <p style="color:rgba(225,231,239,0.75);font-size:12.5px;font-family:'Inter',sans-serif;margin:0;flex:1;min-width:200px;">
+    This portal uses Google Fonts and Tailwind CDN. See our <a href="/portal/cookie-policy.html" style="color:#3b82f6;text-decoration:underline;">Cookie Policy</a>.
+  </p>
+  <div style="display:flex;gap:8px;flex-shrink:0;">
+    <button onclick="setCookieConsent('declined')" style="background:transparent;border:1px solid #1c2035;color:rgba(225,231,239,0.6);padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;">Decline</button>
+    <button onclick="setCookieConsent('accepted')" style="background:#3b82f6;border:none;color:#fff;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;">Accept</button>
+  </div>
+</div>
+<script>
+(function(){
+  var b=document.getElementById('cookie-banner');
+  if(!localStorage.getItem('cookie-consent')&&b){b.style.display='flex';}
+  window.setCookieConsent=function(v){localStorage.setItem('cookie-consent',v);if(b)b.style.display='none';};
+})();
+</script>
+
+
+<script id="hdr-nav-js">
+(function(){
+  document.addEventListener('click',function(e){
+    var trigger=e.target.closest('.hdr-dd-trigger');
+    if(trigger){
+      var dd=trigger.closest('.hdr-dd');
+      var panel=dd.querySelector('.hdr-dd-panel');
+      var isOpen=panel.classList.contains('open');
+      document.querySelectorAll('.hdr-dd-panel.open').forEach(function(p){p.classList.remove('open');});
+      document.querySelectorAll('.hdr-dd-trigger[aria-expanded="true"]').forEach(function(t){t.setAttribute('aria-expanded','false');});
+      if(!isOpen){panel.classList.add('open');trigger.setAttribute('aria-expanded','true');}
+    } else if(!e.target.closest('.hdr-dd-panel')){
+      document.querySelectorAll('.hdr-dd-panel.open').forEach(function(p){p.classList.remove('open');});
+      document.querySelectorAll('.hdr-dd-trigger[aria-expanded="true"]').forEach(function(t){t.setAttribute('aria-expanded','false');});
+    }
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      document.querySelectorAll('.hdr-dd-panel.open').forEach(function(p){p.classList.remove('open');});
+      document.querySelectorAll('.hdr-dd-trigger[aria-expanded="true"]').forEach(function(t){t.setAttribute('aria-expanded','false');});
+    }
+  });
+})();
+</script>
+
+
+<script id="sb-collapse-js">
+(function(){
+  var btn = document.getElementById('sb-collapse-btn');
+  var sb  = document.getElementById('sidebar');
+  var main= document.getElementById('main');
+  if(!btn || !sb) return;
+
+  // Restore saved state
+  if(localStorage.getItem('sb-collapsed')==='1'){
+    sb.classList.add('collapsed');
+  }
+
+  btn.addEventListener('click', function(){
+    var collapsed = sb.classList.toggle('collapsed');
+    localStorage.setItem('sb-collapsed', collapsed ? '1' : '0');
+    btn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+  });
 })();
 </script>
 

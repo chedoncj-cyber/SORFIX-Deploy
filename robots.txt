@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /api/
+Disallow: /.env
+Allow: /portal/
+Sitemap: https://pan-sorfix.onrender.com/sitemap.xml
