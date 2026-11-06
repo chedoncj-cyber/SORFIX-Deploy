@@ -664,6 +664,90 @@
       #sidebar.collapsed + #main { margin-left: 0; }
     }
 
+    /* ── Sidebar Mega Menu ─────────────────────────────────── */
+    .mega-wrap {
+      position: fixed; inset: 0; z-index: 200;
+      pointer-events: none; opacity: 0;
+      transition: opacity 0.14s ease;
+    }
+    .mega-wrap.open { pointer-events: all; opacity: 1; }
+    .mega-panel {
+      position: absolute;
+      min-width: 580px; max-width: 650px;
+      background: linear-gradient(145deg, #111828 0%, #0d1420 100%);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.75),
+                  0 0 0 1px rgba(59,130,246,0.08),
+                  inset 0 1px 0 rgba(255,255,255,0.06);
+      overflow: hidden;
+      transform: translateX(-10px) scale(0.97);
+      opacity: 0;
+      transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1),
+                  opacity 0.17s ease;
+    }
+    .mega-wrap.open .mega-panel { transform: translateX(0) scale(1); opacity: 1; }
+    .mgh {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 20px 15px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      background: rgba(59,130,246,0.03);
+    }
+    .mgh-icon {
+      width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(59,130,246,0.14); border: 1px solid rgba(59,130,246,0.22); color: #60a5fa;
+    }
+    .mgh-icon.green { background:rgba(74,222,128,0.1); border-color:rgba(74,222,128,0.22); color:#4ade80; }
+    .mgh-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .mgh-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .mgh-close {
+      margin-left: auto; width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
+      color: var(--muted); cursor: pointer; font-size: 11px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.12s, color 0.12s;
+    }
+    .mgh-close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .mgb { padding: 14px 18px 16px; }
+    .mg-sec { font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.10em; color: var(--muted); margin-bottom: 9px; }
+    .mg-vgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+    .mg-vi {
+      display: flex; align-items: center; gap: 9px; padding: 10px 11px;
+      border-radius: 9px; border: 1px solid transparent; cursor: pointer;
+      transition: background 0.11s, border-color 0.11s, transform 0.11s;
+    }
+    .mg-vi:hover { background:rgba(59,130,246,0.09); border-color:rgba(59,130,246,0.2); transform:translateY(-1px); }
+    .mg-vi:active { transform: scale(0.97); }
+    .mg-vi-flag { font-size: 18px; line-height: 1; flex-shrink: 0; }
+    .mg-vi-code { font-size: 11.5px; font-weight: 700; color: var(--text); font-family: 'Courier New', monospace; }
+    .mg-vi-name { font-size: 9.5px; color: var(--muted); margin-top: 1px; }
+    .mg-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .mg-oi {
+      display: flex; align-items: flex-start; gap: 9px; padding: 9px 10px;
+      border-radius: 9px; border: 1px solid transparent; cursor: pointer; margin-bottom: 3px;
+      transition: background 0.11s, border-color 0.11s, transform 0.11s;
+    }
+    .mg-oi:hover { background:rgba(59,130,246,0.09); border-color:rgba(59,130,246,0.2); transform:translateY(-1px); }
+    .mg-oi:active { transform: scale(0.97); }
+    .mg-oi-ico {
+      width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 13px;
+    }
+    .mg-oi-title { font-size: 12.5px; font-weight: 700; color: var(--text); }
+    .mg-oi-desc { font-size: 10px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+    .mg-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 10px 0; }
+    .mgf {
+      display: flex; gap: 14px; padding: 8px 18px 10px;
+      border-top: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.15);
+    }
+    .mgf span { font-size: 10px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+    .mgf kbd {
+      padding: 1px 5px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 3px; font-size: 9px; color: var(--text); font-family: monospace;
+    }
+
     </style>
 </head>
 <body>
@@ -803,12 +887,12 @@
     <span class="nav-item-text">Dashboard</span>
   </button>
 
-  <button class="nav-item" data-label="Live" tab-btn" onclick="showTab('book',this)">
+  <button class="nav-item tab-btn" data-tab="book" onclick="showMegaMenu('book',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
     <span class="nav-item-text">Live Book</span>
   </button>
 
-  <button class="nav-item" data-label="Submit" tab-btn" onclick="showTab('submit',this)">
+  <button class="nav-item tab-btn" data-tab="submit" onclick="showMegaMenu('submit',this)">
     <svg class="nsvg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
     <span class="nav-item-text">Submit Order</span>
   </button>
@@ -2946,7 +3030,10 @@ document.addEventListener('keydown', e => {
   if (e.ctrlKey && e.key === 'Enter') {
     if (!document.getElementById('tab-submit').classList.contains('hidden')) submitOrder();
   }
-  if (e.key === 'Escape') disconnectBook(true);
+  if (e.key === 'Escape') {
+    if (document.getElementById('mega-wrap').classList.contains('open')) closeMegaMenu();
+    else disconnectBook(true);
+  }
   // Ctrl+K — jump to Live Book and focus the venue selector
   if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
     e.preventDefault();
@@ -4532,6 +4619,164 @@ async function submitFXOrder() {
     toast('FX order submitted: '+d.order_id,'ok');
   } catch(e){ res.textContent='Error: '+e.message; res.style.color='#f87171'; toast(e.message,'err'); }
 }
+
+// ── Sidebar Mega Menu ─────────────────────────────────────────────────────────
+const _MG_VENUES = [
+  { code: 'NYSE',     name: 'United States', flag: '🇺🇸' },
+  { code: 'LSE',      name: 'United Kingdom', flag: '🇬🇧' },
+  { code: 'HKEX',     name: 'Hong Kong',      flag: '🇭🇰' },
+  { code: 'TSE',      name: 'Japan',          flag: '🇯🇵' },
+  { code: 'SSE',      name: 'China (SH)',     flag: '🇨🇳' },
+  { code: 'SZSE',     name: 'China (SZ)',     flag: '🇨🇳' },
+  { code: 'TADAWUL',  name: 'Saudi Arabia',   flag: '🇸🇦' },
+  { code: 'NSE_IN',   name: 'India',          flag: '🇮🇳' },
+  { code: 'EURONEXT', name: 'Europe',         flag: '🇪🇺' },
+];
+const _MG_ORDER_TYPES = [
+  { key:'market', ico:'⚡', bg:'rgba(74,222,128,0.12)',  col:'#4ade80', title:'Market', desc:'Execute at best available price immediately' },
+  { key:'limit',  ico:'🎯', bg:'rgba(96,165,250,0.12)',  col:'#60a5fa', title:'Limit',  desc:'Set a maximum buy or minimum sell price' },
+  { key:'ioc',    ico:'⏱',  bg:'rgba(251,191,36,0.12)', col:'#fbbf24', title:'IOC',    desc:'Fill immediately, cancel any remainder' },
+  { key:'fok',    ico:'🔒', bg:'rgba(248,113,113,0.12)', col:'#f87171', title:'FOK',    desc:'Fill in full or cancel entirely' },
+];
+const _MG_ALGO_TYPES = [
+  { key:'twap', ico:'📊', bg:'rgba(167,139,250,0.12)', col:'#a78bfa', title:'TWAP', desc:'Time-Weighted Average Price slicing' },
+  { key:'vwap', ico:'📈', bg:'rgba(6,182,212,0.12)',   col:'#06b6d4', title:'VWAP', desc:'Volume-Weighted Average Price slicing' },
+];
+
+function showMegaMenu(type, btn) {
+  const wrap  = document.getElementById('mega-wrap');
+  const panel = document.getElementById('mega-panel');
+  const sb    = document.getElementById('sidebar');
+  const sbR   = sb ? sb.getBoundingClientRect().right : 220;
+  const rect  = btn.getBoundingClientRect();
+  panel.style.left = (sbR + 10) + 'px';
+  panel.style.top  = Math.max(60, Math.min(rect.top, window.innerHeight - 460)) + 'px';
+  panel.innerHTML  = type === 'book' ? _mgBookHTML() : _mgSubmitHTML();
+  wrap.classList.add('open');
+  wrap.setAttribute('aria-hidden', 'false');
+}
+
+function closeMegaMenu() {
+  const w = document.getElementById('mega-wrap');
+  if (w) { w.classList.remove('open'); w.setAttribute('aria-hidden','true'); }
+}
+
+function _mgBookHTML() {
+  return `
+    <div class="mgh">
+      <div class="mgh-icon">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <div>
+        <div class="mgh-title">Live Order Book</div>
+        <div class="mgh-sub">Select a venue to stream real-time depth &amp; price action</div>
+      </div>
+      <button class="mgh-close" onclick="closeMegaMenu()" aria-label="Close">✕</button>
+    </div>
+    <div class="mgb">
+      <div class="mg-sec">Select Venue to Connect</div>
+      <div class="mg-vgrid">
+        ${_MG_VENUES.map(v => `
+          <div class="mg-vi" onclick="mgSelectVenue('${v.code}')">
+            <div class="mg-vi-flag">${v.flag}</div>
+            <div>
+              <div class="mg-vi-code">${v.code}</div>
+              <div class="mg-vi-name">${v.name}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="mgf">
+      <span><kbd>click</kbd> select &amp; connect</span>
+      <span><kbd>Esc</kbd> close</span>
+    </div>`;
+}
+
+function _mgSubmitHTML() {
+  return `
+    <div class="mgh">
+      <div class="mgh-icon green">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      </div>
+      <div>
+        <div class="mgh-title">Submit Order</div>
+        <div class="mgh-sub">Choose execution type to pre-fill the order form</div>
+      </div>
+      <button class="mgh-close" onclick="closeMegaMenu()" aria-label="Close">✕</button>
+    </div>
+    <div class="mgb">
+      <div class="mg-cols">
+        <div>
+          <div class="mg-sec">Order Types</div>
+          ${_MG_ORDER_TYPES.map(t => `
+            <div class="mg-oi" onclick="mgSelectOrderType('${t.key}')">
+              <div class="mg-oi-ico" style="background:${t.bg};color:${t.col}">${t.ico}</div>
+              <div>
+                <div class="mg-oi-title">${t.title}</div>
+                <div class="mg-oi-desc">${t.desc}</div>
+              </div>
+            </div>`).join('')}
+        </div>
+        <div>
+          <div class="mg-sec">Algo Execution</div>
+          ${_MG_ALGO_TYPES.map(t => `
+            <div class="mg-oi" onclick="mgSelectOrderType('${t.key}')">
+              <div class="mg-oi-ico" style="background:${t.bg};color:${t.col}">${t.ico}</div>
+              <div>
+                <div class="mg-oi-title">${t.title}</div>
+                <div class="mg-oi-desc">${t.desc}</div>
+              </div>
+            </div>`).join('')}
+          <div class="mg-divider"></div>
+          <div class="mg-oi" onclick="mgSelectOrderType('direct')">
+            <div class="mg-oi-ico" style="background:rgba(96,165,250,0.1);color:#60a5fa">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            </div>
+            <div>
+              <div class="mg-oi-title">Open Full Form</div>
+              <div class="mg-oi-desc">Fill all order fields manually</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mgf">
+      <span><kbd>click</kbd> select &amp; pre-fill form</span>
+      <span><kbd>Esc</kbd> close</span>
+    </div>`;
+}
+
+function mgSelectVenue(venue) {
+  closeMegaMenu();
+  const btn = document.querySelector('[data-tab="book"]');
+  if (btn) showTab('book', btn);
+  const sel = document.getElementById('b-venue');
+  if (sel) { sel.value = venue; onVenueChange(); }
+}
+
+function mgSelectOrderType(type) {
+  closeMegaMenu();
+  if (type === 'twap' || type === 'vwap') {
+    const btn = Array.from(document.querySelectorAll('[onclick]'))
+      .find(b => (b.getAttribute('onclick')||'').includes("'algo'"));
+    if (btn) showTab('algo', btn);
+    setTimeout(() => {
+      const idBtn = document.getElementById('algo-btn-' + type) ||
+        document.getElementById(type + '-btn');
+      if (idBtn) idBtn.click();
+      else if (typeof setAlgoType === 'function') setAlgoType(type);
+    }, 50);
+  } else {
+    const btn = document.querySelector('[data-tab="submit"]');
+    if (btn) showTab('submit', btn);
+    const typeEl = document.getElementById('o-type');
+    if (typeEl) typeEl.value = type;
+  }
+}
+
+document.getElementById('mega-wrap').addEventListener('mousedown', function(e) {
+  if (e.target === this) closeMegaMenu();
+});
 </script>
 
 <script>
@@ -4900,6 +5145,11 @@ async function submitFXOrder() {
   });
 })();
 </script>
+
+<!-- ═══ SIDEBAR MEGA MENU ════════════════════════════════════════════════════ -->
+<div id="mega-wrap" class="mega-wrap" aria-hidden="true">
+  <div class="mega-panel" id="mega-panel" role="dialog"></div>
+</div>
 
 </body>
 </html>
