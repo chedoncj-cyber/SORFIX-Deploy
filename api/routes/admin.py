@@ -1,10 +1,18 @@
 """Admin endpoints — kill switch, risk config, system control."""
+import logging
 from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import JSONResponse
 from pathlib import Path
 
 from api.models import RiskConfigResponse, RiskStatsResponse, RiskConfigUpdate
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
+
+# Vector 10 — Dedicated audit logger for admin mutations
+_audit_log = logging.getLogger("sorfix.admin.audit")
+
+# Vector 11 — ETag optimistic concurrency: version counter for risk config
+_risk_config_version: int = 0
 
 
 def _get_state():
@@ -13,22 +21,28 @@ def _get_state():
 
 
 @router.post("/halt", summary="Halt all order routing (kill switch)")
-async def halt():
+async def halt(request: Request):
     """Immediately stop accepting new orders. In-flight executions are not affected."""
     try:
         state = _get_state()
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
+    # Vector 10 — Audit log
+    client_ip = request.client.host if request.client else "unknown"
+    _audit_log.info("HALT called | ip=%s method=%s", client_ip, request.method)
     state.halted = True
     return {"ok": True, "status": "halted"}
 
 
 @router.post("/resume", summary="Resume order routing after halt")
-async def resume():
+async def resume(request: Request):
     try:
         state = _get_state()
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
+    # Vector 10 — Audit log
+    client_ip = request.client.host if request.client else "unknown"
+    _audit_log.info("RESUME called | ip=%s method=%s", client_ip, request.method)
     state.halted = False
     return {"ok": True, "status": "running"}
 
@@ -69,21 +83,45 @@ async def get_risk_config():
 
 
 @router.put("/risk/config", response_model=RiskConfigResponse, summary="Update risk parameters at runtime")
-async def update_risk_config(update: RiskConfigUpdate):
+async def update_risk_config(update: RiskConfigUpdate, request: Request):
+    global _risk_config_version
     try:
         state = _get_state()
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
+
+    # Vector 11 — ETag optimistic concurrency
+    if_match = request.headers.get("if-match")
+    current_etag = f'"{_risk_config_version}"'
+    if if_match is not None and if_match != current_etag:
+        return JSONResponse(
+            status_code=412,
+            content={"detail": "Precondition Failed — risk config version mismatch"},
+            headers={"ETag": current_etag},
+        )
+
     changes = {k: v for k, v in update.model_dump().items() if v is not None}
+    # Vector 10 — Audit log
+    client_ip = request.client.host if request.client else "unknown"
+    _audit_log.info(
+        "UPDATE_RISK_CONFIG called | ip=%s method=%s params=%s",
+        client_ip, request.method, changes,
+    )
     state.risk.update_config(**changes)
+    _risk_config_version += 1
     cfg = state.risk.config
-    return RiskConfigResponse(
+    new_etag = f'"{_risk_config_version}"'
+    response_body = RiskConfigResponse(
         enabled=cfg.enabled,
         max_order_qty=cfg.max_order_qty,
         max_order_notional=cfg.max_order_notional,
         price_band_pct=cfg.price_band_pct,
         max_daily_notional=cfg.max_daily_notional,
         max_position_qty=cfg.max_position_qty,
+    )
+    return JSONResponse(
+        content=response_body.model_dump(),
+        headers={"ETag": new_etag},
     )
 
 
