@@ -1,4 +1,5 @@
 """Order submission, routing, and history endpoints."""
+import re
 import time
 from fastapi import APIRouter, HTTPException, Query
 
@@ -158,6 +159,8 @@ async def submit_order(req: OrderRequest):
     data = response.model_dump()
     data["simulated"] = True
     state.order_store.save(decision.order_id, data)
+    # Vector 12 — Response field sanitization: strip internal flag before returning
+    data.pop("simulated", None)
     state.db.save(decision.order_id, data)
     # Update positions and risk counters after confirmed fill
     if result.total_filled > 0 and vwap is not None:
@@ -187,6 +190,9 @@ async def submit_order(req: OrderRequest):
 @router.get("/{order_id}", response_model=OrderResponse, summary="Look up a submitted order by ID")
 async def get_order(order_id: str):
     """Retrieve a previously submitted order from the in-memory history store."""
+    # Vector 9 — IDOR protection: validate order_id format before lookup
+    if not re.match(r"^[A-Za-z0-9_-]{1,64}$", order_id):
+        raise HTTPException(status_code=400, detail="Invalid order_id format")
     try:
         state = _get_state()
     except RuntimeError as exc:

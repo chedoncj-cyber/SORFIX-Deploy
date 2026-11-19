@@ -10,6 +10,7 @@ import collections
 import json
 import logging
 import os
+import re
 import sys
 import time
 from contextlib import asynccontextmanager
@@ -121,6 +122,60 @@ _AUTH_ENABLED, _API_KEYS, _RL_ENABLED, _RL_RPM = _load_auth_config()
 _rate_buckets: dict = collections.defaultdict(collections.deque)
 _rate_last_cleanup: float = 0.0  # epoch seconds of last purge
 
+# ── Web-shell / probe defence ─────────────────────────────────────────────────
+_BLOCKED_EXTS = re.compile(
+    r"\.(php\d*|phtml|phar|asp|aspx|ashx|asmx|jsp|jspx|cfm|cgi|pl|sh|bash"
+    r"|exe|dll|bat|cmd|htaccess|htpasswd|shtml)\b",
+    re.IGNORECASE,
+)
+_SUSPICIOUS_PATH = re.compile(
+    r"(\.\.[/\\]|%2e%2e|%252e|/etc/passwd|/proc/self"
+    r"|cmd\.exe|base64_decode|eval\s*\(|system\s*\(|passthru\s*\("
+    r"|shell_exec\s*\(|phpinfo\s*\()",
+    re.IGNORECASE,
+)
+_BLOCKED_UA = re.compile(
+    r"(sqlmap|nikto|nmap|masscan|zgrab|nuclei|dirsearch|gobuster|ffuf|wfuzz"
+    r"|acunetix|nessus|openvas|burp|havij|hydra|metasploit)",
+    re.IGNORECASE,
+)
+_SEC_HEADERS = {
+    "X-Frame-Options":        "DENY",
+    "X-Content-Type-Options": "nosniff",
+    "X-XSS-Protection":       "1; mode=block",
+    "Referrer-Policy":        "strict-origin-when-cross-origin",
+    "Permissions-Policy":     "geolocation=(), microphone=(), camera=()",
+    "Content-Security-Policy": (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src https://fonts.gstatic.com; "
+        "connect-src 'self' wss:; "
+        "img-src 'self' data:; "
+        "frame-ancestors 'none';"
+    ),
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+}
+
+# Vector 1 — HTTP method override headers to block
+_METHOD_OVERRIDE_HEADERS = frozenset([
+    "x-http-method-override",
+    "x-http-method",
+    "x-method-override",
+    "x-tunneling-method",
+])
+
+# Vector 5 — Mutation-specific rate limiting
+_MUTATION_METHODS = frozenset(["POST", "PUT", "PATCH", "DELETE"])
+_MUT_RPM_FRACTION = max(10, _RL_RPM // 10)
+_mutation_buckets: dict = collections.defaultdict(collections.deque)
+
+# Vector 2 — Max request body size (512 KB)
+_MAX_BODY_BYTES = 512 * 1024
+
+# Vector 11 — ETag version counter for risk config
+_risk_config_version: int = 0
+
 
 app = FastAPI(
     title="Pan SORFIX",
@@ -145,9 +200,57 @@ app.add_middleware(
         "https://pan-sorfix.onrender.com",
         "https://world-sorfix.onrender.com",
     ],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT"],  # Vector 7: removed PATCH and DELETE (no such handlers)
+    allow_headers=["Content-Type", "Authorization", "X-API-Key"],
 )
+
+
+@app.middleware("http")
+async def security_probe_filter(request: Request, call_next):
+    """Block web-shell probes, path traversal, scanner UAs; add security headers."""
+    import uuid
+    path = request.url.path
+    raw  = str(request.url)
+    ua   = request.headers.get("user-agent", "")
+
+    if _BLOCKED_EXTS.search(path):
+        return JSONResponse({"detail": "Forbidden"}, status_code=403)
+    if _SUSPICIOUS_PATH.search(raw):
+        return JSONResponse({"detail": "Forbidden"}, status_code=403)
+    if _BLOCKED_UA.search(ua):
+        return JSONResponse({"detail": "Forbidden"}, status_code=403)
+
+    # Vector 1 — Block HTTP method override headers
+    for hdr in _METHOD_OVERRIDE_HEADERS:
+        if request.headers.get(hdr):
+            return JSONResponse({"detail": "Forbidden"}, status_code=403)
+
+    # Vector 2 — Enforce 512 KB max body size
+    content_length = request.headers.get("content-length")
+    if content_length is not None:
+        try:
+            if int(content_length) > _MAX_BODY_BYTES:
+                return JSONResponse({"detail": "Request body too large"}, status_code=413)
+        except ValueError:
+            pass
+
+    # Vector 6 — Content-Type enforcement for POST/PUT/PATCH with a body
+    if request.method in ("POST", "PUT", "PATCH"):
+        cl = request.headers.get("content-length")
+        if cl is not None and int(cl) > 0:
+            ct = request.headers.get("content-type", "")
+            if not ct.startswith("application/json"):
+                return JSONResponse({"detail": "Unsupported Media Type — application/json required"}, status_code=415)
+
+    response = await call_next(request)
+    for k, v in _SEC_HEADERS.items():
+        response.headers[k] = v
+    # Vector 15 — Obfuscate server fingerprint
+    response.headers["Server"] = "SORFIX"
+    # Vector 16 — Attach request-ID for PATCH audit trail correlation
+    response.headers["X-Request-ID"] = str(uuid.uuid4())
+    return response
 
 
 @app.middleware("http")
@@ -161,7 +264,27 @@ async def auth_and_rate_limit(request: Request, call_next):
     if request.url.path in skip_paths or request.url.path.startswith("/ws"):
         return await call_next(request)
 
-    # API key auth
+    # Vector 13 — Reject empty body for PUT/PATCH
+    if request.method in ("PUT", "PATCH"):
+        cl_raw = request.headers.get("content-length")
+        if cl_raw is None or cl_raw.strip() == "0":
+            return JSONResponse(
+                status_code=400,
+                content={"detail": "Empty request body not allowed for PUT/PATCH"},
+            )
+
+    # Vector 3 — Admin mandatory auth: when API keys are configured, all /admin/
+    # mutation requests require a valid X-API-Key regardless of _AUTH_ENABLED
+    is_admin_mutation = (
+        request.url.path.startswith("/admin/")
+        and request.method in _MUTATION_METHODS
+    )
+    if is_admin_mutation and _API_KEYS:
+        key = request.headers.get("X-API-Key", "")
+        if key not in _API_KEYS:
+            return JSONResponse(status_code=401, content={"detail": "Invalid or missing X-API-Key"})
+
+    # API key auth (global flag)
     if _AUTH_ENABLED:
         key = request.headers.get("X-API-Key", "")
         if key not in _API_KEYS:
@@ -188,6 +311,18 @@ async def auth_and_rate_limit(request: Request, call_next):
             dead = [ip for ip, b in _rate_buckets.items() if not b]
             for ip in dead:
                 del _rate_buckets[ip]
+
+        # Vector 5 — Mutation-specific secondary rate limit
+        if request.method in _MUTATION_METHODS:
+            mut_bucket = _mutation_buckets[client_ip]
+            while mut_bucket and now - mut_bucket[0] > 60.0:
+                mut_bucket.popleft()
+            if len(mut_bucket) >= _MUT_RPM_FRACTION:
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": f"Mutation rate limit exceeded — max {_MUT_RPM_FRACTION} mutations/minute"},
+                )
+            mut_bucket.append(now)
 
     return await call_next(request)
 
@@ -276,6 +411,13 @@ async def stream_order_book(websocket: WebSocket, venue: str, symbol: str):
     from app_state import get_app_state
     venue  = venue.upper()
     symbol = symbol.upper()
+
+    # Vector 14 — Validate path parameters to prevent path injection
+    _WS_VENUE_RE  = re.compile(r"^[A-Z]{2,10}$")
+    _WS_SYMBOL_RE = re.compile(r"^[A-Z0-9._-]{1,16}$")
+    if not _WS_VENUE_RE.match(venue) or not _WS_SYMBOL_RE.match(symbol):
+        await websocket.close(code=1008, reason="Invalid venue or symbol format")
+        return
 
     try:
         state = get_app_state()

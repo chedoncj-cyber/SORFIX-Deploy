@@ -1,7 +1,7 @@
 """
 Pydantic request/response models for the Pan SORFIX REST API.
 """
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import Optional, List
 from enum import Enum
 
@@ -41,6 +41,15 @@ class OrderRequest(BaseModel):
     asset_class:    AssetClassRequest        = Field(AssetClassRequest.equity, description="Asset class")
     max_splits:     Optional[int]            = Field(None, ge=1, le=10, description="Max split legs; defaults to system config")
     min_split_qty:  Optional[float]          = Field(None, gt=0, description="Min qty per leg; defaults to system config")
+
+    # Vector 8 — Symbol format validation
+    @field_validator("symbol")
+    @classmethod
+    def validate_symbol(cls, v: str) -> str:
+        import re
+        if not re.match(r"^[A-Za-z0-9._-]{1,16}$", v):
+            raise ValueError("symbol must be 1–16 alphanumeric/._- characters")
+        return v.upper()
 
 
 # ------------------------------------------------------------------ #
@@ -294,6 +303,9 @@ class RiskStatsResponse(BaseModel):
 
 
 class RiskConfigUpdate(BaseModel):
+    # Vector 4 — Mass assignment protection: reject unknown fields
+    model_config = ConfigDict(extra="forbid")
+
     enabled: Optional[bool] = None
     max_order_qty: Optional[float] = Field(None, gt=0)
     max_order_notional: Optional[float] = Field(None, gt=0)
