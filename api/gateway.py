@@ -176,6 +176,11 @@ _MAX_BODY_BYTES = 512 * 1024
 # Vector 11 — ETag version counter for risk config
 _risk_config_version: int = 0
 
+# PentAGI finding: disable API docs in production (SIMULATE=false) to prevent schema disclosure
+_SIMULATE = os.environ.get("SIMULATE", "true").lower() == "true"
+_docs_url     = "/docs"      if _SIMULATE else None
+_redoc_url    = "/redoc"     if _SIMULATE else None
+_openapi_url  = "/openapi.json" if _SIMULATE else None
 
 app = FastAPI(
     title="Pan SORFIX",
@@ -190,6 +195,9 @@ app = FastAPI(
     ),
     version="3.0.0",
     lifespan=lifespan,
+    docs_url=_docs_url,
+    redoc_url=_redoc_url,
+    openapi_url=_openapi_url,
 )
 
 app.add_middleware(
@@ -255,9 +263,10 @@ async def security_probe_filter(request: Request, call_next):
 
 @app.middleware("http")
 async def auth_and_rate_limit(request: Request, call_next):
-    # Skip auth/rate-limit for health, docs, portal, root
-    skip_paths = {"/", "/health", "/ready", "/portal", "/docs",
-                  "/openapi.json", "/redoc",
+    # Skip auth/rate-limit for health, portal, root, payments
+    # NOTE: /docs, /redoc, /openapi.json intentionally excluded — they go through
+    # auth when _AUTH_ENABLED=true (PentAGI: schema disclosure prevention)
+    skip_paths = {"/", "/health", "/ready", "/portal",
                   "/api/config",
                   "/api/payment/create-charge",
                   "/api/payment/create-payment-intent"}
